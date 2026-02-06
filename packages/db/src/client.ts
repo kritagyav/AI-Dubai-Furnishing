@@ -1,21 +1,22 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient(): PrismaClient {
-  // TODO(Story 1.2): Replace accelerateUrl workaround with proper Prisma adapter.
-  // Prisma 7.x requires an adapter or accelerateUrl. Using accelerateUrl with a
-  // plain PostgreSQL URL is a temporary hack to pass build. Story 1.2 will provision
-  // Supabase and configure the proper @prisma/adapter-pg adapter.
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
+  const pool = new pg.Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
+
   return new PrismaClient({
-    accelerateUrl: databaseUrl,
+    adapter,
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]

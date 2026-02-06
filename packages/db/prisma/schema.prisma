@@ -1,5 +1,5 @@
-// Minimal Prisma schema for client generation
-// Full schema implementation in Story 1.2
+// Dubai AI Furnishing Platform - Prisma Schema
+// Organized by bounded context sections per architecture spec
 
 generator client {
   provider = "prisma-client-js"
@@ -8,3 +8,97 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ═══════════════════════════════════════════
+// IDENTITY & ACCESS
+// ═══════════════════════════════════════════
+
+enum UserRole {
+  USER
+  RETAILER_ADMIN
+  RETAILER_STAFF
+  AGENT
+  CORPORATE_ADMIN
+  CORPORATE_EMPLOYEE
+  PORTFOLIO_OWNER
+  PROPERTY_MANAGER
+  PLATFORM_ADMIN
+  SUPPORT_AGENT
+  HOUSEHOLD_MEMBER
+}
+
+model User {
+  id              String    @id @default(uuid())
+  supabaseAuthId  String    @unique
+  email           String    @unique
+  name            String?
+  avatarUrl       String?
+  role            UserRole  @default(USER)
+  tenantId        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  sessions Session[]
+
+  @@index([supabaseAuthId])
+  @@index([tenantId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceType   String?
+  lastActiveAt DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════
+// ROOM INTELLIGENCE
+// ═══════════════════════════════════════════
+// Project, Room, RoomScan, RoomPhoto — Future stories
+
+// ═══════════════════════════════════════════
+// AI PACKAGES
+// ═══════════════════════════════════════════
+// Package, PackageItem, PackageReview, PackagePreview — Future stories
+
+// ═══════════════════════════════════════════
+// CATALOG & INVENTORY
+// ═══════════════════════════════════════════
+// Retailer, RetailerProduct, InventoryReservation, CatalogValidation — Future stories
+
+// ═══════════════════════════════════════════
+// COMMERCE & ORDERS
+// ═══════════════════════════════════════════
+// Cart, CartItem, Order, OrderLineItem, Payment — Future stories
+
+// ═══════════════════════════════════════════
+// FINANCIAL LEDGER
+// ═══════════════════════════════════════════
+// LedgerEntry, SettlementBatch, Commission — Future stories
+
+// ═══════════════════════════════════════════
+// DELIVERY & FULFILLMENT
+// ═══════════════════════════════════════════
+// DeliverySchedule, DeliverySlot, DeliveryIssue — Future stories
+
+// ═══════════════════════════════════════════
+// ENGAGEMENT & LIFECYCLE
+// ═══════════════════════════════════════════
+// Notification, SatisfactionSurvey, AbandonedCart, ReEngagementSequence — Future stories
+
+// ═══════════════════════════════════════════
+// PLATFORM OPERATIONS
+// ═══════════════════════════════════════════
+// SupportTicket, AuditLog, FeatureFlag, AIQualityFlag — Future stories
+
+// ═══════════════════════════════════════════
+// B2B2C DISTRIBUTION
+// ═══════════════════════════════════════════
+// AgentPartner, Referral, CorporateAccount, CorporateEmployee — Future stories
