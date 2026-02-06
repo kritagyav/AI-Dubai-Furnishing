@@ -1,0 +1,5 @@
+import { defineConfig } from "eslint/config";
+
+import { baseConfig } from "@dubai/eslint-config/base";
+
+export default defineConfig(baseConfig);
