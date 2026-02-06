@@ -34,5 +34,14 @@
     "turbo": "^2.5.8",
     "typescript": "catalog:"
   },
-  "prettier": "@dubai/prettier-config"
+  "prettier": "@dubai/prettier-config",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "@tailwindcss/oxide",
+      "esbuild",
+      "prisma",
+      "sharp"
+    ]
+  }
 }

@@ -3,11 +3,12 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@dubai/api";
 
-import { auth } from "~/auth/server";
+import { createSupabaseServerClient } from "~/auth/server";
 
 /**
  * Configure basic CORS headers
- * You should extend this to match your needs
+ * TODO(Story 1.3): Restrict to known origins — wildcard is insecure for production.
+ * Replace "*" with env-configured allowed origins list.
  */
 const setCorsHeaders = (res: Response) => {
   res.headers.set("Access-Control-Allow-Origin", "*");
@@ -25,13 +26,15 @@ export const OPTIONS = () => {
 };
 
 const handler = async (req: NextRequest) => {
+  const supabase = createSupabaseServerClient();
+
   const response = await fetchRequestHandler({
     endpoint: "/api/trpc",
     router: appRouter,
     req,
     createContext: () =>
       createTRPCContext({
-        auth: auth,
+        supabase,
         headers: req.headers,
       }),
     onError({ error, path }) {

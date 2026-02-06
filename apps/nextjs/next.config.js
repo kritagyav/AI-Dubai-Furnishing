@@ -7,6 +7,10 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
+  turbopack: {
+    root: "../..",
+  },
+
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@dubai/api",

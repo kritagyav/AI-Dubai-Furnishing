@@ -1,34 +1,16 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { desc, eq } from "@dubai/db";
-import { CreatePostSchema, Post } from "@dubai/db/schema";
+import { publicProcedure } from "../trpc";
 
-import { protectedProcedure, publicProcedure } from "../trpc";
-
+// Placeholder post router - full implementation in later stories
+// Drizzle ORM references removed during Prisma migration
 export const postRouter = {
-  all: publicProcedure.query(({ ctx }) => {
-    return ctx.db.query.Post.findMany({
-      orderBy: desc(Post.id),
-      limit: 10,
-    });
-  }),
-
-  byId: publicProcedure
-    .input(z.object({ id: z.string() }))
-    .query(({ ctx, input }) => {
-      return ctx.db.query.Post.findFirst({
-        where: eq(Post.id, input.id),
-      });
+  hello: publicProcedure
+    .input(z.object({ text: z.string() }))
+    .query(({ input }) => {
+      return {
+        greeting: `Hello ${input.text}`,
+      };
     }),
-
-  create: protectedProcedure
-    .input(CreatePostSchema)
-    .mutation(({ ctx, input }) => {
-      return ctx.db.insert(Post).values(input);
-    }),
-
-  delete: protectedProcedure.input(z.string()).mutation(({ ctx, input }) => {
-    return ctx.db.delete(Post).where(eq(Post.id, input));
-  }),
 } satisfies TRPCRouterRecord;

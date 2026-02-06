@@ -1,52 +1,18 @@
-import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
-import { expo } from "@better-auth/expo";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import { createClient } from "@supabase/supabase-js";
 
-import { db } from "@dubai/db/client";
+import { authEnv } from "../env";
 
-export function initAuth<
-  TExtraPlugins extends BetterAuthPlugin[] = [],
->(options: {
-  baseUrl: string;
-  productionUrl: string;
-  secret: string | undefined;
-
-  discordClientId: string;
-  discordClientSecret: string;
-  extraPlugins?: TExtraPlugins;
-}) {
-  const config = {
-    database: drizzleAdapter(db, {
-      provider: "pg",
-    }),
-    baseURL: options.baseUrl,
-    secret: options.secret,
-    plugins: [
-      oAuthProxy({
-        productionURL: options.productionUrl,
-      }),
-      expo(),
-      ...(options.extraPlugins ?? []),
-    ],
-    socialProviders: {
-      discord: {
-        clientId: options.discordClientId,
-        clientSecret: options.discordClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
-      },
-    },
-    trustedOrigins: ["expo://"],
-    onAPIError: {
-      onError(error, ctx) {
-        console.error("BETTER AUTH API ERROR", error, ctx);
-      },
-    },
-  } satisfies BetterAuthOptions;
-
-  return betterAuth(config);
+export function createSupabaseClient() {
+  const env = authEnv();
+  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
-export type Auth = ReturnType<typeof initAuth>;
-export type Session = Auth["$Infer"]["Session"];
+export function createSupabaseServiceClient() {
+  const env = authEnv();
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for service client");
+  }
+  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+export type SupabaseClient = ReturnType<typeof createSupabaseClient>;

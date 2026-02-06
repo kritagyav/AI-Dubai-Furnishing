@@ -21,6 +21,7 @@
     "@dubai/auth": "workspace:*",
     "@dubai/db": "workspace:*",
     "@dubai/validators": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
     "@trpc/server": "catalog:",
     "superjson": "2.2.3",
     "zod": "catalog:"

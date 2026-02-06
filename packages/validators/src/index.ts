@@ -1,8 +1,6 @@
 import { z } from "zod/v4";
 
-export const unused = z.string().describe(
-  `This lib is currently not used as we use drizzle-zod for simple schemas
-   But as your application grows and you need other validators to share
-   with back and frontend, you can put them in here
-  `,
-);
+// Shared Zod validators used across the platform
+// Add cross-cutting validation schemas here as the application grows
+
+export const placeholder = z.string().describe("Validators package placeholder");

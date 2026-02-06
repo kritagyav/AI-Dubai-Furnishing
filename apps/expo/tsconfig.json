@@ -1,7 +1,6 @@
 {
-  "extends": ["@dubai/tsconfig/base.json"],
+  "extends": ["@dubai/tsconfig/expo.json"],
   "compilerOptions": {
-    "jsx": "react-native",
     "checkJs": false,
     "moduleSuffixes": [".ios", ".android", ".native", ""],
     "paths": {

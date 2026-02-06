@@ -7,7 +7,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@dubai/api";
 import { appRouter, createTRPCContext } from "@dubai/api";
 
-import { auth } from "~/auth/server";
+import { createSupabaseServerClient } from "~/auth/server";
 import { createQueryClient } from "./query-client";
 
 /**
@@ -18,9 +18,11 @@ const createContext = cache(async () => {
   const heads = new Headers(await headers());
   heads.set("x-trpc-source", "rsc");
 
+  const supabase = createSupabaseServerClient();
+
   return createTRPCContext({
     headers: heads,
-    auth,
+    supabase,
   });
 });
 

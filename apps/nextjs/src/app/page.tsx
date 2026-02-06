@@ -2,36 +2,23 @@ import { Suspense } from "react";
 
 import { HydrateClient, prefetch, trpc } from "~/trpc/server";
 import { AuthShowcase } from "./_components/auth-showcase";
-import {
-  CreatePostForm,
-  PostCardSkeleton,
-  PostList,
-} from "./_components/posts";
+import { HelloCard, PostCardSkeleton } from "./_components/posts";
 
 export default function HomePage() {
-  prefetch(trpc.post.all.queryOptions());
+  prefetch(trpc.post.hello.queryOptions({ text: "Dubai Furnishing Platform" }));
 
   return (
     <HydrateClient>
       <main className="container h-screen py-16">
         <div className="flex flex-col items-center justify-center gap-4">
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-primary">T3</span> Turbo
+            Dubai <span className="text-primary">Furnishing</span>
           </h1>
           <AuthShowcase />
 
-          <CreatePostForm />
-          <div className="w-full max-w-2xl overflow-y-scroll">
-            <Suspense
-              fallback={
-                <div className="flex w-full flex-col gap-4">
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
-                </div>
-              }
-            >
-              <PostList />
+          <div className="w-full max-w-2xl">
+            <Suspense fallback={<PostCardSkeleton />}>
+              <HelloCard />
             </Suspense>
           </div>
         </div>

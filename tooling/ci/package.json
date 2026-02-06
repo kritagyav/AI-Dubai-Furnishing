@@ -1,0 +1,10 @@
+{
+  "name": "@dubai/ci-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./lighthouse": "./lighthouse.config.js",
+    "./chromatic": "./chromatic.config.js"
+  },
+  "license": "MIT"
+}

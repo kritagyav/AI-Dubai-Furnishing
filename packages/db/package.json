@@ -10,10 +10,6 @@
     "./client": {
       "types": "./dist/client.d.ts",
       "default": "./src/client.ts"
-    },
-    "./schema": {
-      "types": "./dist/schema.d.ts",
-      "default": "./src/schema.ts"
     }
   },
   "license": "MIT",
@@ -22,25 +18,25 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
+    "generate": "pnpm with-env prisma generate",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "push": "pnpm with-env drizzle-kit push",
-    "studio": "pnpm with-env drizzle-kit studio",
+    "push": "pnpm with-env prisma db push",
+    "studio": "pnpm with-env prisma studio",
+    "migrate": "pnpm with-env prisma migrate dev",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@vercel/postgres": "^0.10.0",
-    "drizzle-orm": "^0.44.7",
-    "drizzle-zod": "^0.8.3",
+    "@prisma/client": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",
     "@dubai/prettier-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
-    "drizzle-kit": "^0.31.5",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "prisma": "catalog:",
     "typescript": "catalog:"
   },
   "prettier": "@dubai/prettier-config"

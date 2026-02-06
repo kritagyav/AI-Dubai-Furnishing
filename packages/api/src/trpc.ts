@@ -6,12 +6,12 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
-import type { Auth } from "@dubai/auth";
-import { db } from "@dubai/db/client";
+import { prisma } from "@dubai/db";
 
 /**
  * 1. CONTEXT
@@ -28,16 +28,16 @@ import { db } from "@dubai/db/client";
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
-  auth: Auth;
+  supabase: SupabaseClient;
 }) => {
-  const authApi = opts.auth.api;
-  const session = await authApi.getSession({
-    headers: opts.headers,
-  });
+  const {
+    data: { session },
+  } = await opts.supabase.auth.getSession();
+
   return {
-    authApi,
+    supabase: opts.supabase,
     session,
-    db,
+    db: prisma,
   };
 };
 /**
@@ -74,7 +74,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 
 /**
- * Middleware for timing procedure execution and adding an articifial delay in development.
+ * Middleware for timing procedure execution and adding an artificial delay in development.
  *
  * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
  * network latency that would occur in production but not in local development.
@@ -121,7 +121,6 @@ export const protectedProcedure = t.procedure
     }
     return next({
       ctx: {
-        // infers the `session` as non-nullable
         session: { ...ctx.session, user: ctx.session.user },
       },
     });

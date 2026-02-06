@@ -1,0 +1,10 @@
+// Minimal Prisma schema for client generation
+// Full schema implementation in Story 1.2
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
