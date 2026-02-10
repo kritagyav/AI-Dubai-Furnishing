@@ -1,57 +1,59 @@
 /**
- * YOU PROBABLY DON'T NEED TO EDIT THIS FILE, UNLESS:
- * 1. You want to modify request context (see Part 1)
- * 2. You want to create a new middleware or type of procedure (see Part 3)
+ * tRPC server initialization and procedure hierarchy.
  *
- * tl;dr - this is where all the tRPC server stuff is created and plugged in.
- * The pieces you will need to use are documented accordingly near the end
+ * Defines the context, middleware chain, and pre-built procedure types
+ * per architecture decisions AC-1 through AC-4 and AS-2 (Three-Layer RBAC).
+ *
+ * Rule: Every tRPC router uses these pre-built procedures.
+ * No custom auth logic in individual routers.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
-import { prisma } from "@dubai/db";
+import type { PrismaClient } from "@dubai/db";
+import { prisma, scopedClient } from "@dubai/db";
 
-/**
- * 1. CONTEXT
- *
- * This section defines the "contexts" that are available in the backend API.
- *
- * These allow you to access things when processing a request, like the database, the session, etc.
- *
- * This helper generates the "internals" for a tRPC context. The API handler and RSC clients each
- * wrap this and provides the required context.
- *
- * @see https://trpc.io/docs/server/context
- */
+import { writeAuditLog } from "./audit";
+
+// ═══════════════════════════════════════════
+// 1. CONTEXT
+// ═══════════════════════════════════════════
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
   supabase: SupabaseClient;
+  correlationId?: string;
 }) => {
   const {
     data: { session },
   } = await opts.supabase.auth.getSession();
 
+  const source = opts.headers.get("x-trpc-source") ?? "unknown";
+
   return {
     supabase: opts.supabase,
     session,
     db: prisma,
+    source,
+    correlationId: opts.correlationId,
   };
 };
-/**
- * 2. INITIALIZATION
- *
- * This is where the trpc api is initialized, connecting the context and
- * transformer
- */
+
+// ═══════════════════════════════════════════
+// 2. INITIALIZATION
+// ═══════════════════════════════════════════
+
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
-  errorFormatter: ({ shape, error }) => ({
+  errorFormatter: ({ shape, error, ctx }) => ({
     ...shape,
     data: {
       ...shape.data,
+      correlationId:
+        (ctx as Record<string, unknown> | undefined)?.correlationId ??
+        "unknown",
       zodError:
         error.cause instanceof ZodError
           ? z.flattenError(error.cause as ZodError<Record<string, unknown>>)
@@ -60,68 +62,235 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   }),
 });
 
-/**
- * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
- *
- * These are the pieces you use to build your tRPC API. You should import these
- * a lot in the /src/server/api/routers folder
- */
-
-/**
- * This is how you create new routers and subrouters in your tRPC API
- * @see https://trpc.io/docs/router
- */
 export const createTRPCRouter = t.router;
+export const createCallerFactory = t.createCallerFactory;
+
+// ═══════════════════════════════════════════
+// 3. MIDDLEWARE
+// ═══════════════════════════════════════════
 
 /**
- * Middleware for timing procedure execution and adding an artificial delay in development.
+ * Correlation ID middleware — generates a time-sortable correlation ID
+ * for request tracing across logs and error responses (NFR-O1).
  *
- * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
- * network latency that would occur in production but not in local development.
+ * Format: `{base36-timestamp}-{uuid-slice}` — sortable by timestamp
+ * prefix, unique via crypto.randomUUID() suffix.
  */
-const timingMiddleware = t.middleware(async ({ next, path }) => {
-  const start = Date.now();
+const correlationIdMiddleware = t.middleware(async ({ next }) => {
+  const correlationId = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
-  if (t._config.isDev) {
-    // artificial delay in dev 100-500ms
-    const waitMs = Math.floor(Math.random() * 400) + 100;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  return next({
+    ctx: { correlationId },
+  });
+});
+
+/**
+ * Rate limit middleware — stub implementation for development.
+ * Actual Upstash Redis rate limiter will be added in Story 1.7.
+ * For now, this is a pass-through that sets rate limit context.
+ */
+const rateLimitMiddleware = t.middleware(async ({ next }) => {
+  // Stub: actual Upstash Redis rate limiter in Story 1.7
+  return next();
+});
+
+/**
+ * Auth middleware — verifies Supabase session and resolves the
+ * application User from Prisma by supabaseAuthId. Sets ctx.user
+ * with role and tenantId from the database record.
+ */
+const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Not authenticated" });
   }
 
+  const dbUser = await ctx.db.user.findUnique({
+    where: { supabaseAuthId: ctx.session.user.id },
+    select: { id: true, role: true, tenantId: true, email: true, name: true },
+  });
+
+  if (!dbUser) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "User record not found",
+    });
+  }
+
+  return next({
+    ctx: {
+      user: {
+        id: dbUser.id,
+        supabaseId: ctx.session.user.id,
+        role: dbUser.role,
+        tenantId: dbUser.tenantId,
+        email: dbUser.email,
+        name: dbUser.name,
+      },
+    },
+  });
+});
+
+/**
+ * Tenant middleware factory — verifies the authenticated user has
+ * the required tenant role type and extracts tenantId.
+ *
+ * @param tenantType - "retailer" or "corporate"
+ */
+function tenantMiddleware(tenantType: "retailer" | "corporate") {
+  const allowedRoles: Record<string, string[]> = {
+    retailer: ["RETAILER_ADMIN", "RETAILER_STAFF"],
+    corporate: ["CORPORATE_ADMIN", "CORPORATE_EMPLOYEE"],
+  };
+
+  return t.middleware(async ({ ctx, next }) => {
+    const user = (ctx as Record<string, unknown>).user as {
+      id: string;
+      role: string;
+      tenantId: string | null;
+    };
+
+    if (!allowedRoles[tenantType]?.includes(user.role)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `${tenantType} access required`,
+      });
+    }
+
+    if (!user.tenantId) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `No tenant association for ${tenantType} user`,
+      });
+    }
+
+    return next({
+      ctx: { tenantId: user.tenantId },
+    });
+  });
+}
+
+/**
+ * Scoped DB middleware — replaces ctx.db with a tenant-scoped
+ * Prisma client that automatically filters by tenantId (DA-1).
+ */
+const scopedDbMiddleware = t.middleware(async ({ ctx, next }) => {
+  const tenantId = (ctx as Record<string, unknown>).tenantId as string;
+
+  return next({
+    ctx: { db: scopedClient(tenantId) as unknown as PrismaClient },
+  });
+});
+
+/**
+ * Role middleware factory — restricts access to specific roles.
+ *
+ * @param allowedRoles - Array of UserRole values that can access the procedure
+ */
+function roleMiddleware(allowedRoles: string[]) {
+  return t.middleware(async ({ ctx, next }) => {
+    const user = (ctx as Record<string, unknown>).user as {
+      id: string;
+      role: string;
+    };
+
+    if (!allowedRoles.includes(user.role)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Insufficient permissions",
+      });
+    }
+
+    return next();
+  });
+}
+
+// ═══════════════════════════════════════════
+// 4. PROCEDURE HIERARCHY
+// ═══════════════════════════════════════════
+
+/**
+ * Public procedure — no authentication required.
+ * Includes correlation ID and rate limiting middleware.
+ */
+export const publicProcedure = t.procedure
+  .use(correlationIdMiddleware)
+  .use(rateLimitMiddleware);
+
+/**
+ * Authenticated procedure — requires valid Supabase session.
+ * Sets ctx.user with role, tenantId, email, name.
+ */
+export const authedProcedure = publicProcedure.use(authMiddleware);
+
+/**
+ * Retailer procedure — requires RETAILER_ADMIN or RETAILER_STAFF role.
+ * Sets ctx.tenantId and ctx.db = scopedClient(tenantId).
+ */
+export const retailerProcedure = authedProcedure
+  .use(tenantMiddleware("retailer"))
+  .use(scopedDbMiddleware);
+
+/**
+ * Corporate procedure — requires CORPORATE_ADMIN or CORPORATE_EMPLOYEE role.
+ * Sets ctx.tenantId and ctx.db = scopedClient(tenantId).
+ */
+export const corporateProcedure = authedProcedure
+  .use(tenantMiddleware("corporate"))
+  .use(scopedDbMiddleware);
+
+/**
+ * Admin procedure — requires PLATFORM_ADMIN role.
+ */
+export const adminProcedure = authedProcedure.use(
+  roleMiddleware(["PLATFORM_ADMIN"]),
+);
+
+/**
+ * Support procedure — requires SUPPORT_AGENT or PLATFORM_ADMIN role.
+ */
+export const supportProcedure = authedProcedure.use(
+  roleMiddleware(["SUPPORT_AGENT", "PLATFORM_ADMIN"]),
+);
+
+/**
+ * Agent procedure — requires AGENT role.
+ */
+export const agentProcedure = authedProcedure.use(roleMiddleware(["AGENT"]));
+
+/**
+ * Audit middleware — automatically captures audit logs for admin actions.
+ * Expects the procedure input to include `resourceType` and `resourceId`.
+ */
+const auditMiddleware = t.middleware(async ({ ctx, next, path }) => {
   const result = await next();
 
-  const end = Date.now();
-  console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+  const user = (ctx as Record<string, unknown>).user as {
+    id: string;
+    role: string;
+  } | undefined;
+
+  if (user) {
+    const correlationId = (ctx as Record<string, unknown>).correlationId as string | undefined;
+
+    try {
+      await writeAuditLog(ctx.db, {
+        actorId: user.id,
+        actorRole: user.role,
+        action: path,
+        resourceType: path.split(".")[0] ?? "unknown",
+        resourceId: "unknown",
+        correlationId: correlationId,
+      });
+    } catch {
+      // Audit log write failure should not break the request
+    }
+  }
 
   return result;
 });
 
 /**
- * Public (unauthed) procedure
- *
- * This is the base piece you use to build new queries and mutations on your
- * tRPC API. It does not guarantee that a user querying is authorized, but you
- * can still access user session data if they are logged in
+ * Audited procedure — admin procedure with automatic audit logging.
+ * Use for sensitive admin operations that need an audit trail.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
-
-/**
- * Protected (authenticated) procedure
- *
- * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
- * the session is valid and guarantees `ctx.session.user` is not null.
- *
- * @see https://trpc.io/docs/procedures
- */
-export const protectedProcedure = t.procedure
-  .use(timingMiddleware)
-  .use(({ ctx, next }) => {
-    if (!ctx.session?.user) {
-      throw new TRPCError({ code: "UNAUTHORIZED" });
-    }
-    return next({
-      ctx: {
-        session: { ...ctx.session, user: ctx.session.user },
-      },
-    });
-  });
+export const auditedProcedure = adminProcedure.use(auditMiddleware);

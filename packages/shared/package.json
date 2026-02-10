@@ -10,6 +10,10 @@
     "./env": {
       "types": "./dist/env.d.ts",
       "default": "./src/env.ts"
+    },
+    "./logger": {
+      "types": "./dist/logger.d.ts",
+      "default": "./src/logger.ts"
     }
   },
   "license": "MIT",
@@ -19,18 +23,23 @@
     "dev": "tsc",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "pino": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",
     "@dubai/prettier-config": "workspace:*",
+    "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
     "eslint": "catalog:",
+    "pino-pretty": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@dubai/prettier-config"
 }

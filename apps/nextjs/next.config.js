@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs";
+import { withAxiom } from "next-axiom";
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
@@ -16,12 +18,24 @@ const config = {
     "@dubai/api",
     "@dubai/auth",
     "@dubai/db",
+    "@dubai/shared",
     "@dubai/ui",
     "@dubai/validators",
   ],
+
+  /** Pino requires native modules bundled as external */
+  serverExternalPackages: ["pino", "pino-pretty"],
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
 };
 
-export default config;
+export default withSentryConfig(withAxiom(config), {
+  org: process.env.SENTRY_ORG ?? "",
+  project: process.env.SENTRY_PROJECT ?? "",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});

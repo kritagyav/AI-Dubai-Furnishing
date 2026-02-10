@@ -1,10 +1,30 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
   "packageRules": [
     {
       "matchPackagePatterns": ["^@dubai/"],
       "enabled": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "description": "Group Sentry packages together",
+      "matchPackagePatterns": ["^@sentry/"],
+      "groupName": "sentry"
+    },
+    {
+      "description": "Auto-merge security patches",
+      "matchUpdateTypes": ["patch"],
+      "matchPackagePatterns": ["*"],
+      "automerge": true,
+      "prPriority": 10
     }
   ],
   "updateInternalDeps": true,

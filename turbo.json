@@ -9,6 +9,10 @@
       "dependsOn": ["^build"],
       "outputs": [".cache/tsbuildinfo.json", "dist/**"]
     },
+    "build:tokens": {
+      "inputs": ["src/tokens/**/*.json", "src/config.ts", "src/build.ts"],
+      "outputs": ["dist/**"]
+    },
     "dev": {
       "dependsOn": ["^dev"],
       "cache": false,
@@ -21,6 +25,9 @@
     "lint": {
       "dependsOn": ["^topo", "^build"],
       "outputs": [".cache/.eslintcache"]
+    },
+    "lint:style": {
+      "outputs": [".cache/.stylelintcache"]
     },
     "test": {
       "dependsOn": ["^build"],
@@ -47,6 +54,22 @@
     "ui-add": {
       "cache": false,
       "interactive": true
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    },
+    "build-storybook": {
+      "dependsOn": ["^build"],
+      "outputs": ["storybook-static/**"]
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "validate": {
+      "dependsOn": ["^build"],
+      "outputs": []
     }
   },
   "globalEnv": [
@@ -60,7 +83,19 @@
     "CHECKOUT_COM_SECRET_KEY",
     "NEXT_PUBLIC_SENTRY_DSN",
     "NEXT_PUBLIC_MIXPANEL_TOKEN",
-    "PORT"
+    "NEXT_PUBLIC_AXIOM_DATASET",
+    "NEXT_PUBLIC_AXIOM_TOKEN",
+    "AXIOM_TOKEN",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT",
+    "SENTRY_DSN",
+    "EXPO_PUBLIC_SENTRY_DSN",
+    "BETTERSTACK_API_TOKEN",
+    "WORKER_HEALTH_PORT",
+    "LOG_LEVEL",
+    "PORT",
+    "ALLOWED_ORIGINS"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
@@ -68,6 +103,8 @@
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_URL",
-    "npm_lifecycle_event"
+    "NEXT_RUNTIME",
+    "npm_lifecycle_event",
+    "npm_package_version"
   ]
 }

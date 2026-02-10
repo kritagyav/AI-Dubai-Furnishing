@@ -96,7 +96,25 @@ model Session {
 // ═══════════════════════════════════════════
 // PLATFORM OPERATIONS
 // ═══════════════════════════════════════════
-// SupportTicket, AuditLog, FeatureFlag, AIQualityFlag — Future stories
+// SupportTicket, FeatureFlag, AIQualityFlag — Future stories
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  timestamp     DateTime @default(now())
+  actorId       String
+  actorRole     String
+  action        String
+  resourceType  String
+  resourceId    String
+  changes       Json?
+  correlationId String?
+  ipAddress     String?
+  userAgent     String?
+
+  @@index([actorId])
+  @@index([resourceType, resourceId])
+  @@index([timestamp])
+}
 
 // ═══════════════════════════════════════════
 // B2B2C DISTRIBUTION

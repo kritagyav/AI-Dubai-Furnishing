@@ -1,0 +1,35 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Weekly Monday 9am UTC
+  pull_request:
+    paths:
+      - "**/package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Security audit
+        run: pnpm audit --audit-level=high
+
+      - name: Critical vulnerability check (48h SLA)
+        if: always()
+        run: |
+          if pnpm audit --audit-level=critical 2>&1 | grep -q "critical"; then
+            echo "::error::CRITICAL vulnerabilities found — 48h SLA to resolve"
+            exit 1
+          fi
+
+      - name: Check outdated dependencies
+        if: always()
+        run: pnpm outdated || true

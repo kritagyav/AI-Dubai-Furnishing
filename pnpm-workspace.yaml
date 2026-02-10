@@ -26,8 +26,32 @@ catalog:
   dotenv: ^16.5.0
   typescript: ^5.9.3
   zod: ^4.1.12
-  zustand: ^5.0.10
+  "@fast-check/vitest": ^0.2.4
+  "@playwright/test": ^1.58.0
+  "@storybook/addon-a11y": ^8.6.14
+  "@storybook/addon-essentials": ^8.6.14
+  "@storybook/addon-interactions": ^8.6.14
+  "@storybook/addon-links": ^8.6.14
+  "@storybook/react": ^8.6.14
+  "@storybook/react-vite": ^8.6.14
+  "@storybook/test": ^8.6.14
+  "@testing-library/react": ^16.3.0
+  "@vitest/coverage-v8": ^4.0.18
+  "@vitest/ui": ^4.0.18
+  chromatic: ^15.0.0
+  fast-check: ^4.5.3
+  jest-axe: ^10.0.0
+  jsdom: ^26.1.0
+  storybook: ^8.6.14
   vite: 7.1.12
+  vitest: ^4.0.18
+  zustand: ^5.0.10
+  pino: ^10.3.0
+  pino-pretty: ^13.0.0
+  next-axiom: ^1.10.0
+  "@sentry/nextjs": ^10.38.0
+  "@sentry/react-native": ^7.12.0
+  "@sentry/node": ^10.38.0
 
 catalogs:
   react19:

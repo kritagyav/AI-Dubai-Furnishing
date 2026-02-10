@@ -5,19 +5,18 @@ import type { AppRouter } from "./root";
 /**
  * Inference helpers for input types
  * @example
- * type PostByIdInput = RouterInputs['post']['byId']
- *      ^? { id: number }
+ * type HelloInput = RouterInputs['room']['hello']
  */
 type RouterInputs = inferRouterInputs<AppRouter>;
 
 /**
  * Inference helpers for output types
  * @example
- * type AllPostsOutput = RouterOutputs['post']['all']
- *      ^? Post[]
+ * type HelloOutput = RouterOutputs['room']['hello']
  */
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { type AppRouter, appRouter } from "./root";
-export { createTRPCContext } from "./trpc";
+export { createCallerFactory, createTRPCContext, auditedProcedure } from "./trpc";
 export type { RouterInputs, RouterOutputs };
+export { type AppError, type AppErrorCode, APP_ERROR_CODES } from "./errors";

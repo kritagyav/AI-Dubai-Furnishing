@@ -5,6 +5,14 @@
 // - Delivery coordination
 // - Notification dispatch
 
-console.log("Worker starting...");
+import { initSentry } from "./sentry";
+import { logger } from "./logger";
+import { startHealthServer } from "./health";
+
+initSentry();
+
+logger.info("Worker starting...");
+
+startHealthServer();
 
 // Worker implementation will be added in later stories

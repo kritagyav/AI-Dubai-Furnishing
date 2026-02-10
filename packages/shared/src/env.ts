@@ -12,8 +12,8 @@ const serverEnvSchema = z.object({
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url(),
-  NEXT_PUBLIC_MIXPANEL_TOKEN: z.string(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_MIXPANEL_TOKEN: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

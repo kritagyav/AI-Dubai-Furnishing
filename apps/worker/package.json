@@ -14,7 +14,9 @@
   "dependencies": {
     "@dubai/db": "workspace:*",
     "@dubai/queue": "workspace:*",
-    "@dubai/shared": "workspace:*"
+    "@dubai/shared": "workspace:*",
+    "@sentry/node": "catalog:",
+    "pino": "catalog:"
   },
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",

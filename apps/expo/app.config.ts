@@ -45,6 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-web-browser",
+    "@sentry/react-native/expo",
     [
       "expo-splash-screen",
       {

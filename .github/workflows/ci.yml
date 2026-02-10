@@ -3,15 +3,13 @@ name: CI
 on:
   pull_request:
     branches: ["*"]
-  push:
-    branches: ["main"]
   merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# You can leverage Vercel Remote Caching with Turbo to speed up your builds
+# Vercel Remote Caching for Turbo
 # @link https://turborepo.com/docs/core-concepts/remote-caching#remote-caching-on-vercel-builds
 env:
   FORCE_COLOR: 3
@@ -23,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -31,21 +31,67 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
-      - name: Lint
-        run: pnpm lint && pnpm lint:ws
+      - name: Lint (affected)
+        run: pnpm turbo run lint --filter='...[origin/main...HEAD]'
+
+      - name: Stylelint (affected)
+        run: pnpm turbo run lint:style --filter='...[origin/main...HEAD]'
+
+      - name: Workspace lint
+        run: pnpm lint:ws
 
   format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Format
-        run: pnpm format
+      - name: Format (affected)
+        run: pnpm turbo run format --filter='...[origin/main...HEAD]'
 
   typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Typecheck (affected)
+        run: pnpm turbo run typecheck --filter='...[origin/main...HEAD]'
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Copy env
+        shell: bash
+        run: cp .env.example .env
+
+      - name: Test (affected)
+        run: pnpm turbo run test --filter='...[origin/main...HEAD]'
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: "**/coverage/"
+          retention-days: 7
+
+  security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -53,5 +99,118 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Security audit
+        run: pnpm audit --audit-level=critical
+
+  build:
+    needs: [lint, format, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Copy env
+        shell: bash
+        run: cp .env.example .env
+
+      - name: Build (affected)
+        run: pnpm turbo run build --filter='...[origin/main...HEAD]'
+
+  preview:
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Install Vercel CLI
+        shell: bash
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing preview comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "Preview deployment"
+
+      - name: Create or update preview comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            🚀 **Preview deployment:** ${{ steps.deploy.outputs.url }}
+
+  chromatic:
+    needs: [build]
+    if: github.event_name == 'pull_request' && hashFiles('packages/ui/.storybook/**') != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      # buildScriptName must match the script added in Story 1.6 (Test Infrastructure)
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: "build-storybook"
+          exitZeroOnChanges: true
+          autoAcceptChanges: "main"
+          onlyChanged: true
+
+  lighthouse:
+    needs: [preview]
+    if: github.event_name == 'pull_request' && needs.preview.outputs.preview-url
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: ${{ needs.preview.outputs.preview-url }}
+          configPath: ./tooling/ci/lighthouse.config.js
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: ".lighthouseci/"
+          retention-days: 7
