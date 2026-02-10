@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { updateSession } from "@dubai/auth/middleware";
 
-const PROTECTED_ROUTES = ["/settings", "/dashboard", "/onboarding", "/projects"];
+const PROTECTED_ROUTES = ["/settings", "/dashboard", "/onboarding", "/projects", "/retailer"];
 const AUTH_ROUTES = ["/login", "/register", "/verify-email", "/reset-password", "/update-password", "/mfa-challenge"];
 
 export async function middleware(request: NextRequest) {

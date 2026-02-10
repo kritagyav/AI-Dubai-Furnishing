@@ -10,16 +10,16 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPCClient } from "~/trpc/react";
 
 export default function DashboardPage() {
-  const trpc = useTRPC();
+  const client = useTRPCClient();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [onboardingPath, setOnboardingPath] = useState<string | null>(null);
 
   useEffect(() => {
-    void trpc.user.getOnboardingStatus
+    void client.user.getOnboardingStatus
       .query()
       .then((status) => {
         if (status.needsOnboarding) {
@@ -32,7 +32,7 @@ export default function DashboardPage() {
       .catch(() => {
         setLoading(false);
       });
-  }, [trpc, router]);
+  }, [client, router]);
 
   if (loading) {
     return (

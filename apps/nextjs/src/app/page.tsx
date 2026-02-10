@@ -5,7 +5,7 @@ import { AuthShowcase } from "./_components/auth-showcase";
 import { HelloCard, PostCardSkeleton } from "./_components/posts";
 
 export default function HomePage() {
-  prefetch(trpc.room.hello.queryOptions());
+  prefetch(trpc.user.getSession.queryOptions());
 
   return (
     <HydrateClient>

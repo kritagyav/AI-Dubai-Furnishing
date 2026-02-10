@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPCClient } from "~/trpc/react";
 
 interface DeviceSession {
   id: string;
@@ -44,21 +44,21 @@ function DeviceIcon({ type }: { type: string | null }) {
 }
 
 export default function DevicesPage() {
-  const trpc = useTRPC();
+  const client = useTRPCClient();
   const [sessions, setSessions] = useState<DeviceSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
 
   const fetchSessions = useCallback(async () => {
     try {
-      const data = await trpc.session.listDevices.query();
+      const data = await client.session.listDevices.query();
       setSessions(data);
     } catch {
       // silently fail
     } finally {
       setLoading(false);
     }
-  }, [trpc]);
+  }, [client]);
 
   useEffect(() => {
     void fetchSessions();
@@ -67,7 +67,7 @@ export default function DevicesPage() {
   const handleRevoke = async (sessionId: string) => {
     setRevoking(sessionId);
     try {
-      await trpc.session.revokeSession.mutate({ sessionId });
+      await client.session.revokeSession.mutate({ sessionId });
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch {
       // silently fail
@@ -84,7 +84,7 @@ export default function DevicesPage() {
 
     setRevoking("all");
     try {
-      await trpc.session.revokeAllOtherSessions.mutate({ currentSessionId });
+      await client.session.revokeAllOtherSessions.mutate({ currentSessionId });
       setSessions((prev) => (prev[0] ? [prev[0]] : []));
     } catch {
       // silently fail

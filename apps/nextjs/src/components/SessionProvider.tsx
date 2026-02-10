@@ -17,23 +17,23 @@ import {
 } from "@dubai/auth/session-sync";
 import { ContinueBanner, OfflineIndicator } from "@dubai/ui";
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPCClient } from "~/trpc/react";
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const isAuthenticated = !loading && !!user;
-  const trpc = useTRPC();
+  const client = useTRPCClient();
   const router = useRouter();
   const pathname = usePathname();
 
   // Device session registration
   const { sessionId, trackNavigation } = useDeviceSession({
     registerDevice: async (input) => {
-      const result = await trpc.session.registerDevice.mutate(input);
+      const result = await client.session.registerDevice.mutate(input);
       return result;
     },
     updateActivityState: async (input) => {
-      const result = await trpc.session.updateActivityState.mutate(input);
+      const result = await client.session.updateActivityState.mutate(input);
       return result;
     },
     isAuthenticated,
@@ -57,7 +57,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Resumable state from other devices
   const { resumable, dismiss } = useResumableState({
     getResumableState: async (input) => {
-      const result = await trpc.session.getResumableState.query(input);
+      const result = await client.session.getResumableState.query(input);
       return result;
     },
     sessionId,
@@ -67,7 +67,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Offline sync
   const { pendingCount } = useOfflineSync({
     submitOfflineAction: async (input) => {
-      const result = await trpc.session.submitOfflineAction.mutate(input);
+      const result = await client.session.submitOfflineAction.mutate(input);
       return result;
     },
     isAuthenticated,

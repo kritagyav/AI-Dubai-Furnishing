@@ -20,7 +20,7 @@ import { useState } from "react";
 
 import { Button } from "@dubai/ui/button";
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPCClient } from "~/trpc/react";
 
 type PathChoice = "FURNISH_NOW" | "JUST_BROWSING";
 
@@ -61,7 +61,7 @@ const PATH_OPTIONS: PathOption[] = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const trpc = useTRPC();
+  const client = useTRPCClient();
   const [selected, setSelected] = useState<PathChoice | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      await trpc.user.setOnboardingPath.mutate({ path });
+      await client.user.setOnboardingPath.mutate({ path });
 
       if (path === "FURNISH_NOW") {
         router.push("/dashboard");

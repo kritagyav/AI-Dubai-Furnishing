@@ -8,12 +8,14 @@ import { useTRPC } from "~/trpc/react";
 export function HelloCard() {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.room.hello.queryOptions(),
+    trpc.user.getSession.queryOptions(),
   );
 
   return (
     <div className="bg-muted rounded-lg p-4">
-      <p className="text-primary text-xl font-bold">{data.message}</p>
+      <p className="text-primary text-xl font-bold">
+        {data ? "Connected to API" : "Not authenticated"}
+      </p>
     </div>
   );
 }

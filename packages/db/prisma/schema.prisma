@@ -42,6 +42,8 @@ model User {
 
   sessions      Session[]
   activityState UserActivityState?
+  projects      Project[]
+  retailer      Retailer?
 
   @@index([supabaseAuthId])
   @@index([tenantId])
@@ -101,7 +103,78 @@ model OfflineAction {
 // ═══════════════════════════════════════════
 // ROOM INTELLIGENCE
 // ═══════════════════════════════════════════
-// Project, Room, RoomScan, RoomPhoto — Future stories
+
+enum RoomType {
+  LIVING_ROOM
+  BEDROOM
+  DINING_ROOM
+  KITCHEN
+  BATHROOM
+  STUDY_OFFICE
+  BALCONY
+  OTHER
+}
+
+enum RoomTypeSource {
+  MANUAL
+  AI_SUGGESTED
+  AI_CONFIRMED
+}
+
+enum DimensionUnit {
+  METRIC
+  IMPERIAL
+}
+
+model Project {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  address      String?
+  floorPlanUrl      String?
+  floorPlanThumbUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rooms Room[]
+
+  @@index([userId])
+}
+
+model Room {
+  id             String         @id @default(uuid())
+  projectId      String
+  name           String
+  type           RoomType       @default(OTHER)
+  typeConfidence Float?
+  typeSource     RoomTypeSource @default(MANUAL)
+  widthCm        Int?
+  lengthCm       Int?
+  heightCm       Int?
+  displayUnit    DimensionUnit  @default(METRIC)
+  orderIndex     Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  photos  RoomPhoto[]
+
+  @@index([projectId])
+}
+
+model RoomPhoto {
+  id           String   @id @default(uuid())
+  roomId       String
+  storageUrl   String
+  thumbnailUrl String?
+  orderIndex   Int      @default(0)
+  uploadedAt   DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
 
 // ═══════════════════════════════════════════
 // AI PACKAGES
@@ -111,7 +184,93 @@ model OfflineAction {
 // ═══════════════════════════════════════════
 // CATALOG & INVENTORY
 // ═══════════════════════════════════════════
-// Retailer, RetailerProduct, InventoryReservation, CatalogValidation — Future stories
+
+enum RetailerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum ProductValidationStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+}
+
+enum FurnitureCategory {
+  SOFA
+  BED
+  DINING_TABLE
+  DINING_CHAIR
+  DESK
+  OFFICE_CHAIR
+  WARDROBE
+  DRESSER
+  BOOKSHELF
+  TV_UNIT
+  COFFEE_TABLE
+  SIDE_TABLE
+  RUG
+  CURTAIN
+  LIGHTING
+  MIRROR
+  STORAGE
+  OUTDOOR
+  DECOR
+  OTHER
+}
+
+model Retailer {
+  id                  String         @id @default(uuid())
+  tenantId            String         @unique @default(uuid())
+  companyName         String
+  tradeLicenseNumber  String
+  contactEmail        String
+  contactPhone        String?
+  businessType        String?
+  status              RetailerStatus @default(PENDING)
+  rejectionReason     String?
+  warehouseDetails    Json?
+  documentsUrl        String?
+  commissionRate      Int            @default(1200) // basis points (12.00%)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products RetailerProduct[]
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model RetailerProduct {
+  id               String                  @id @default(uuid())
+  retailerId       String
+  tenantId         String
+  sku              String
+  name             String
+  category         FurnitureCategory
+  widthCm          Int
+  depthCm          Int
+  heightCm         Int
+  materials        Json                    // string[]
+  colors           Json                    // string[]
+  priceFils        Int                     // AED in fils (1/100)
+  photos           Json                    // string[] of URLs
+  stockQuantity    Int                     @default(0)
+  validationStatus ProductValidationStatus @default(PENDING)
+  validationErrors Json?                   // field-level errors
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@unique([retailerId, sku])
+  @@index([tenantId])
+  @@index([category, validationStatus])
+}
 
 // ═══════════════════════════════════════════
 // COMMERCE & ORDERS
