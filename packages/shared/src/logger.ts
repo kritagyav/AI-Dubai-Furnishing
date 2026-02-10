@@ -11,7 +11,6 @@ export type Logger = pino.Logger;
  * - ISO timestamps, level as label
  */
 export function createLogger(service: string): Logger {
-  /* eslint-disable no-restricted-properties -- Logger factory needs raw env access */
   const isDev = process.env.NODE_ENV !== "production";
 
   return pino({

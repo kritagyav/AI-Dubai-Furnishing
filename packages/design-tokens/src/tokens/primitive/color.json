@@ -1,0 +1,70 @@
+{
+  "color": {
+    "neutral": {
+      "$description": "Warm neutral foundation — no pure black or pure white",
+      "50":  { "$value": "#FAFAF7", "$type": "color" },
+      "100": { "$value": "#F5F0EB", "$type": "color" },
+      "150": { "$value": "#EDE7E0", "$type": "color" },
+      "200": { "$value": "#DDD6CD", "$type": "color" },
+      "300": { "$value": "#C4BBB2", "$type": "color" },
+      "400": { "$value": "#B5AFA9", "$type": "color" },
+      "500": { "$value": "#9B9590", "$type": "color" },
+      "600": { "$value": "#736D68", "$type": "color" },
+      "700": { "$value": "#5C5753", "$type": "color" },
+      "800": { "$value": "#3A3631", "$type": "color" },
+      "900": { "$value": "#2C2926", "$type": "color" }
+    },
+    "sage": {
+      "$description": "Primary interactive color palette",
+      "100": { "$value": "#EEF2EE", "$type": "color" },
+      "200": { "$value": "#D1DCD1", "$type": "color" },
+      "300": { "$value": "#A8BFA8", "$type": "color" },
+      "400": { "$value": "#5C7A5C", "$type": "color" },
+      "decorative": { "$value": "#8B9E8B", "$type": "color" },
+      "500": { "$value": "#6F836F", "$type": "color" },
+      "600": { "$value": "#556755", "$type": "color" }
+    },
+    "terracotta": {
+      "$description": "Primary CTA color palette",
+      "100": { "$value": "#FAEEE7", "$type": "color" },
+      "200": { "$value": "#EECDB9", "$type": "color" },
+      "300": { "$value": "#D9956F", "$type": "color" },
+      "400": { "$value": "#C67D5B", "$type": "color" },
+      "500": { "$value": "#9E5F3F", "$type": "color" },
+      "600": { "$value": "#8B5338", "$type": "color" }
+    },
+    "slate": {
+      "$description": "Data and professional context palette",
+      "100": { "$value": "#ECEEF0", "$type": "color" },
+      "200": { "$value": "#C5CBD2", "$type": "color" },
+      "300": { "$value": "#8E9AAA", "$type": "color" },
+      "400": { "$value": "#5E6B7A", "$type": "color" },
+      "500": { "$value": "#4A5563", "$type": "color" },
+      "600": { "$value": "#37404B", "$type": "color" }
+    },
+    "success": {
+      "$description": "Warm-toned success states",
+      "light":   { "$value": "#E8F5E8", "$type": "color" },
+      "default": { "$value": "#5C8A5C", "$type": "color" },
+      "dark":    { "$value": "#3D6B3D", "$type": "color" }
+    },
+    "error": {
+      "$description": "Warm-toned error states",
+      "light":   { "$value": "#FBEAE8", "$type": "color" },
+      "default": { "$value": "#C4554D", "$type": "color" },
+      "dark":    { "$value": "#963F38", "$type": "color" }
+    },
+    "warning": {
+      "$description": "Warm-toned warning states",
+      "light":   { "$value": "#FDF3E4", "$type": "color" },
+      "default": { "$value": "#C88A35", "$type": "color" },
+      "dark":    { "$value": "#8D6124", "$type": "color" }
+    },
+    "info": {
+      "$description": "Info states — cool-shifted but warm-adjacent",
+      "light":   { "$value": "#E8EDF2", "$type": "color" },
+      "default": { "$value": "#5E6B7A", "$type": "color" },
+      "dark":    { "$value": "#4A5563", "$type": "color" }
+    }
+  }
+}

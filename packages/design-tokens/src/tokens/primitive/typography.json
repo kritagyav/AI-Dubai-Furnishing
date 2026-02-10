@@ -1,0 +1,51 @@
+{
+  "font": {
+    "family": {
+      "primary":   { "$value": "'DM Sans Variable', system-ui, sans-serif", "$type": "fontFamily" },
+      "display":   { "$value": "'Playfair Display', Georgia, serif", "$type": "fontFamily" },
+      "mono":      { "$value": "'JetBrains Mono', monospace", "$type": "fontFamily" },
+      "arabic":    { "$value": "'Noto Kufi Arabic', sans-serif", "$type": "fontFamily" }
+    },
+    "weight": {
+      "regular":   { "$value": "400", "$type": "fontWeight" },
+      "medium":    { "$value": "500", "$type": "fontWeight" },
+      "semibold":  { "$value": "600", "$type": "fontWeight" },
+      "bold":      { "$value": "700", "$type": "fontWeight" }
+    }
+  },
+  "text": {
+    "display-xl":  { "$value": "40px", "$type": "dimension", "$description": "Hero headlines" },
+    "display-lg":  { "$value": "32px", "$type": "dimension", "$description": "Section headlines" },
+    "display-md":  { "$value": "28px", "$type": "dimension", "$description": "Sub-section headers" },
+    "heading-xl":  { "$value": "24px", "$type": "dimension", "$description": "Page titles" },
+    "heading-lg":  { "$value": "20px", "$type": "dimension", "$description": "Card headers" },
+    "heading-md":  { "$value": "18px", "$type": "dimension", "$description": "Sub-section headers" },
+    "heading-sm":  { "$value": "16px", "$type": "dimension", "$description": "Small headers" },
+    "body-lg":     { "$value": "18px", "$type": "dimension", "$description": "Warmth zone body" },
+    "body-md":     { "$value": "16px", "$type": "dimension", "$description": "Primary body text" },
+    "body-sm":     { "$value": "14px", "$type": "dimension", "$description": "Secondary info" },
+    "caption":     { "$value": "12px", "$type": "dimension", "$description": "Labels, badges" },
+    "overline":    { "$value": "11px", "$type": "dimension", "$description": "ALL CAPS category labels" },
+    "price-lg":    { "$value": "28px", "$type": "dimension", "$description": "Package total price" },
+    "price-md":    { "$value": "20px", "$type": "dimension", "$description": "Item prices" },
+    "price-sm":    { "$value": "16px", "$type": "dimension", "$description": "Inline price refs" },
+    "data":        { "$value": "14px", "$type": "dimension", "$description": "Dimensions, ROI metrics" }
+  },
+  "lineHeight": {
+    "tight":     { "$value": "1.15", "$type": "number" },
+    "snug":      { "$value": "1.2", "$type": "number" },
+    "heading":   { "$value": "1.3", "$type": "number" },
+    "subheading":{ "$value": "1.35", "$type": "number" },
+    "normal":    { "$value": "1.4", "$type": "number" },
+    "body":      { "$value": "1.5", "$type": "number" },
+    "relaxed":   { "$value": "1.6", "$type": "number" }
+  },
+  "letterSpacing": {
+    "tighter":  { "$value": "-0.02em", "$type": "dimension" },
+    "tight":    { "$value": "-0.01em", "$type": "dimension" },
+    "normal":   { "$value": "0em", "$type": "dimension" },
+    "wide":     { "$value": "0.01em", "$type": "dimension" },
+    "wider":    { "$value": "0.02em", "$type": "dimension" },
+    "widest":   { "$value": "0.08em", "$type": "dimension" }
+  }
+}

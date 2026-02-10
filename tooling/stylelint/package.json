@@ -5,5 +5,8 @@
   "exports": {
     ".": "./index.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "stylelint": "^17.1.1"
+  }
 }

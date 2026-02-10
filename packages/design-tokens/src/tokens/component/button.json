@@ -1,0 +1,41 @@
+{
+  "button": {
+    "$description": "Button component tokens",
+    "primary": {
+      "bg":           { "$value": "{color.cta.primary}", "$type": "color" },
+      "bg-hover":     { "$value": "{color.cta.primary-hover}", "$type": "color" },
+      "bg-active":    { "$value": "{color.cta.primary-active}", "$type": "color" },
+      "text":         { "$value": "{color.cta.primary-text}", "$type": "color" },
+      "radius":       { "$value": "{radius.md}", "$type": "dimension" },
+      "padding-x":    { "$value": "{space.6}", "$type": "dimension" },
+      "padding-y":    { "$value": "{space.3}", "$type": "dimension" }
+    },
+    "secondary": {
+      "bg":           { "$value": "{color.interactive.default}", "$type": "color" },
+      "bg-hover":     { "$value": "{color.interactive.hover}", "$type": "color" },
+      "bg-active":    { "$value": "{color.interactive.active}", "$type": "color" },
+      "text":         { "$value": "{color.text.inverse}", "$type": "color" },
+      "radius":       { "$value": "{radius.md}", "$type": "dimension" },
+      "padding-x":    { "$value": "{space.6}", "$type": "dimension" },
+      "padding-y":    { "$value": "{space.3}", "$type": "dimension" }
+    },
+    "outline": {
+      "bg":           { "$value": "transparent", "$type": "color" },
+      "bg-hover":     { "$value": "{color.interactive.subtle}", "$type": "color" },
+      "border":       { "$value": "{color.border.default}", "$type": "color" },
+      "border-hover": { "$value": "{color.interactive.default}", "$type": "color" },
+      "text":         { "$value": "{color.text.primary}", "$type": "color" },
+      "radius":       { "$value": "{radius.md}", "$type": "dimension" },
+      "padding-x":    { "$value": "{space.6}", "$type": "dimension" },
+      "padding-y":    { "$value": "{space.3}", "$type": "dimension" }
+    },
+    "ghost": {
+      "bg":           { "$value": "transparent", "$type": "color" },
+      "bg-hover":     { "$value": "{color.interactive.subtle}", "$type": "color" },
+      "text":         { "$value": "{color.text.primary}", "$type": "color" },
+      "radius":       { "$value": "{radius.md}", "$type": "dimension" },
+      "padding-x":    { "$value": "{space.4}", "$type": "dimension" },
+      "padding-y":    { "$value": "{space.2}", "$type": "dimension" }
+    }
+  }
+}

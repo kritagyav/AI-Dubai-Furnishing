@@ -1,0 +1,25 @@
+{
+  "zone-efficiency": {
+    "$description": "Efficiency zone — compact spacing, standard body, sage progress, terracotta CTA only",
+    "color": {
+      "surface": {
+        "primary":   { "$value": "{color.neutral.50}", "$type": "color", "$description": "Warm white background" },
+        "secondary": { "$value": "{color.neutral.100}", "$type": "color" }
+      },
+      "interactive": {
+        "default": { "$value": "{color.sage.400}", "$type": "color", "$description": "Sage for progress indicators" }
+      },
+      "cta": {
+        "primary":       { "$value": "{color.terracotta.400}", "$type": "color", "$description": "Terracotta CTA only" },
+        "primary-hover": { "$value": "{color.terracotta.500}", "$type": "color" }
+      }
+    },
+    "spacing": {
+      "base": { "$value": "{space.4}", "$type": "dimension", "$description": "16px compact spacing" }
+    },
+    "typography": {
+      "body-size":    { "$value": "{text.body-md}", "$type": "dimension", "$description": "16px standard body" },
+      "body-leading": { "$value": "{lineHeight.normal}", "$type": "number", "$description": "1.4 line height" }
+    }
+  }
+}

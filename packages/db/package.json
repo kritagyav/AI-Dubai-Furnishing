@@ -24,6 +24,7 @@
     "studio": "prisma studio",
     "migrate": "prisma migrate dev",
     "seed": "pnpm with-env tsx src/seed.ts",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",
     "@dubai/prettier-config": "workspace:*",
+    "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
     "@types/pg": "^8.16.0",
     "dotenv": "catalog:",
@@ -43,7 +45,8 @@
     "prettier": "catalog:",
     "prisma": "catalog:",
     "tsx": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@dubai/prettier-config"
 }

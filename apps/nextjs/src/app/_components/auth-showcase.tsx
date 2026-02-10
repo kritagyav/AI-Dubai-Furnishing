@@ -1,16 +1,18 @@
+import Link from "next/link";
+
 import { Button } from "@dubai/ui/button";
 
 import { getSession } from "~/auth/server";
 
 export async function AuthShowcase() {
-  const session = await getSession();
+  const user = await getSession();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="flex flex-col items-center gap-2">
         <p className="text-muted-foreground text-sm">Not signed in</p>
-        <Button size="lg" disabled>
-          Sign in (configured in later stories)
+        <Button size="lg" asChild>
+          <Link href="/login">Sign in</Link>
         </Button>
       </div>
     );
@@ -19,7 +21,7 @@ export async function AuthShowcase() {
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <p className="text-center text-2xl">
-        <span>Logged in as {session.user.email}</span>
+        <span>Logged in as {user.email}</span>
       </p>
     </div>
   );

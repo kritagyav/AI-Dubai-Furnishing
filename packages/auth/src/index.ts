@@ -16,3 +16,16 @@ export function createSupabaseServiceClient() {
 }
 
 export type SupabaseClient = ReturnType<typeof createSupabaseClient>;
+
+export {
+  hasAllPermissions,
+  hasAnyPermission,
+  hasPermission,
+  MFA_REQUIRED_ROLES,
+  PERMISSIONS,
+  requiresMFA,
+  ROLE_PERMISSIONS,
+  USER_ROLES,
+} from "./roles";
+
+export type { Permission, UserRole } from "./roles";

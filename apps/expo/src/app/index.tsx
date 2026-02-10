@@ -6,9 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "~/utils/api";
 
 export default function Index() {
-  const helloQuery = useQuery(
-    trpc.post.hello.queryOptions({ text: "from Dubai Furnishing" }),
-  );
+  const helloQuery = useQuery(trpc.room.hello.queryOptions());
 
   return (
     <SafeAreaView className="bg-background">
@@ -20,7 +18,7 @@ export default function Index() {
 
         <View className="py-4">
           <Text className="text-foreground text-center text-xl">
-            {helloQuery.data?.greeting ?? "Loading..."}
+            {helloQuery.data?.message ?? "Loading..."}
           </Text>
         </View>
       </View>

@@ -23,6 +23,7 @@
     "@dubai/ui": "workspace:*",
     "@dubai/validators": "workspace:*",
     "@sentry/nextjs": "catalog:",
+    "@supabase/ssr": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-form": "catalog:",

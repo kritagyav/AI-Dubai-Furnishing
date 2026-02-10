@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "expo",
   slug: "expo",
-  scheme: "expo",
+  scheme: "dubaifurnishing",
   version: "0.1.0",
   orientation: "portrait",
   icon: "./assets/icon-light.png",
@@ -17,6 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     bundleIdentifier: "your.bundle.identifier",
     supportsTablet: true,
+    associatedDomains: ["applinks:dubai-furnishing.com"],
     icon: {
       light: "./assets/icon-light.png",
       dark: "./assets/icon-dark.png",
@@ -29,6 +30,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#1F104A",
     },
     edgeToEdgeEnabled: true,
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          {
+            scheme: "https",
+            host: "dubai-furnishing.com",
+            pathPrefix: "/auth",
+          },
+        ],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
   },
   // extra: {
   //   eas: {

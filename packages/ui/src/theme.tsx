@@ -4,6 +4,8 @@ import * as React from "react";
 import { DesktopIcon, MoonIcon, SunIcon } from "@radix-ui/react-icons";
 import * as z from "zod/v4";
 
+import type { ZoneName } from "./zones";
+
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -105,13 +107,25 @@ const ThemeContext = React.createContext<ThemeContextProps | undefined>(
   undefined,
 );
 
-export function ThemeProvider({ children }: React.PropsWithChildren) {
+export function ThemeProvider({
+  children,
+  defaultZone,
+}: React.PropsWithChildren<{ defaultZone?: ZoneName }>) {
   const [themeMode, setThemeMode] = React.useState(getStoredThemeMode);
 
   React.useEffect(() => {
     if (themeMode !== "auto") return;
     return setupPreferredListener();
   }, [themeMode]);
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (defaultZone) {
+      root.setAttribute("data-zone", defaultZone);
+    } else {
+      root.removeAttribute("data-zone");
+    }
+  }, [defaultZone]);
 
   const resolvedTheme = themeMode === "auto" ? getSystemTheme() : themeMode;
 

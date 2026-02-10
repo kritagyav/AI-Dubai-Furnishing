@@ -9,6 +9,15 @@
     },
     "./vitest": {
       "default": "./vitest.shared.ts"
+    },
+    "./fixtures": {
+      "default": "./src/fixtures.ts"
+    },
+    "./mocks": {
+      "default": "./src/mocks.ts"
+    },
+    "./a11y": {
+      "default": "./src/a11y.ts"
     }
   },
   "license": "MIT",
@@ -19,6 +28,14 @@
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@fast-check/vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
+    "fast-check": "catalog:",
+    "jest-axe": "catalog:",
+    "vitest": "catalog:"
   },
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",

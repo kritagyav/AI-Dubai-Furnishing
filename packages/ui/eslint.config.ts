@@ -5,7 +5,7 @@ import { reactConfig } from "@dubai/eslint-config/react";
 
 export default defineConfig(
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", ".storybook/**"],
   },
   baseConfig,
   reactConfig,

@@ -8,12 +8,12 @@ import { useTRPC } from "~/trpc/react";
 export function HelloCard() {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.post.hello.queryOptions({ text: "Dubai Furnishing Platform" }),
+    trpc.room.hello.queryOptions(),
   );
 
   return (
     <div className="bg-muted rounded-lg p-4">
-      <p className="text-primary text-xl font-bold">{data.greeting}</p>
+      <p className="text-primary text-xl font-bold">{data.message}</p>
     </div>
   );
 }

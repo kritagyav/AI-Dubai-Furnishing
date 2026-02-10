@@ -5,7 +5,7 @@ import { AuthShowcase } from "./_components/auth-showcase";
 import { HelloCard, PostCardSkeleton } from "./_components/posts";
 
 export default function HomePage() {
-  prefetch(trpc.post.hello.queryOptions({ text: "Dubai Furnishing Platform" }));
+  prefetch(trpc.room.hello.queryOptions());
 
   return (
     <HydrateClient>

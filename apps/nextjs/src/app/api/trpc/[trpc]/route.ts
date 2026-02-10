@@ -8,7 +8,7 @@ import { createSupabaseServerClient } from "~/auth/server";
 const app = createEdgeApp();
 
 app.all("/api/trpc/*", async (c) => {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const correlationId = c.req.header("x-correlation-id");
 
   return fetchRequestHandler({

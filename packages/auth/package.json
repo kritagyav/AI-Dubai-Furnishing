@@ -4,31 +4,45 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./env": "./env.ts"
+    "./env": "./env.ts",
+    "./hooks": "./src/hooks.ts",
+    "./middleware": "./src/middleware.ts",
+    "./roles": "./src/roles.ts",
+    "./session": "./src/session.ts",
+    "./session-sync": "./src/use-session-sync.ts"
   },
   "license": "MIT",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dubai/db": "workspace:*",
-    "@supabase/auth-helpers-nextjs": "catalog:",
+    "@supabase/ssr": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@t3-oss/env-core": "^0.13.8",
     "zod": "catalog:"
   },
+  "peerDependencies": {
+    "next": ">=14",
+    "react": "catalog:react19"
+  },
   "devDependencies": {
     "@dubai/eslint-config": "workspace:*",
     "@dubai/prettier-config": "workspace:*",
+    "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
+    "@types/react": "catalog:react19",
     "eslint": "catalog:",
+    "next": "~16.1.6",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "react": "catalog:react19",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "prettier": "@dubai/prettier-config"
 }
