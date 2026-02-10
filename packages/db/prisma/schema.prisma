@@ -28,27 +28,40 @@ enum UserRole {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  supabaseAuthId  String    @unique
-  email           String    @unique
+  id              String          @id @default(uuid())
+  supabaseAuthId  String          @unique
+  email           String          @unique
   name            String?
   avatarUrl       String?
-  role            UserRole  @default(USER)
+  role            UserRole        @default(USER)
   tenantId        String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  onboardingPath  OnboardingPath?
+  onboardedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  sessions Session[]
+  sessions      Session[]
+  activityState UserActivityState?
 
   @@index([supabaseAuthId])
   @@index([tenantId])
+}
+
+enum OnboardingPath {
+  FURNISH_NOW
+  JUST_BROWSING
 }
 
 model Session {
   id           String   @id @default(uuid())
   userId       String
   deviceType   String?
+  deviceName   String?
+  userAgent    String?
+  ipAddress    String?
   lastActiveAt DateTime @default(now())
+  lastPath     String?
+  lastContext  Json?
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -56,6 +69,33 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, lastActiveAt(sort: Desc)])
+}
+
+model UserActivityState {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  currentPath   String?
+  currentScreen String?
+  contextData   Json?
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OfflineAction {
+  id             String   @id @default(uuid())
+  userId         String
+  idempotencyKey String   @unique
+  action         String
+  payload        Json
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  processedAt    DateTime?
+  errorMessage   String?
+
+  @@index([userId, status])
+  @@index([idempotencyKey])
 }
 
 // ═══════════════════════════════════════════
