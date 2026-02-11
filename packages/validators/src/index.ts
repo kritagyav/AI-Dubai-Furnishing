@@ -183,3 +183,173 @@ export const updateProductInput = z.object({
   stockQuantity: z.number().int().nonnegative().optional(),
   photos: z.array(z.url()).min(1).max(10).optional(),
 });
+
+// ═══════════════════════════════════════════
+// Lifestyle Discovery — Stories 3.1–3.4
+// ═══════════════════════════════════════════
+
+export const profileTypeEnum = z.enum([
+  "RELOCATOR",
+  "AIRBNB_INVESTOR",
+  "CORPORATE_RELOCATION",
+  "PORTFOLIO_OWNER",
+]);
+
+export const stylePreferenceEnum = z.enum([
+  "modern",
+  "traditional",
+  "minimalist",
+  "eclectic",
+  "scandinavian",
+  "industrial",
+  "bohemian",
+  "coastal",
+  "mid_century",
+  "contemporary",
+  "rustic",
+  "luxury",
+]);
+
+export const safetyFeatureEnum = z.enum([
+  "ANCHORED_FURNITURE",
+  "ROUNDED_CORNERS",
+  "NON_TOXIC_FINISHES",
+  "STAIN_RESISTANT_FABRICS",
+  "SAFETY_LOCKS",
+  "SOFT_CLOSE_DRAWERS",
+  "ANTI_TIP_STRAPS",
+  "CORD_COVERS",
+]);
+
+/** Story 3.1: Save/update lifestyle quiz answers. Supports partial saves (auto-save). */
+export const saveLifestyleQuizInput = z.object({
+  projectId: z.uuid(),
+  budgetMinFils: z.number().int().nonnegative().optional(),
+  budgetMaxFils: z.number().int().nonnegative().optional(),
+  familySize: z.number().int().min(1).max(20).optional(),
+  childrenAges: z.array(z.number().int().min(0).max(18)).optional(),
+  hasPets: z.boolean().optional(),
+  petTypes: z.array(z.string().max(50)).max(10).optional(),
+  stylePreferences: z.array(stylePreferenceEnum).min(1).max(5).optional(),
+  quizStep: z.number().int().min(0).max(10).optional(),
+  quizCompleted: z.boolean().optional(),
+});
+
+/** Story 3.2: Set profile type for a project. */
+export const setProfileTypeInput = z.object({
+  projectId: z.uuid(),
+  profileType: profileTypeEnum,
+});
+
+/** Story 3.3: Save Airbnb investor-specific preferences. */
+export const targetDemographicEnum = z.enum([
+  "business_travelers",
+  "families",
+  "luxury_tourists",
+  "budget_travelers",
+  "couples",
+  "digital_nomads",
+]);
+
+export const saveInvestorPreferencesInput = z.object({
+  projectId: z.uuid(),
+  targetDemographics: z.array(targetDemographicEnum).min(1).max(6),
+  nightlyRateMinFils: z.number().int().nonnegative().optional(),
+  nightlyRateMaxFils: z.number().int().nonnegative().optional(),
+  occupancyTargetPct: z.number().int().min(0).max(100).optional(),
+  investmentBudgetFils: z.number().int().nonnegative().optional(),
+});
+
+/** Story 3.4: Save child-safety requirements. */
+export const saveChildSafetyInput = z.object({
+  projectId: z.uuid(),
+  youngestChildAge: z.number().int().min(0).max(18).optional(),
+  safetyFeatures: z.array(safetyFeatureEnum).min(1),
+  notes: z.string().max(1000).optional(),
+});
+
+// ═══════════════════════════════════════════
+// Inventory Sync — Story 5.3
+// ═══════════════════════════════════════════
+
+export const syncTierEnum = z.enum(["BASIC", "PREMIUM"]);
+
+export const registerSyncConfigInput = z.object({
+  tier: syncTierEnum,
+  webhookUrl: z.url().optional(),
+  pollingInterval: z.number().int().min(15).max(1440).optional(), // 15 min – 24 hrs
+});
+
+export const inventoryUpdateInput = z.object({
+  updates: z
+    .array(
+      z.object({
+        sku: z.string().min(1).max(100),
+        stockQuantity: z.number().int().nonnegative(),
+        priceFils: z.number().int().positive().optional(),
+      }),
+    )
+    .min(1)
+    .max(5000),
+});
+
+// ═══════════════════════════════════════════
+// Commission & Settlement — Story 5.5
+// ═══════════════════════════════════════════
+
+export const commissionStatusEnum = z.enum([
+  "PENDING",
+  "CLEARED",
+  "SETTLED",
+  "DISPUTED",
+]);
+
+export const listCommissionsInput = paginationInput.extend({
+  status: commissionStatusEnum.optional(),
+  fromDate: z.iso.datetime().optional(),
+  toDate: z.iso.datetime().optional(),
+});
+
+export const disputeCommissionInput = z.object({
+  commissionId: z.uuid(),
+  reason: z.string().min(1, "Reason is required").max(2000),
+});
+
+export const listSettlementsInput = paginationInput.extend({
+  status: z.enum(["PENDING", "PROCESSING", "COMPLETED", "FAILED"]).optional(),
+});
+
+// ═══════════════════════════════════════════
+// Catalog Health — Story 5.6
+// ═══════════════════════════════════════════
+
+export const getCatalogHealthInput = z.object({
+  retailerId: z.uuid().optional(), // admin can specify; retailer auto-scoped
+});
+
+export const listCatalogIssuesInput = paginationInput.extend({
+  severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+  issueType: z
+    .enum([
+      "STALE_STOCK",
+      "MISSING_FIELDS",
+      "BROKEN_IMAGE",
+      "PRICING_ANOMALY",
+      "LOW_QUALITY_IMAGE",
+      "DUPLICATE_SKU",
+    ])
+    .optional(),
+  resolved: z.boolean().optional(),
+});
+
+// ═══════════════════════════════════════════
+// Retailer Dashboard Metrics — Story 5.4
+// ═══════════════════════════════════════════
+
+export const timeRangeEnum = z.enum(["7d", "30d", "90d", "custom"]);
+
+export const getDashboardMetricsInput = z.object({
+  timeRange: timeRangeEnum.default("30d"),
+  fromDate: z.iso.datetime().optional(),
+  toDate: z.iso.datetime().optional(),
+});

@@ -8,6 +8,7 @@ import { deliveryRouter } from "./delivery/router";
 import { engagementRouter } from "./engagement/router";
 import { ledgerRouter } from "./ledger/router";
 import { packageRouter } from "./package/router";
+import { preferenceRouter } from "./preference/router";
 import { retailerRouter } from "./retailer/router";
 import { roomRouter } from "./room/router";
 import { sessionRouter } from "./session/router";
@@ -21,6 +22,7 @@ export const appRouter = createTRPCRouter({
   catalog: catalogRouter,
   user: userRouter,
   session: sessionRouter,
+  preference: preferenceRouter,
   retailer: retailerRouter,
   delivery: deliveryRouter,
   admin: adminRouter,

@@ -4,12 +4,13 @@ import { Prisma } from "@dubai/db";
 import type { Prisma as PrismaTypes } from "@dubai/db";
 import {
   catalogIngestInput,
+  listCatalogIssuesInput,
   paginationInput,
   updateProductInput,
 } from "@dubai/validators";
 import { z } from "zod/v4";
 
-import { retailerProcedure } from "../trpc";
+import { adminProcedure, retailerProcedure } from "../trpc";
 
 type JsonValue = PrismaTypes.InputJsonValue;
 
@@ -246,5 +247,278 @@ export const catalogRouter = {
 
       await ctx.db.retailerProduct.delete({ where: { id: input.productId } });
       return { success: true };
+    }),
+
+  // ─── Story 5.6: Catalog Health Monitoring ───
+
+  /**
+   * Get catalog health summary for the authenticated retailer.
+   */
+  getCatalogHealth: retailerProcedure.query(async ({ ctx }) => {
+    const retailer = await ctx.db.retailer.findUnique({
+      where: { userId: ctx.user.id },
+      select: { id: true },
+    });
+
+    if (!retailer) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+    }
+
+    // Get latest health check
+    const latestCheck = await ctx.db.catalogHealthCheck.findFirst({
+      where: { retailerId: retailer.id },
+      orderBy: { checkedAt: "desc" },
+    });
+
+    // Count open issues by severity
+    const issueCounts = await ctx.db.catalogIssue.groupBy({
+      by: ["severity"],
+      where: { retailerId: retailer.id, resolved: false },
+      _count: true,
+    });
+
+    const issues = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
+    for (const group of issueCounts) {
+      issues[group.severity as keyof typeof issues] = group._count;
+    }
+
+    // Count issues by type
+    const issuesByType = await ctx.db.catalogIssue.groupBy({
+      by: ["issueType"],
+      where: { retailerId: retailer.id, resolved: false },
+      _count: true,
+    });
+
+    const typeBreakdown: Record<string, number> = {};
+    for (const group of issuesByType) {
+      typeBreakdown[group.issueType] = group._count;
+    }
+
+    return {
+      latestCheck: latestCheck
+        ? {
+            overallScore: latestCheck.overallScore,
+            totalProducts: latestCheck.totalProducts,
+            issuesFound: latestCheck.issuesFound,
+            staleProducts: latestCheck.staleProducts,
+            missingFields: latestCheck.missingFields,
+            brokenImages: latestCheck.brokenImages,
+            pricingIssues: latestCheck.pricingIssues,
+            checkedAt: latestCheck.checkedAt,
+          }
+        : null,
+      openIssues: issues,
+      typeBreakdown,
+    };
+  }),
+
+  /**
+   * List catalog issues for the authenticated retailer.
+   */
+  listCatalogIssues: retailerProcedure
+    .input(listCatalogIssuesInput)
+    .query(async ({ ctx, input }) => {
+      const retailer = await ctx.db.retailer.findUnique({
+        where: { userId: ctx.user.id },
+        select: { id: true },
+      });
+
+      if (!retailer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+      }
+
+      const issuesList = await ctx.db.catalogIssue.findMany({
+        where: {
+          retailerId: retailer.id,
+          ...(input.severity ? { severity: input.severity } : {}),
+          ...(input.issueType ? { issueType: input.issueType } : {}),
+          ...(input.resolved !== undefined ? { resolved: input.resolved } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          productId: true,
+          issueType: true,
+          severity: true,
+          description: true,
+          recommendation: true,
+          resolved: true,
+          createdAt: true,
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (issuesList.length > input.limit) {
+        const next = issuesList.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items: issuesList, nextCursor };
+    }),
+
+  /**
+   * Run a catalog health check for a specific retailer.
+   * Admin-only — normally triggered by scheduled job.
+   */
+  runHealthCheck: adminProcedure
+    .input(z.object({ retailerId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const retailer = await ctx.db.retailer.findUnique({
+        where: { id: input.retailerId },
+        select: { id: true, status: true },
+      });
+
+      if (!retailer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+      }
+
+      // Get all products for health analysis
+      const products = await ctx.db.retailerProduct.findMany({
+        where: { retailerId: retailer.id },
+        select: {
+          id: true,
+          sku: true,
+          name: true,
+          photos: true,
+          priceFils: true,
+          stockQuantity: true,
+          materials: true,
+          colors: true,
+          updatedAt: true,
+        },
+      });
+
+      const totalProducts = products.length;
+      let staleProducts = 0;
+      let missingFields = 0;
+      let brokenImages = 0;
+      let pricingIssues = 0;
+      const newIssues: Array<{
+        productId: string;
+        issueType: string;
+        severity: string;
+        description: string;
+        recommendation: string;
+      }> = [];
+
+      const now = new Date();
+      const staleThresholdMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      for (const product of products) {
+        // Stale stock check
+        const ageMs = now.getTime() - product.updatedAt.getTime();
+        if (ageMs > staleThresholdMs) {
+          staleProducts++;
+          newIssues.push({
+            productId: product.id,
+            issueType: "STALE_STOCK",
+            severity: ageMs > staleThresholdMs * 2 ? "HIGH" : "MEDIUM",
+            description: `Product "${product.name}" has not been updated in ${Math.floor(ageMs / (24 * 60 * 60 * 1000))} days`,
+            recommendation: "Sync inventory to update stock levels and pricing",
+          });
+        }
+
+        // Missing fields check
+        const photos = product.photos as unknown[];
+        if (!photos || (Array.isArray(photos) && photos.length === 0)) {
+          missingFields++;
+          newIssues.push({
+            productId: product.id,
+            issueType: "MISSING_FIELDS",
+            severity: "HIGH",
+            description: `Product "${product.name}" has no photos`,
+            recommendation: "Add at least one product photo for package inclusion",
+          });
+        }
+
+        const materials = product.materials as unknown[];
+        if (!materials || (Array.isArray(materials) && materials.length === 0)) {
+          missingFields++;
+          newIssues.push({
+            productId: product.id,
+            issueType: "MISSING_FIELDS",
+            severity: "LOW",
+            description: `Product "${product.name}" has no materials listed`,
+            recommendation: "Add material information for better AI matching",
+          });
+        }
+
+        // Pricing anomaly check (zero or extremely high price)
+        if (product.priceFils <= 0) {
+          pricingIssues++;
+          newIssues.push({
+            productId: product.id,
+            issueType: "PRICING_ANOMALY",
+            severity: "CRITICAL",
+            description: `Product "${product.name}" has invalid price: ${product.priceFils} fils`,
+            recommendation: "Update product price to a valid amount",
+          });
+        } else if (product.priceFils > 100000000) {
+          // > 1M AED
+          pricingIssues++;
+          newIssues.push({
+            productId: product.id,
+            issueType: "PRICING_ANOMALY",
+            severity: "MEDIUM",
+            description: `Product "${product.name}" has unusually high price: ${(product.priceFils / 100).toFixed(2)} AED`,
+            recommendation: "Verify that the price is correct",
+          });
+        }
+      }
+
+      // Compute overall score (0-100)
+      const issuesFound =
+        staleProducts + missingFields + brokenImages + pricingIssues;
+      const maxDeductions = totalProducts * 4; // 4 checks per product
+      const overallScore =
+        totalProducts === 0
+          ? 100
+          : Math.max(
+              0,
+              Math.round(100 - (issuesFound / maxDeductions) * 100),
+            );
+
+      // Save health check record
+      const healthCheck = await ctx.db.catalogHealthCheck.create({
+        data: {
+          retailerId: retailer.id,
+          overallScore,
+          totalProducts,
+          issuesFound,
+          staleProducts,
+          missingFields,
+          brokenImages,
+          pricingIssues,
+        },
+      });
+
+      // Resolve old issues and create new ones
+      await ctx.db.catalogIssue.updateMany({
+        where: { retailerId: retailer.id, resolved: false },
+        data: { resolved: true, resolvedAt: now },
+      });
+
+      if (newIssues.length > 0) {
+        await ctx.db.catalogIssue.createMany({
+          data: newIssues.map((issue) => ({
+            retailerId: retailer.id,
+            productId: issue.productId,
+            issueType: issue.issueType as "STALE_STOCK",
+            severity: issue.severity as "LOW",
+            description: issue.description,
+            recommendation: issue.recommendation,
+          })),
+        });
+      }
+
+      return {
+        healthCheckId: healthCheck.id,
+        overallScore,
+        totalProducts,
+        issuesFound,
+        breakdown: { staleProducts, missingFields, brokenImages, pricingIssues },
+      };
     }),
 } satisfies TRPCRouterRecord;

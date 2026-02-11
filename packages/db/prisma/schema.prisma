@@ -44,6 +44,7 @@ model User {
   activityState UserActivityState?
   projects      Project[]
   retailer      Retailer?
+  preferences   UserPreference[]
 
   @@index([supabaseAuthId])
   @@index([tenantId])
@@ -126,18 +127,27 @@ enum DimensionUnit {
   IMPERIAL
 }
 
+enum ProfileType {
+  RELOCATOR
+  AIRBNB_INVESTOR
+  CORPORATE_RELOCATION
+  PORTFOLIO_OWNER
+}
+
 model Project {
-  id           String   @id @default(uuid())
+  id           String       @id @default(uuid())
   userId       String
   name         String
   address      String?
+  profileType  ProfileType?
   floorPlanUrl      String?
   floorPlanThumbUrl String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rooms Room[]
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rooms       Room[]
+  preferences UserPreference[]
 
   @@index([userId])
 }
@@ -174,6 +184,83 @@ model RoomPhoto {
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@index([roomId])
+}
+
+// ═══════════════════════════════════════════
+// LIFESTYLE DISCOVERY & PREFERENCES
+// ═══════════════════════════════════════════
+
+model UserPreference {
+  id          String   @id @default(uuid())
+  userId      String
+  projectId   String
+  // Lifestyle quiz (Story 3.1)
+  budgetMinFils   Int?    // AED in fils
+  budgetMaxFils   Int?
+  familySize      Int?
+  childrenAges    Json?   // int[]
+  hasPets         Boolean @default(false)
+  petTypes        Json?   // string[]
+  stylePreferences Json?  // string[] — "modern", "traditional", "minimalist", etc.
+  quizCompleted   Boolean @default(false)
+  quizStep        Int     @default(0)  // auto-save resume point
+  // Profile type (Story 3.2) — also on Project for quick access
+  profileType     ProfileType?
+  // Raw quiz responses for future re-processing
+  rawResponses    Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  investorPreference    InvestorPreference?
+  childSafetyPreference ChildSafetyPreference?
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+// Story 3.3: Airbnb Investor Target & Revenue Goals
+model InvestorPreference {
+  id               String @id @default(uuid())
+  preferenceId     String @unique
+  targetDemographics Json  // string[] — "business_travelers", "families", etc.
+  nightlyRateMinFils Int?
+  nightlyRateMaxFils Int?
+  occupancyTargetPct Int?  // 0–100
+  investmentBudgetFils Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  preference UserPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
+}
+
+// Story 3.4: Child-Safety Requirements
+enum SafetyFeature {
+  ANCHORED_FURNITURE
+  ROUNDED_CORNERS
+  NON_TOXIC_FINISHES
+  STAIN_RESISTANT_FABRICS
+  SAFETY_LOCKS
+  SOFT_CLOSE_DRAWERS
+  ANTI_TIP_STRAPS
+  CORD_COVERS
+}
+
+model ChildSafetyPreference {
+  id              String @id @default(uuid())
+  preferenceId    String @unique
+  hasChildren     Boolean @default(true)
+  youngestChildAge Int?
+  safetyFeatures  Json    // SafetyFeature[]
+  ageBasedProfile String? // "toddler", "school_age", "mixed"
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  preference UserPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
 }
 
 // ═══════════════════════════════════════════
@@ -240,6 +327,13 @@ model Retailer {
   userId   String @unique
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   products RetailerProduct[]
+  syncConfig     InventorySyncConfig?
+  syncJobs       InventorySyncJob[]
+  commissions    Commission[]
+  settlements    Settlement[]
+  ledgerEntries  LedgerEntry[]
+  healthChecks   CatalogHealthCheck[]
+  catalogIssues  CatalogIssue[]
 
   @@index([tenantId])
   @@index([status])
@@ -273,14 +367,145 @@ model RetailerProduct {
 }
 
 // ═══════════════════════════════════════════
+// INVENTORY SYNC — Story 5.3
+// ═══════════════════════════════════════════
+
+enum SyncTier {
+  BASIC    // platform-initiated polling
+  PREMIUM  // retailer-push webhooks
+}
+
+enum SyncJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  DEAD_LETTER
+}
+
+model InventorySyncConfig {
+  id              String   @id @default(uuid())
+  retailerId      String   @unique
+  tier            SyncTier @default(BASIC)
+  webhookUrl      String?          // retailer's endpoint (PREMIUM only)
+  webhookSecret   String?          // HMAC secret for verification
+  pollingInterval Int      @default(60) // minutes (BASIC only)
+  isActive        Boolean  @default(true)
+  lastSyncAt      DateTime?
+  consecutiveFailures Int  @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+}
+
+model InventorySyncJob {
+  id           String        @id @default(uuid())
+  retailerId   String
+  status       SyncJobStatus @default(PENDING)
+  productsUpdated Int        @default(0)
+  productsErrored Int        @default(0)
+  errorMessage String?
+  retryCount   Int           @default(0)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@index([retailerId])
+  @@index([status])
+  @@index([retailerId, createdAt(sort: Desc)])
+}
+
+// ═══════════════════════════════════════════
 // COMMERCE & ORDERS
 // ═══════════════════════════════════════════
 // Cart, CartItem, Order, OrderLineItem, Payment — Future stories
 
 // ═══════════════════════════════════════════
-// FINANCIAL LEDGER
+// FINANCIAL LEDGER — Story 5.5
 // ═══════════════════════════════════════════
-// LedgerEntry, SettlementBatch, Commission — Future stories
+
+enum CommissionStatus {
+  PENDING
+  CLEARED
+  SETTLED
+  DISPUTED
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum LedgerEntryType {
+  COMMISSION
+  SETTLEMENT_PAYOUT
+  ADJUSTMENT
+  REFUND
+}
+
+model Commission {
+  id            String           @id @default(uuid())
+  retailerId    String
+  orderId       String?          // nullable until commerce stories link it
+  orderRef      String?          // human-readable order reference
+  amountFils    Int              // commission amount in fils
+  rateBps       Int              // rate in basis points at time of transaction
+  netAmountFils Int              // retailer net = product price - commission
+  status        CommissionStatus @default(PENDING)
+  disputeReason String?
+  disputeNotes  String?
+  clearedAt     DateTime?
+  settledAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  retailer   Retailer    @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  settlement Settlement? @relation(fields: [settlementId], references: [id])
+  settlementId String?
+
+  @@index([retailerId])
+  @@index([retailerId, status])
+  @@index([settlementId])
+}
+
+model Settlement {
+  id              String           @id @default(uuid())
+  retailerId      String
+  totalAmountFils Int              // total payout
+  commissionCount Int              // number of commissions included
+  status          SettlementStatus @default(PENDING)
+  payoutDate      DateTime?
+  transactionRef  String?          // external payment reference
+  statementUrl    String?          // downloadable statement
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  retailer    Retailer     @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  commissions Commission[]
+
+  @@index([retailerId])
+  @@index([retailerId, status])
+}
+
+model LedgerEntry {
+  id          String          @id @default(uuid())
+  retailerId  String
+  type        LedgerEntryType
+  amountFils  Int             // positive = credit, negative = debit
+  referenceId String?         // commission/settlement/adjustment ID
+  description String?
+  createdAt   DateTime        @default(now())
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@index([retailerId])
+  @@index([retailerId, createdAt(sort: Desc)])
+}
 
 // ═══════════════════════════════════════════
 // DELIVERY & FULFILLMENT
@@ -291,6 +516,63 @@ model RetailerProduct {
 // ENGAGEMENT & LIFECYCLE
 // ═══════════════════════════════════════════
 // Notification, SatisfactionSurvey, AbandonedCart, ReEngagementSequence — Future stories
+
+// ═══════════════════════════════════════════
+// CATALOG HEALTH — Story 5.6
+// ═══════════════════════════════════════════
+
+enum HealthIssueType {
+  STALE_STOCK
+  MISSING_FIELDS
+  BROKEN_IMAGE
+  PRICING_ANOMALY
+  LOW_QUALITY_IMAGE
+  DUPLICATE_SKU
+}
+
+enum HealthIssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model CatalogHealthCheck {
+  id            String   @id @default(uuid())
+  retailerId    String
+  overallScore  Int      // 0–100
+  totalProducts Int
+  issuesFound   Int
+  staleProducts Int      @default(0)
+  missingFields Int      @default(0)
+  brokenImages  Int      @default(0)
+  pricingIssues Int      @default(0)
+  checkedAt     DateTime @default(now())
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@index([retailerId])
+  @@index([retailerId, checkedAt(sort: Desc)])
+}
+
+model CatalogIssue {
+  id            String              @id @default(uuid())
+  retailerId    String
+  productId     String?             // null for retailer-wide issues
+  issueType     HealthIssueType
+  severity      HealthIssueSeverity
+  description   String
+  recommendation String?
+  resolved      Boolean             @default(false)
+  resolvedAt    DateTime?
+  createdAt     DateTime            @default(now())
+
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@index([retailerId])
+  @@index([retailerId, resolved])
+  @@index([productId])
+}
 
 // ═══════════════════════════════════════════
 // PLATFORM OPERATIONS
