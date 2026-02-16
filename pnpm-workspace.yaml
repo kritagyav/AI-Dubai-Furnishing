@@ -29,7 +29,7 @@ catalog:
   '@trpc/client': ^11.9.0
   '@trpc/server': ^11.9.0
   '@trpc/tanstack-react-query': ^11.9.0
-  '@types/node': ^22.18.12
+  '@types/node': ^22.19.9
   '@vitejs/plugin-react': 5.1.0
   '@vitest/coverage-v8': ^4.0.18
   '@vitest/ui': ^4.0.18
