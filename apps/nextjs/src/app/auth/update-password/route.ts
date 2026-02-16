@@ -6,16 +6,16 @@ import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 
 /**
- * OAuth callback route handler.
+ * Password reset callback route handler.
  *
- * Supabase redirects here after a successful OAuth sign-in (Google / Apple).
- * We exchange the authorization `code` for a session, persist the session
- * cookies, and redirect the user to /dashboard.
+ * Supabase redirects here when a user clicks the reset-password link in
+ * their email.  We exchange the authorization `code` for a session, persist
+ * the session cookies, and send the user to the /update-password page where
+ * they can enter a new password.
  */
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/dashboard";
 
   if (code) {
     const cookieStore = await cookies();
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(new URL("/update-password", request.url));
     }
   }
 

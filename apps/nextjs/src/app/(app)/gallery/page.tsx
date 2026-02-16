@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import { Button } from "@dubai/ui/button";
-
 import { useTRPC } from "~/trpc/react";
 
 const CATEGORIES = [
@@ -123,9 +121,10 @@ export default function GalleryPage() {
             const materials = product.materials as string[] | null;
 
             return (
-              <div
+              <button
                 key={product.id}
-                className="group overflow-hidden rounded-lg border transition hover:shadow-lg"
+                onClick={() => router.push(`/gallery/${product.id}`)}
+                className="group overflow-hidden rounded-lg border text-left transition hover:shadow-lg"
               >
                 <div className="flex h-48 items-center justify-center bg-gray-100">
                   {firstPhoto ? (
@@ -161,16 +160,11 @@ export default function GalleryPage() {
                       {materials.join(", ")}
                     </p>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 w-full"
-                    onClick={() => router.push("/projects/new")}
-                  >
-                    Furnish in this style
-                  </Button>
+                  <span className="mt-3 block w-full rounded-md border px-3 py-2 text-center text-sm font-medium transition group-hover:bg-gray-50">
+                    View Details
+                  </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

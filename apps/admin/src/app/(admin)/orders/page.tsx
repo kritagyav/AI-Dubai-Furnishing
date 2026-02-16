@@ -14,6 +14,7 @@ function StatusBadge({ status }: { status: string }) {
     DELIVERED: "bg-green-100 text-green-800",
     CANCELLED: "bg-red-100 text-red-800",
     REFUNDED: "bg-orange-100 text-orange-800",
+    DISPUTED: "bg-amber-100 text-amber-800",
   };
 
   return (
@@ -34,13 +35,14 @@ const ORDER_STATUSES = [
   "DELIVERED",
   "CANCELLED",
   "REFUNDED",
+  "DISPUTED",
 ] as const;
 
 export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const trpc = useTRPC();
 
-  type OrderStatus = "DRAFT" | "PENDING_PAYMENT" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
+  type OrderStatus = "DRAFT" | "PENDING_PAYMENT" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "DISPUTED";
 
   const orders = useQuery(
     trpc.admin.listAllOrders.queryOptions({

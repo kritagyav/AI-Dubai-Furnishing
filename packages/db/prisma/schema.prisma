@@ -503,6 +503,7 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   REFUNDED
+  DISPUTED
 }
 
 enum PaymentStatus {
@@ -694,6 +695,8 @@ model LedgerEntry {
 
 enum DeliveryStatus {
   SCHEDULED
+  ASSIGNED
+  EN_ROUTE
   IN_TRANSIT
   DELIVERED
   FAILED
@@ -718,6 +721,7 @@ model DeliverySchedule {
   scheduledSlot String?        // e.g., "09:00-12:00"
   driverName    String?
   driverPhone   String?
+  vehiclePlate  String?
   trackingUrl   String?
   deliveredAt   DateTime?
   notes         String?
@@ -907,6 +911,24 @@ model CatalogIssue {
 }
 
 // ═══════════════════════════════════════════
+// ANALYTICS EVENTS — Story 5.4
+// ═══════════════════════════════════════════
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  event      String   // e.g. "product.viewed", "package.generated", "order.paid"
+  userId     String
+  properties Json?    // event-specific metadata (productId, source, etc.)
+  timestamp  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([event])
+  @@index([userId])
+  @@index([event, timestamp])
+  @@index([userId, event, timestamp])
+}
+
+// ═══════════════════════════════════════════
 // PLATFORM OPERATIONS
 // ═══════════════════════════════════════════
 
@@ -933,6 +955,7 @@ enum TicketCategory {
   ACCOUNT_ISSUE
   GENERAL_INQUIRY
   RETURN_REQUEST
+  DISPUTE
   OTHER
 }
 

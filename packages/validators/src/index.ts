@@ -415,6 +415,7 @@ export const orderStatusEnum = z.enum([
   "DELIVERED",
   "CANCELLED",
   "REFUNDED",
+  "DISPUTED",
 ]);
 
 export const paymentMethodEnum = z.enum([
@@ -462,6 +463,8 @@ export const refundOrderInput = z.object({
 
 export const deliveryStatusEnum = z.enum([
   "SCHEDULED",
+  "ASSIGNED",
+  "EN_ROUTE",
   "IN_TRANSIT",
   "DELIVERED",
   "FAILED",
@@ -554,6 +557,7 @@ export const ticketCategoryEnum = z.enum([
   "ACCOUNT_ISSUE",
   "GENERAL_INQUIRY",
   "RETURN_REQUEST",
+  "DISPUTE",
   "OTHER",
 ]);
 
@@ -637,4 +641,66 @@ export const updateAgentStatusInput = z.object({
 export const updateAgentCommissionInput = z.object({
   agentId: z.uuid(),
   commissionRate: z.number().int().min(0).max(10000),
+});
+
+// ═══════════════════════════════════════════
+// Dispute/Refund Workflows
+// ═══════════════════════════════════════════
+
+export const disputeReasonEnum = z.enum([
+  "DAMAGED",
+  "WRONG_ITEM",
+  "NOT_DELIVERED",
+  "QUALITY",
+  "OTHER",
+]);
+
+export const disputeResolutionEnum = z.enum([
+  "FULL_REFUND",
+  "PARTIAL_REFUND",
+  "REPLACEMENT",
+  "REJECTED",
+]);
+
+export const createDisputeInput = z.object({
+  orderId: z.uuid(),
+  reason: disputeReasonEnum,
+  description: z.string().min(1).max(5000),
+});
+
+export const resolveDisputeInput = z.object({
+  ticketId: z.uuid(),
+  resolution: disputeResolutionEnum,
+  refundAmountFils: z.number().int().positive().optional(),
+  notes: z.string().max(2000).optional(),
+});
+
+export const listDisputesInput = paginationInput.extend({
+  status: ticketStatusEnum.optional(),
+});
+
+// ═══════════════════════════════════════════
+// Driver Assignment
+// ═══════════════════════════════════════════
+
+export const assignDriverInput = z.object({
+  deliveryId: z.uuid(),
+  driverName: z.string().min(1).max(100),
+  driverPhone: z.string().min(1).max(20),
+  vehiclePlate: z.string().max(20).optional(),
+});
+
+export const unassignDriverInput = z.object({
+  deliveryId: z.uuid(),
+});
+
+export const listDriverAssignmentsInput = paginationInput.extend({
+  fromDate: z.iso.date().optional(),
+  toDate: z.iso.date().optional(),
+});
+
+export const updateDriverStatusInput = z.object({
+  deliveryId: z.uuid(),
+  status: z.enum(["EN_ROUTE", "ARRIVED", "COMPLETED"]),
+  notes: z.string().max(1000).optional(),
 });

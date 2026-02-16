@@ -25,6 +25,7 @@ import { handlePackageGenerate } from "./jobs/package-generate";
 import { handleAnalyticsTrack } from "./jobs/analytics-track";
 import { handleReEngagement } from "./jobs/re-engagement";
 import { handleCatalogHealthCheck } from "./jobs/catalog-health";
+import { handleOfflineSync } from "./jobs/offline-sync";
 import { enqueue } from "@dubai/queue";
 
 initSentry();
@@ -62,6 +63,7 @@ const jobHandlers: Record<string, (payload: never) => Promise<void>> = {
   "analytics.track": handleAnalyticsTrack as (payload: never) => Promise<void>,
   "re-engagement.process": handleReEngagement as (payload: never) => Promise<void>,
   "catalog.health-check": handleCatalogHealthCheck as (payload: never) => Promise<void>,
+  "offline.sync": handleOfflineSync as (payload: never) => Promise<void>,
 };
 
 // ─── Scheduled Scanners ───

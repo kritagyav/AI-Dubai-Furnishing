@@ -53,7 +53,9 @@ export default function RootLayout({
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/retailer">Retailers</NavLink>
                 <NavLink href="/orders">Orders</NavLink>
+                <NavLink href="/disputes">Disputes</NavLink>
                 <NavLink href="/deliveries">Deliveries</NavLink>
+                <NavLink href="/drivers">Drivers</NavLink>
                 <NavLink href="/delivery-slots">Slots</NavLink>
                 <NavLink href="/settlements">Settlements</NavLink>
                 <NavLink href="/catalog-health">Catalog</NavLink>

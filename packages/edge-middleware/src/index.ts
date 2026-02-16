@@ -45,6 +45,6 @@ export { correlationId } from "./correlationId";
 export { cors } from "./cors";
 export { healthCheck } from "./healthCheck";
 export { logging } from "./logging";
-export { rateLimit } from "./rateLimit";
+export { createRateLimit, rateLimit } from "./rateLimit";
 export { securityHeaders } from "./securityHeaders";
 export { versioning } from "./versioning";

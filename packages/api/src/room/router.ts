@@ -14,6 +14,7 @@ import {
   updateRoomInput,
   uploadFloorPlanInput,
 } from "@dubai/validators";
+import { aiClient, classifyRoomTypeByName } from "@dubai/ai-client";
 import { z } from "zod/v4";
 
 import { authedProcedure } from "../trpc";
@@ -408,5 +409,83 @@ export const roomRouter = {
           typeConfidence: true,
         },
       });
+    }),
+
+  // ─── AI Room Type Detection ───
+
+  detectRoomType: authedProcedure
+    .input(z.object({ roomId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      await verifyRoomOwnership(ctx.db, input.roomId, ctx.user.id);
+
+      // Fetch the room with photos and name
+      const room = await ctx.db.room.findFirst({
+        where: { id: input.roomId, project: { userId: ctx.user.id } },
+        select: {
+          id: true,
+          name: true,
+          photos: {
+            select: { storageUrl: true },
+            orderBy: { orderIndex: "asc" },
+          },
+        },
+      });
+
+      if (!room) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Room not found" });
+      }
+
+      if (room.photos.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Upload room photos first for AI detection",
+        });
+      }
+
+      const photoUrls = room.photos.map((p) => p.storageUrl);
+
+      let detectedType: string;
+      let confidence: number;
+      let source: string;
+
+      try {
+        const result = await aiClient.classifyRoomType(photoUrls);
+        detectedType = result.type;
+        confidence = result.confidence;
+        source = result.source === "ai" ? "AI_SUGGESTED" : "AI_SUGGESTED";
+
+        // If AI gave low confidence or returned OTHER, try name-based fallback
+        if (result.source === "fallback" || (result.confidence < 0.3 && result.type === "OTHER")) {
+          const nameBased = classifyRoomTypeByName(room.name);
+          if (nameBased.confidence > result.confidence) {
+            detectedType = nameBased.type;
+            confidence = nameBased.confidence;
+          }
+        }
+      } catch {
+        // Fallback to name-based heuristic
+        const nameBased = classifyRoomTypeByName(room.name);
+        detectedType = nameBased.type;
+        confidence = nameBased.confidence;
+        source = "AI_SUGGESTED";
+      }
+
+      // Update the room with detected type
+      const updated = await ctx.db.room.update({
+        where: { id: input.roomId },
+        data: {
+          type: detectedType as "LIVING_ROOM",
+          typeSource: source as "AI_SUGGESTED",
+          typeConfidence: confidence,
+        },
+        select: {
+          id: true,
+          type: true,
+          typeSource: true,
+          typeConfidence: true,
+        },
+      });
+
+      return updated;
     }),
 } satisfies TRPCRouterRecord;

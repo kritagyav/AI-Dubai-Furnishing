@@ -19,6 +19,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "hono": "catalog:"
   },
   "devDependencies": {

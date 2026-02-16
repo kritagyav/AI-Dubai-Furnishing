@@ -598,4 +598,70 @@ export const catalogRouter = {
 
       return { items: products, nextCursor };
     }),
+
+  /**
+   * Get a single product's public details (for the product detail page).
+   * Returns active products from approved retailers only.
+   */
+  getProductDetail: publicProcedure
+    .input(z.object({ productId: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      const product = await ctx.db.retailerProduct.findFirst({
+        where: {
+          id: input.productId,
+          validationStatus: "ACTIVE",
+          retailer: { status: "APPROVED" },
+        },
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          priceFils: true,
+          photos: true,
+          materials: true,
+          colors: true,
+          widthCm: true,
+          depthCm: true,
+          heightCm: true,
+          stockQuantity: true,
+          sku: true,
+          createdAt: true,
+          retailer: {
+            select: { companyName: true },
+          },
+        },
+      });
+
+      if (!product) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
+      }
+
+      // Fetch related products (same category, different product, limit 4)
+      const relatedProducts = await ctx.db.retailerProduct.findMany({
+        where: {
+          category: product.category,
+          id: { not: product.id },
+          validationStatus: "ACTIVE",
+          stockQuantity: { gt: 0 },
+          retailer: { status: "APPROVED" },
+        },
+        take: 4,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          priceFils: true,
+          photos: true,
+          retailer: {
+            select: { companyName: true },
+          },
+        },
+      });
+
+      return { ...product, relatedProducts };
+    }),
 } satisfies TRPCRouterRecord;

@@ -10,10 +10,13 @@ import {
   listOrdersInput,
   cancelOrderInput,
   refundOrderInput,
+  createDisputeInput,
+  resolveDisputeInput,
+  listDisputesInput,
 } from "@dubai/validators";
 import { trackEvent } from "@dubai/queue";
 
-import { authedProcedure } from "../trpc";
+import { adminProcedure, authedProcedure } from "../trpc";
 import {
   createPaymentIntent,
   capturePayment,
@@ -720,6 +723,424 @@ export const commerceRouter = {
       });
 
       return { refunded: true, orderId: order.id };
+    }),
+
+  // ─── Disputes ───
+
+  /**
+   * Create a dispute for an order. Creates a support ticket with category DISPUTE
+   * and sets order status to DISPUTED.
+   */
+  createDispute: authedProcedure
+    .input(createDisputeInput)
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findFirst({
+        where: { id: input.orderId, userId: ctx.user.id },
+        select: { id: true, orderRef: true, status: true, totalFils: true },
+      });
+
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+      }
+
+      // Only paid/processing/shipped/delivered orders can be disputed
+      const disputable = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
+      if (!disputable.includes(order.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Order cannot be disputed in its current status (${order.status})`,
+        });
+      }
+
+      // Check for existing open disputes on this order
+      const existingDispute = await ctx.db.supportTicket.findFirst({
+        where: {
+          orderId: order.id,
+          category: "DISPUTE",
+          status: { in: ["OPEN", "IN_PROGRESS", "WAITING_ON_CUSTOMER"] },
+        },
+        select: { id: true },
+      });
+
+      if (existingDispute) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "An active dispute already exists for this order",
+        });
+      }
+
+      const result = await ctx.db.$transaction(async (tx) => {
+        // Create a support ticket with DISPUTE category
+        const ticket = await tx.supportTicket.create({
+          data: {
+            userId: ctx.user.id,
+            category: "DISPUTE",
+            priority: "HIGH",
+            subject: `Dispute: ${input.reason} — Order ${order.orderRef}`,
+            description: input.description,
+            orderId: order.id,
+          },
+          select: {
+            id: true,
+            ticketRef: true,
+            category: true,
+            priority: true,
+            status: true,
+            subject: true,
+            createdAt: true,
+          },
+        });
+
+        // Add a system message with dispute details
+        await tx.ticketMessage.create({
+          data: {
+            ticketId: ticket.id,
+            senderId: ctx.user.id,
+            senderRole: "system",
+            body: `Dispute opened. Reason: ${input.reason}. Order total: ${(order.totalFils / 100).toFixed(2)} AED.`,
+          },
+        });
+
+        // Set order status to DISPUTED
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: "DISPUTED" },
+        });
+
+        return ticket;
+      });
+
+      trackEvent("dispute.created", ctx.user.id, {
+        orderId: order.id,
+        ticketId: result.id,
+        reason: input.reason,
+      });
+
+      return result;
+    }),
+
+  /**
+   * Resolve a dispute (admin only). Handles refund processing and commission adjustments.
+   */
+  resolveDispute: adminProcedure
+    .input(resolveDisputeInput)
+    .mutation(async ({ ctx, input }) => {
+      const ticket = await ctx.db.supportTicket.findUnique({
+        where: { id: input.ticketId },
+        select: {
+          id: true,
+          category: true,
+          status: true,
+          orderId: true,
+          userId: true,
+        },
+      });
+
+      if (!ticket) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Ticket not found",
+        });
+      }
+
+      if (ticket.category !== "DISPUTE") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Ticket is not a dispute",
+        });
+      }
+
+      if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dispute is already resolved",
+        });
+      }
+
+      if (!ticket.orderId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dispute has no linked order",
+        });
+      }
+
+      const order = await ctx.db.order.findUnique({
+        where: { id: ticket.orderId },
+        select: { id: true, status: true, totalFils: true },
+      });
+
+      if (!order) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Linked order not found",
+        });
+      }
+
+      const now = new Date();
+
+      if (input.resolution === "FULL_REFUND" || input.resolution === "PARTIAL_REFUND") {
+        // Find the captured payment for this order
+        const payment = await ctx.db.payment.findFirst({
+          where: { orderId: order.id, status: "CAPTURED" },
+          select: { id: true, externalRef: true, amountFils: true },
+        });
+
+        if (!payment) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No captured payment found for this order",
+          });
+        }
+
+        const refundAmount = input.resolution === "FULL_REFUND"
+          ? payment.amountFils
+          : input.refundAmountFils;
+
+        if (!refundAmount || refundAmount <= 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Refund amount must be specified for partial refund",
+          });
+        }
+
+        if (refundAmount > payment.amountFils) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Refund amount cannot exceed payment amount",
+          });
+        }
+
+        // Call payment service to process refund
+        try {
+          if (!payment.externalRef) {
+            throw new PaymentError(
+              "No external payment reference available",
+              "NOT_REFUNDABLE",
+            );
+          }
+          await refundPayment(payment.externalRef, refundAmount);
+        } catch (err) {
+          if (err instanceof PaymentError) {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `Refund failed: ${err.message}`,
+              cause: err,
+            });
+          }
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Refund processing failed unexpectedly",
+          });
+        }
+
+        await ctx.db.$transaction(async (tx) => {
+          // Update payment status
+          if (input.resolution === "FULL_REFUND") {
+            await tx.payment.update({
+              where: { id: payment.id },
+              data: { status: "REFUNDED" },
+            });
+          }
+
+          // Update order status
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              status: input.resolution === "FULL_REFUND" ? "REFUNDED" : order.status === "DISPUTED" ? "PAID" : order.status,
+            },
+          });
+
+          // Adjust commissions proportionally
+          const commissions = await tx.commission.findMany({
+            where: { orderId: order.id },
+            select: {
+              id: true,
+              retailerId: true,
+              amountFils: true,
+              netAmountFils: true,
+              rateBps: true,
+            },
+          });
+
+          const refundRatio = refundAmount / order.totalFils;
+
+          for (const commission of commissions) {
+            const commissionAdjustment = Math.round(commission.amountFils * refundRatio);
+            const netAdjustment = Math.round(commission.netAmountFils * refundRatio);
+
+            // Adjust existing commission
+            await tx.commission.update({
+              where: { id: commission.id },
+              data: {
+                amountFils: commission.amountFils - commissionAdjustment,
+                netAmountFils: commission.netAmountFils - netAdjustment,
+              },
+            });
+
+            // Create adjustment ledger entry
+            await tx.ledgerEntry.create({
+              data: {
+                retailerId: commission.retailerId,
+                type: "REFUND",
+                amountFils: -netAdjustment,
+                referenceId: order.id,
+                description: `${input.resolution === "FULL_REFUND" ? "Full" : "Partial"} refund adjustment for dispute on order ${order.id.slice(0, 8)}`,
+              },
+            });
+          }
+
+          // Update ticket status to RESOLVED
+          await tx.supportTicket.update({
+            where: { id: ticket.id },
+            data: {
+              status: "RESOLVED",
+              resolvedAt: now,
+            },
+          });
+
+          // Add system message about resolution
+          await tx.ticketMessage.create({
+            data: {
+              ticketId: ticket.id,
+              senderId: ctx.user.id,
+              senderRole: "system",
+              body: `Dispute resolved: ${input.resolution}. Refund amount: ${(refundAmount / 100).toFixed(2)} AED.${input.notes ? ` Notes: ${input.notes}` : ""}`,
+            },
+          });
+        });
+      } else if (input.resolution === "REPLACEMENT") {
+        // Mark ticket as resolved; order stays in current status for re-fulfillment
+        await ctx.db.$transaction(async (tx) => {
+          await tx.supportTicket.update({
+            where: { id: ticket.id },
+            data: {
+              status: "RESOLVED",
+              resolvedAt: now,
+            },
+          });
+
+          // Restore order to PROCESSING for re-fulfillment
+          if (order.status === "DISPUTED") {
+            await tx.order.update({
+              where: { id: order.id },
+              data: { status: "PROCESSING" },
+            });
+          }
+
+          await tx.ticketMessage.create({
+            data: {
+              ticketId: ticket.id,
+              senderId: ctx.user.id,
+              senderRole: "system",
+              body: `Dispute resolved: REPLACEMENT ordered.${input.notes ? ` Notes: ${input.notes}` : ""}`,
+            },
+          });
+        });
+      } else {
+        // REJECTED
+        await ctx.db.$transaction(async (tx) => {
+          await tx.supportTicket.update({
+            where: { id: ticket.id },
+            data: {
+              status: "RESOLVED",
+              resolvedAt: now,
+            },
+          });
+
+          // Restore order to previous meaningful status
+          if (order.status === "DISPUTED") {
+            await tx.order.update({
+              where: { id: order.id },
+              data: { status: "DELIVERED" },
+            });
+          }
+
+          await tx.ticketMessage.create({
+            data: {
+              ticketId: ticket.id,
+              senderId: ctx.user.id,
+              senderRole: "system",
+              body: `Dispute rejected.${input.notes ? ` Notes: ${input.notes}` : ""}`,
+            },
+          });
+        });
+      }
+
+      trackEvent("dispute.resolved", ctx.user.id, {
+        ticketId: ticket.id,
+        orderId: order.id,
+        resolution: input.resolution,
+      });
+
+      return {
+        resolved: true,
+        ticketId: ticket.id,
+        resolution: input.resolution,
+      };
+    }),
+
+  /**
+   * List all disputes (admin only).
+   */
+  listDisputes: adminProcedure
+    .input(listDisputesInput)
+    .query(async ({ ctx, input }) => {
+      const where = {
+        category: "DISPUTE" as const,
+        ...(input.status ? { status: input.status } : {}),
+      };
+
+      const items = await ctx.db.supportTicket.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          ticketRef: true,
+          userId: true,
+          status: true,
+          subject: true,
+          description: true,
+          priority: true,
+          orderId: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      // Enrich with order data
+      const orderIds = items
+        .map((t) => t.orderId)
+        .filter((id): id is string => id !== null);
+
+      const orders = orderIds.length > 0
+        ? await ctx.db.order.findMany({
+            where: { id: { in: orderIds } },
+            select: {
+              id: true,
+              orderRef: true,
+              totalFils: true,
+              status: true,
+              userId: true,
+            },
+          })
+        : [];
+
+      const orderMap = new Map(orders.map((o) => [o.id, o]));
+
+      const enriched = items.map((item) => ({
+        ...item,
+        order: item.orderId ? (orderMap.get(item.orderId) ?? null) : null,
+      }));
+
+      return { items: enriched, nextCursor };
     }),
 
 } satisfies TRPCRouterRecord;

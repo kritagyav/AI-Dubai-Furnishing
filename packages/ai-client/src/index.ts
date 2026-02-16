@@ -111,6 +111,13 @@ export interface StyleMatchOutput {
   source: "ai" | "fallback";
 }
 
+/** Output from room type classification. */
+export interface RoomClassificationOutput {
+  type: string;
+  confidence: number;
+  source: "ai" | "fallback";
+}
+
 /** Configuration options for the AI client. */
 export interface AIClientConfig {
   /** AI service base URL. Defaults to AI_SERVICE_URL env var. */
@@ -178,6 +185,28 @@ Respond with valid JSON matching this schema:
 {
   "score": number,
   "reasoning": "string explaining the score"
+}`;
+
+/**
+ * System prompt for room type classification from photos.
+ * Instructs the AI to classify a room type from photo URLs.
+ */
+export const ROOM_CLASSIFICATION_PROMPT = `You are an expert interior design analyst. Given photo URLs of a room, classify the room type.
+
+Possible room types:
+- LIVING_ROOM
+- BEDROOM
+- DINING_ROOM
+- KITCHEN
+- BATHROOM
+- STUDY_OFFICE
+- BALCONY
+- OTHER
+
+Respond with valid JSON matching this schema:
+{
+  "type": "string (one of the room types above)",
+  "confidence": number (0.0 to 1.0)
 }`;
 
 // ─── Style-Category Affinity Map (for fallback logic) ────────────────────
@@ -466,6 +495,58 @@ function fallbackStyleMatch(input: StyleMatchInput): StyleMatchOutput {
   };
 }
 
+// ─── Fallback Room Type Classification ────────────────────────────────────
+
+/**
+ * Keyword-based room type classification.
+ * Attempts to match photo URLs or contextual hints to a room type.
+ * Since we cannot actually inspect photo contents without the AI service,
+ * this returns OTHER with low confidence as a default fallback.
+ */
+function fallbackRoomClassification(
+  _photoUrls: string[],
+): RoomClassificationOutput {
+  return {
+    type: "OTHER",
+    confidence: 0.1,
+    source: "fallback",
+  };
+}
+
+/**
+ * Heuristic room type classification based on a room name string.
+ * Useful when AI service is unavailable and we have a room name to work with.
+ */
+export function classifyRoomTypeByName(name: string): RoomClassificationOutput {
+  const lower = name.toLowerCase();
+
+  const patterns: Array<{ keywords: string[]; type: string; confidence: number }> = [
+    { keywords: ["living", "lounge", "family room", "sitting"], type: "LIVING_ROOM", confidence: 0.85 },
+    { keywords: ["master bed", "bedroom", "guest room", "kids room", "nursery"], type: "BEDROOM", confidence: 0.85 },
+    { keywords: ["dining", "eat-in"], type: "DINING_ROOM", confidence: 0.85 },
+    { keywords: ["kitchen", "pantry", "kitchenette"], type: "KITCHEN", confidence: 0.85 },
+    { keywords: ["bath", "shower", "toilet", "powder room", "washroom", "restroom"], type: "BATHROOM", confidence: 0.85 },
+    { keywords: ["study", "office", "workspace", "den", "library"], type: "STUDY_OFFICE", confidence: 0.85 },
+    { keywords: ["balcony", "terrace", "patio", "veranda", "deck"], type: "BALCONY", confidence: 0.85 },
+  ];
+
+  for (const pattern of patterns) {
+    if (pattern.keywords.some((kw) => lower.includes(kw))) {
+      return {
+        type: pattern.type,
+        confidence: pattern.confidence,
+        source: "fallback",
+      };
+    }
+  }
+
+  return {
+    type: "OTHER",
+    confidence: 0.3,
+    source: "fallback",
+  };
+}
+
 // ─── AI Client Class ─────────────────────────────────────────────────────
 
 /**
@@ -643,6 +724,46 @@ export class AIClient {
     } catch {
       // Fall back to rule-based scoring on any failure
       return fallbackStyleMatch(input);
+    }
+  }
+
+  /**
+   * Classify a room type from photo URLs.
+   *
+   * Calls the AI service to analyze room photos and determine the room type.
+   * Falls back to a default classification when the AI service is unavailable.
+   */
+  async classifyRoomType(photoUrls: string[]): Promise<RoomClassificationOutput> {
+    if (!this.serviceUrl) {
+      return fallbackRoomClassification(photoUrls);
+    }
+
+    try {
+      const userMessage = JSON.stringify({ photoUrls });
+
+      const response = await this.callService<{
+        type: string;
+        confidence: number;
+      }>("/v1/room-classification", {
+        systemPrompt: ROOM_CLASSIFICATION_PROMPT,
+        userMessage,
+      });
+
+      const validTypes = [
+        "LIVING_ROOM", "BEDROOM", "DINING_ROOM", "KITCHEN",
+        "BATHROOM", "STUDY_OFFICE", "BALCONY", "OTHER",
+      ];
+
+      const type = validTypes.includes(response.type) ? response.type : "OTHER";
+      const confidence = Math.max(0, Math.min(1, response.confidence ?? 0.5));
+
+      return {
+        type,
+        confidence: Math.round(confidence * 100) / 100,
+        source: "ai",
+      };
+    } catch {
+      return fallbackRoomClassification(photoUrls);
     }
   }
 

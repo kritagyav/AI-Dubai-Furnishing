@@ -12,7 +12,8 @@ export type JobName =
   | "cart.abandon-check"
   | "analytics.track"
   | "re-engagement.process"
-  | "catalog.health-check";
+  | "catalog.health-check"
+  | "offline.sync";
 
 export interface InventorySyncPayload {
   retailerId: string;
@@ -65,7 +66,9 @@ export type AnalyticsEventName =
   | "cart.item_added"
   | "cart.cleared"
   | "product.viewed"
-  | "catalog.uploaded";
+  | "catalog.uploaded"
+  | "dispute.created"
+  | "dispute.resolved";
 
 export interface AnalyticsTrackPayload {
   event: AnalyticsEventName;
@@ -82,6 +85,11 @@ export interface CatalogHealthCheckPayload {
   retailerId: string;
 }
 
+export interface OfflineSyncPayload {
+  actionId: string;
+  userId: string;
+}
+
 export type JobPayloadMap = {
   "inventory.sync": InventorySyncPayload;
   "notification.send": NotificationSendPayload;
@@ -92,6 +100,7 @@ export type JobPayloadMap = {
   "analytics.track": AnalyticsTrackPayload;
   "re-engagement.process": ReEngagementProcessPayload;
   "catalog.health-check": CatalogHealthCheckPayload;
+  "offline.sync": OfflineSyncPayload;
 };
 
 export type JobHandler<T extends JobName> = (

@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Project Detail — Stories 2.1-2.6.
- * Shows project overview with room list, floor plan, and room management.
+ * Project Detail -- Stories 2.1-2.6.
+ * Shows project overview with room list, floor plan, room management,
+ * photo thumbnails, "Generate Package" per room, and budget summary.
  */
 
 import { useParams, useRouter } from "next/navigation";
@@ -23,6 +24,13 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
   BALCONY: "Balcony",
   OTHER: "Other",
 };
+
+interface RoomPhoto {
+  id: string;
+  storageUrl: string;
+  thumbnailUrl: string | null;
+  orderIndex: number;
+}
 
 interface ProjectData {
   id: string;
@@ -45,6 +53,15 @@ interface ProjectData {
   }>;
 }
 
+interface PackageListItem {
+  id: string;
+  name: string;
+  status: string;
+  totalPriceFils: number;
+  createdAt: Date;
+  _count: { items: number };
+}
+
 export default function ProjectDetailPage() {
   const params = useParams<{ projectId: string }>();
   const client = useTRPCClient();
@@ -55,6 +72,9 @@ export default function ProjectDetailPage() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editAddress, setEditAddress] = useState("");
+  const [packages, setPackages] = useState<PackageListItem[]>([]);
+  const [roomPhotos, setRoomPhotos] = useState<Record<string, RoomPhoto[]>>({});
+  const [generatingRoom, setGeneratingRoom] = useState<string | null>(null);
 
   const loadProject = useCallback(async () => {
     try {
@@ -62,6 +82,30 @@ export default function ProjectDetailPage() {
       setProject(data);
       setEditName(data.name);
       setEditAddress(data.address ?? "");
+
+      // Load packages for this project
+      void client.package.list
+        .query({ limit: 50, projectId: params.projectId })
+        .then((pkgData) => {
+          setPackages(pkgData.items as PackageListItem[]);
+        })
+        .catch(() => {
+          // Non-critical
+        });
+
+      // Load room photos for thumbnails (first 3 per room)
+      const photoMap: Record<string, RoomPhoto[]> = {};
+      for (const room of data.rooms) {
+        if (room._count.photos > 0) {
+          try {
+            const roomData = await client.room.getRoom.query({ roomId: room.id });
+            photoMap[room.id] = roomData.photos.slice(0, 3) as RoomPhoto[];
+          } catch {
+            // Skip
+          }
+        }
+      }
+      setRoomPhotos(photoMap);
     } catch {
       setError("Failed to load project");
     } finally {
@@ -104,7 +148,28 @@ export default function ProjectDetailPage() {
       await client.room.deleteRoom.mutate({ roomId });
       void loadProject();
     } catch {
-      // Swallow — user sees no change
+      // Swallow -- user sees no change
+    }
+  }
+
+  async function handleGeneratePackage(roomId: string) {
+    if (!project) return;
+    setGeneratingRoom(roomId);
+    try {
+      await client.package.generate.mutate({
+        projectId: project.id,
+        roomId,
+      });
+      // Reload packages
+      const pkgData = await client.package.list.query({
+        limit: 50,
+        projectId: project.id,
+      });
+      setPackages(pkgData.items as PackageListItem[]);
+    } catch {
+      // Swallow
+    } finally {
+      setGeneratingRoom(null);
     }
   }
 
@@ -128,6 +193,11 @@ export default function ProjectDetailPage() {
       </div>
     );
   }
+
+  // Budget summary from packages
+  const totalBudget = packages
+    .filter((p) => p.status !== "REJECTED")
+    .reduce((sum, p) => sum + p.totalPriceFils, 0);
 
   return (
     <div className="space-y-8">
@@ -185,6 +255,48 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
+      {/* Budget Summary */}
+      {packages.length > 0 && (
+        <div className="border-border rounded-lg border p-4">
+          <h2 className="mb-3 text-lg font-semibold">Budget Summary</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-muted-foreground text-sm">Total Packages</p>
+              <p className="text-xl font-bold">{packages.length}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-sm">Estimated Budget</p>
+              <p className="text-xl font-bold">
+                AED{" "}
+                {(totalBudget / 100).toLocaleString("en-AE", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-sm">Status</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {packages.some((p) => p.status === "ACCEPTED") && (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                    {packages.filter((p) => p.status === "ACCEPTED").length} accepted
+                  </span>
+                )}
+                {packages.some((p) => p.status === "READY") && (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                    {packages.filter((p) => p.status === "READY").length} ready
+                  </span>
+                )}
+                {packages.some((p) => p.status === "GENERATING") && (
+                  <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                    {packages.filter((p) => p.status === "GENERATING").length} generating
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Rooms Section */}
       <div>
         <div className="mb-4 flex items-center justify-between">
@@ -211,48 +323,87 @@ export default function ProjectDetailPage() {
             }
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {project.rooms.map((room) => (
               <div
                 key={room.id}
-                className="border-border flex items-start justify-between rounded-lg border p-4"
+                className="border-border rounded-lg border p-4"
               >
-                <button
-                  onClick={() =>
-                    router.push(`/projects/${project.id}/rooms/${room.id}`)
-                  }
-                  className="flex-1 text-left"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{room.name}</span>
-                    <span className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-xs">
-                      {ROOM_TYPE_LABELS[room.type] ?? room.type}
-                    </span>
-                  </div>
-                  {room.widthCm && room.lengthCm && (
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      {room.displayUnit === "IMPERIAL"
-                        ? `${(room.widthCm / 30.48).toFixed(1)}' × ${(room.lengthCm / 30.48).toFixed(1)}'`
-                        : `${(room.widthCm / 100).toFixed(1)}m × ${(room.lengthCm / 100).toFixed(1)}m`}
-                      {room.heightCm
-                        ? room.displayUnit === "IMPERIAL"
-                          ? ` × ${(room.heightCm / 30.48).toFixed(1)}' h`
-                          : ` × ${(room.heightCm / 100).toFixed(1)}m h`
-                        : ""}
+                <div className="flex items-start justify-between">
+                  <button
+                    onClick={() =>
+                      router.push(`/projects/${project.id}/rooms/${room.id}`)
+                    }
+                    className="flex-1 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{room.name}</span>
+                      <span className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-xs">
+                        {ROOM_TYPE_LABELS[room.type] ?? room.type}
+                      </span>
+                    </div>
+                    {room.widthCm && room.lengthCm && (
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {room.displayUnit === "IMPERIAL"
+                          ? `${(room.widthCm / 30.48).toFixed(1)}' x ${(room.lengthCm / 30.48).toFixed(1)}'`
+                          : `${(room.widthCm / 100).toFixed(1)}m x ${(room.lengthCm / 100).toFixed(1)}m`}
+                        {room.heightCm
+                          ? room.displayUnit === "IMPERIAL"
+                            ? ` x ${(room.heightCm / 30.48).toFixed(1)}' h`
+                            : ` x ${(room.heightCm / 100).toFixed(1)}m h`
+                          : ""}
+                      </p>
+                    )}
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {room._count.photos} photo{room._count.photos !== 1 ? "s" : ""}
                     </p>
-                  )}
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {room._count.photos} photo{room._count.photos !== 1 ? "s" : ""}
-                  </p>
-                </button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteRoom(room.id)}
-                  aria-label={`Delete ${room.name}`}
-                >
-                  &times;
-                </Button>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteRoom(room.id)}
+                    aria-label={`Delete ${room.name}`}
+                  >
+                    &times;
+                  </Button>
+                </div>
+
+                {/* Room photo thumbnails */}
+                {(() => {
+                  const photos = roomPhotos[room.id];
+                  if (!photos || photos.length === 0) return null;
+                  return (
+                    <div className="mt-3 flex gap-2">
+                      {photos.map((photo) => (
+                        <img
+                          key={photo.id}
+                          src={photo.thumbnailUrl ?? photo.storageUrl}
+                          alt="Room photo"
+                          className="h-12 w-12 rounded object-cover"
+                        />
+                      ))}
+                      {room._count.photos > 3 && (
+                        <div className="bg-muted text-muted-foreground flex h-12 w-12 items-center justify-center rounded text-xs">
+                          +{room._count.photos - 3}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Generate Package button */}
+                <div className="mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleGeneratePackage(room.id)}
+                    disabled={generatingRoom === room.id}
+                  >
+                    {generatingRoom === room.id
+                      ? "Generating..."
+                      : "Generate Package"}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

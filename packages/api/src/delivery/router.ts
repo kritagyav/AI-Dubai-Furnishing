@@ -8,6 +8,10 @@ import {
   reportDeliveryIssueInput,
   updateDeliveryStatusInput,
   listDeliveriesInput,
+  assignDriverInput,
+  unassignDriverInput,
+  listDriverAssignmentsInput,
+  updateDriverStatusInput as updateDriverStatusValidation,
 } from "@dubai/validators";
 
 import { adminProcedure, authedProcedure } from "../trpc";
@@ -421,5 +425,224 @@ export const deliveryRouter = {
       }
 
       return { created: created.length, slots: created };
+    }),
+
+  // ─── Driver Assignment ───
+
+  /**
+   * Assign a driver to a delivery (admin).
+   */
+  assignDriver: adminProcedure
+    .input(assignDriverInput)
+    .mutation(async ({ ctx, input }) => {
+      const delivery = await ctx.db.deliverySchedule.findUnique({
+        where: { id: input.deliveryId },
+        select: { id: true, status: true },
+      });
+
+      if (!delivery) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Delivery not found",
+        });
+      }
+
+      if (!["SCHEDULED", "RESCHEDULED"].includes(delivery.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot assign driver to delivery in ${delivery.status} status`,
+        });
+      }
+
+      return ctx.db.deliverySchedule.update({
+        where: { id: delivery.id },
+        data: {
+          driverName: input.driverName,
+          driverPhone: input.driverPhone,
+          vehiclePlate: input.vehiclePlate ?? null,
+          status: "ASSIGNED",
+        },
+        select: {
+          id: true,
+          status: true,
+          driverName: true,
+          driverPhone: true,
+          vehiclePlate: true,
+        },
+      });
+    }),
+
+  /**
+   * Unassign a driver from a delivery (admin).
+   */
+  unassignDriver: adminProcedure
+    .input(unassignDriverInput)
+    .mutation(async ({ ctx, input }) => {
+      const delivery = await ctx.db.deliverySchedule.findUnique({
+        where: { id: input.deliveryId },
+        select: { id: true, status: true },
+      });
+
+      if (!delivery) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Delivery not found",
+        });
+      }
+
+      if (delivery.status !== "ASSIGNED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot unassign driver from delivery in ${delivery.status} status`,
+        });
+      }
+
+      return ctx.db.deliverySchedule.update({
+        where: { id: delivery.id },
+        data: {
+          driverName: null,
+          driverPhone: null,
+          vehiclePlate: null,
+          status: "SCHEDULED",
+        },
+        select: {
+          id: true,
+          status: true,
+          driverName: true,
+          driverPhone: true,
+        },
+      });
+    }),
+
+  /**
+   * List deliveries with driver assignment info for a date range (admin).
+   */
+  listDriverAssignments: adminProcedure
+    .input(listDriverAssignmentsInput)
+    .query(async ({ ctx, input }) => {
+      const where: Prisma.DeliveryScheduleWhereInput = {};
+
+      if (input.fromDate || input.toDate) {
+        where.scheduledDate = {};
+        if (input.fromDate) {
+          where.scheduledDate.gte = new Date(input.fromDate);
+        }
+        if (input.toDate) {
+          // Add one day to make toDate inclusive
+          const end = new Date(input.toDate);
+          end.setDate(end.getDate() + 1);
+          where.scheduledDate.lt = end;
+        }
+      }
+
+      const items = await ctx.db.deliverySchedule.findMany({
+        where,
+        orderBy: { scheduledDate: "asc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          orderId: true,
+          status: true,
+          scheduledDate: true,
+          scheduledSlot: true,
+          driverName: true,
+          driverPhone: true,
+          vehiclePlate: true,
+          deliveredAt: true,
+          notes: true,
+          createdAt: true,
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      // Enrich with order info
+      const orderIds = [...new Set(items.map((d) => d.orderId))];
+      const orders = orderIds.length > 0
+        ? await ctx.db.order.findMany({
+            where: { id: { in: orderIds } },
+            select: {
+              id: true,
+              orderRef: true,
+              totalFils: true,
+              shippingAddress: true,
+            },
+          })
+        : [];
+
+      const orderMap = new Map(orders.map((o) => [o.id, o]));
+
+      const enriched = items.map((item) => ({
+        ...item,
+        order: orderMap.get(item.orderId) ?? null,
+      }));
+
+      return { items: enriched, nextCursor };
+    }),
+
+  /**
+   * Update driver/delivery status with timestamps (admin).
+   */
+  updateDriverStatus: adminProcedure
+    .input(updateDriverStatusValidation)
+    .mutation(async ({ ctx, input }) => {
+      const delivery = await ctx.db.deliverySchedule.findUnique({
+        where: { id: input.deliveryId },
+        select: { id: true, status: true, notes: true },
+      });
+
+      if (!delivery) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Delivery not found",
+        });
+      }
+
+      // Map input status to delivery status
+      const statusMap: Record<string, "EN_ROUTE" | "IN_TRANSIT" | "DELIVERED"> = {
+        EN_ROUTE: "EN_ROUTE",
+        ARRIVED: "IN_TRANSIT",
+        COMPLETED: "DELIVERED",
+      };
+
+      const newStatus = statusMap[input.status];
+      if (!newStatus) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid status",
+        });
+      }
+
+      const existingNotes = delivery.notes ?? "";
+      const updatedNotes = input.notes
+        ? existingNotes
+          ? `${existingNotes}\n[${new Date().toISOString()}] ${input.notes}`
+          : `[${new Date().toISOString()}] ${input.notes}`
+        : existingNotes || null;
+
+      return ctx.db.deliverySchedule.update({
+        where: { id: delivery.id },
+        data: {
+          status: newStatus,
+          notes: updatedNotes,
+          ...(input.status === "COMPLETED"
+            ? { deliveredAt: new Date() }
+            : {}),
+        },
+        select: {
+          id: true,
+          status: true,
+          driverName: true,
+          driverPhone: true,
+          vehiclePlate: true,
+          deliveredAt: true,
+          notes: true,
+        },
+      });
     }),
 } satisfies TRPCRouterRecord;

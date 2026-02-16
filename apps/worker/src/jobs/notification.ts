@@ -1,13 +1,24 @@
 import type { Prisma } from "@dubai/db";
 import { prisma } from "@dubai/db";
+import { emailClient } from "@dubai/email";
 import type { NotificationSendPayload } from "@dubai/queue";
 
 import { logger } from "../logger";
 
+/** Notification types that should also trigger an email. */
+const EMAIL_NOTIFICATION_TYPES = new Set([
+  "ORDER_UPDATE",
+  "DELIVERY_UPDATE",
+  "PACKAGE_READY",
+]);
+
 /**
- * Notification Send Job — creates in-app notifications.
- * In production, this would also dispatch push notifications
- * and emails via third-party providers.
+ * Notification Send Job — creates in-app notifications and delivers
+ * via email when appropriate.
+ *
+ * - IN_APP: always created as a DB record
+ * - EMAIL: sent for ORDER_UPDATE, DELIVERY_UPDATE, PACKAGE_READY types
+ * - PROMOTION type: sent as re-engagement email
  */
 export async function handleNotificationSend(
   payload: NotificationSendPayload,
@@ -15,11 +26,18 @@ export async function handleNotificationSend(
   const log = logger.child({ job: "notification.send", userId: payload.userId });
   log.info({ type: payload.type }, "Sending notification");
 
+  // Determine channel based on notification type
+  const shouldSendEmail =
+    EMAIL_NOTIFICATION_TYPES.has(payload.type) || payload.type === "PROMOTION";
+
+  const channel = shouldSendEmail ? "EMAIL" : "IN_APP";
+
+  // Create in-app notification record
   await prisma.notification.create({
     data: {
       userId: payload.userId,
       type: payload.type,
-      channel: "IN_APP",
+      channel,
       title: payload.title,
       body: payload.body,
       ...(payload.data
@@ -30,4 +48,58 @@ export async function handleNotificationSend(
   });
 
   log.info("Notification created successfully");
+
+  // Send email if appropriate
+  if (shouldSendEmail) {
+    try {
+      // Look up user email
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { email: true, name: true },
+      });
+
+      if (!user) {
+        log.warn("User not found for email delivery — skipping email");
+        return;
+      }
+
+      if (payload.type === "PROMOTION") {
+        // Send re-engagement email
+        const step = (payload.data?.step as number | undefined) ?? 1;
+        const cartItems = payload.data?.cartItems as
+          | Array<{ name: string; priceFils: number }>
+          | undefined;
+
+        const result = await emailClient.sendReEngagement(
+          user.email,
+          user.name ?? "",
+          step,
+          cartItems,
+        );
+
+        if (!result.success) {
+          log.error({ error: result.error }, "Failed to send re-engagement email");
+        } else {
+          log.info({ emailId: result.id }, "Re-engagement email sent");
+        }
+      } else {
+        // Send transactional email for order/delivery/package notifications
+        const result = await emailClient.sendTransactional(
+          user.email,
+          payload.title,
+          payload.body,
+        );
+
+        if (!result.success) {
+          log.error({ error: result.error }, "Failed to send transactional email");
+        } else {
+          log.info({ emailId: result.id }, "Transactional email sent");
+        }
+      }
+    } catch (err) {
+      // Email delivery failure should not fail the job
+      const message = err instanceof Error ? err.message : "Unknown error";
+      log.error({ error: message }, "Email delivery failed — notification record created but email not sent");
+    }
+  }
 }

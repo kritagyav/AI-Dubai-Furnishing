@@ -9,11 +9,13 @@ import { corporateRouter } from "./corporate/router";
 import { deliveryRouter } from "./delivery/router";
 import { engagementRouter } from "./engagement/router";
 import { ledgerRouter } from "./ledger/router";
+import { offlineRouter } from "./offline/router";
 import { packageRouter } from "./package/router";
 import { preferenceRouter } from "./preference/router";
 import { retailerRouter } from "./retailer/router";
 import { roomRouter } from "./room/router";
 import { sessionRouter } from "./session/router";
+import { storageRouter } from "./storage/router";
 import { supportRouter } from "./support/router";
 import { userRouter } from "./user/router";
 
@@ -30,10 +32,12 @@ export const appRouter = createTRPCRouter({
   admin: adminRouter,
   agent: agentRouter,
   corporate: corporateRouter,
+  storage: storageRouter,
   support: supportRouter,
   analytics: analyticsRouter,
   engagement: engagementRouter,
   ledger: ledgerRouter,
+  offline: offlineRouter,
 });
 
 export type AppRouter = typeof appRouter;

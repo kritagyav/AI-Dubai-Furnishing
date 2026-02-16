@@ -8,7 +8,7 @@ import { z } from "zod/v4";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
 
-import { signUp } from "@dubai/auth/hooks";
+import { signInWithOAuth, signUp } from "@dubai/auth/hooks";
 
 const registrationSchema = z.object({
   email: z.email("Invalid email address"),
@@ -23,6 +23,14 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const handleOAuthLogin = async (provider: "google" | "apple") => {
+    try {
+      await signInWithOAuth(provider);
+    } catch {
+      setError("Social sign-up failed");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,7 @@ export default function RegisterPage() {
       }
 
       router.push("/verify-email");
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof z.ZodError) {
         const firstIssue = err.issues[0];
         setError(firstIssue?.message ?? "Validation failed");
@@ -57,38 +65,68 @@ export default function RegisterPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <h1 className="text-center text-2xl font-bold">Create Account</h1>
 
-      <Input
-        type="text"
-        placeholder="Full Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-      />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          type="text"
+          placeholder="Full Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
 
-      <Input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
+        <Input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-      <Input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-      {error && <p className="text-destructive text-sm">{error}</p>}
+        {error && <p className="text-destructive text-sm">{error}</p>}
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Creating account..." : "Sign Up"}
-      </Button>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Creating account..." : "Sign Up"}
+        </Button>
+      </form>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="border-border w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="text-muted-foreground bg-white px-2 dark:bg-gray-900">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleOAuthLogin("google")}
+        >
+          Google
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => handleOAuthLogin("apple")}
+        >
+          Apple
+        </Button>
+      </div>
 
       <p className="text-muted-foreground text-center text-sm">
         Already have an account?{" "}
@@ -96,6 +134,6 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </p>
-    </form>
+    </div>
   );
 }
