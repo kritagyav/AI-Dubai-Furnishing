@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { useTRPC, useTRPCClient } from "~/trpc/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     SCHEDULED: "bg-blue-100 text-blue-800",
@@ -11,12 +17,55 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? "bg-gray-100 text-gray-800"}`}
     >
-      {status.replace("_", " ")}
+      {status.replace(/_/g, " ")}
     </span>
   );
 }
 
 export default function DeliveriesPage() {
+  const trpc = useTRPC();
+  const client = useTRPCClient();
+  const queryClient = useQueryClient();
+  const [slotDate, setSlotDate] = useState("");
+  const [slotArea, setSlotArea] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const deliveries = useQuery(
+    trpc.delivery.listAll.queryOptions({ limit: 50 }),
+  );
+
+  const scheduled = deliveries.data?.items.filter(
+    (d) => d.status === "SCHEDULED",
+  ).length ?? 0;
+  const inTransit = deliveries.data?.items.filter(
+    (d) => d.status === "IN_TRANSIT",
+  ).length ?? 0;
+  const delivered = deliveries.data?.items.filter(
+    (d) => d.status === "DELIVERED",
+  ).length ?? 0;
+  const failed = deliveries.data?.items.filter(
+    (d) => d.status === "FAILED",
+  ).length ?? 0;
+
+  async function handleCreateSlots() {
+    if (!slotDate || !slotArea) return;
+    setCreating(true);
+    try {
+      const result = await client.delivery.createSlots.mutate({
+        date: slotDate,
+        area: slotArea,
+      });
+      alert(`Created ${result.created} delivery slots`);
+      setSlotDate("");
+      setSlotArea("");
+      void queryClient.invalidateQueries();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create slots");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -28,52 +77,73 @@ export default function DeliveriesPage() {
             Manage delivery slots, track shipments, and resolve issues
           </p>
         </div>
-        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-          Create Delivery Slots
-        </button>
       </div>
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Scheduled Today</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">--</p>
+          <p className="text-sm text-gray-500">Scheduled</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{scheduled}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">In Transit</p>
-          <p className="mt-1 text-2xl font-bold text-indigo-600">--</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-600">{inTransit}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Delivered Today</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">--</p>
+          <p className="text-sm text-gray-500">Delivered</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">{delivered}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">Issues</p>
-          <p className="mt-1 text-2xl font-bold text-red-600">--</p>
+          <p className="mt-1 text-2xl font-bold text-red-600">{failed}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Delivery Schedule */}
+        {/* Create Delivery Slots */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Today&apos;s Schedule
+            Create Delivery Slots
           </h2>
           <div className="space-y-3">
-            {["09:00-12:00", "12:00-15:00", "15:00-18:00", "18:00-21:00"].map(
-              (slot) => (
-                <div
-                  key={slot}
-                  className="flex items-center justify-between rounded-md border border-gray-100 p-3"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{slot}</p>
-                    <p className="text-xs text-gray-500">-- / -- booked</p>
-                  </div>
-                  <span className="text-sm text-gray-400">-- available</span>
-                </div>
-              ),
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Date
+              </label>
+              <input
+                type="date"
+                value={slotDate}
+                onChange={(e) => setSlotDate(e.target.value)}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Area
+              </label>
+              <select
+                value={slotArea}
+                onChange={(e) => setSlotArea(e.target.value)}
+                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">Select area</option>
+                <option value="DUBAI_MARINA">Dubai Marina</option>
+                <option value="DOWNTOWN">Downtown</option>
+                <option value="JBR">JBR</option>
+                <option value="BUSINESS_BAY">Business Bay</option>
+                <option value="PALM_JUMEIRAH">Palm Jumeirah</option>
+                <option value="JLT">JLT</option>
+                <option value="DEIRA">Deira</option>
+                <option value="BUR_DUBAI">Bur Dubai</option>
+              </select>
+            </div>
+            <button
+              onClick={handleCreateSlots}
+              disabled={creating || !slotDate || !slotArea}
+              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {creating ? "Creating..." : "Create 4 Slots"}
+            </button>
           </div>
         </div>
 
@@ -82,48 +152,36 @@ export default function DeliveriesPage() {
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             Active Deliveries
           </h2>
-          <div className="text-center text-sm text-gray-400 py-8">
-            Connect tRPC delivery.listAll to display active deliveries
-          </div>
-        </div>
-
-        {/* Delivery Issues */}
-        <div className="col-span-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Recent Issues
-          </h2>
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Delivery
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-8 text-center text-sm text-gray-400"
-                  >
-                    No delivery issues to display
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          {deliveries.isLoading && (
+            <p className="py-8 text-center text-sm text-gray-400">
+              Loading...
+            </p>
+          )}
+          {deliveries.data?.items.length === 0 && (
+            <p className="py-8 text-center text-sm text-gray-400">
+              No deliveries scheduled
+            </p>
+          )}
+          <div className="space-y-2">
+            {deliveries.data?.items.slice(0, 10).map((d) => (
+              <div
+                key={d.id}
+                className="flex items-center justify-between rounded-md border border-gray-100 p-3"
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {d.scheduledDate
+                      ? new Date(d.scheduledDate).toLocaleDateString()
+                      : "No date"}{" "}
+                    &middot; {d.scheduledSlot ?? "N/A"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {d.driverName ?? "Unassigned"}
+                  </p>
+                </div>
+                <StatusBadge status={d.status} />
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -197,12 +197,18 @@ importers:
       '@dubai/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@dubai/edge-middleware':
+        specifier: workspace:^
+        version: link:../../packages/edge-middleware
       '@dubai/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@dubai/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@supabase/ssr':
+        specifier: 'catalog:'
+        version: 0.8.0(@supabase/supabase-js@2.95.2(bufferutil@4.1.0))
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.95.2(bufferutil@4.1.0)
@@ -230,6 +236,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.1.4(react@19.1.4)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       superjson:
         specifier: 2.2.3
         version: 2.2.3

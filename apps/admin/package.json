@@ -16,8 +16,10 @@
     "@dubai/api": "workspace:*",
     "@dubai/auth": "workspace:*",
     "@dubai/db": "workspace:*",
+    "@dubai/edge-middleware": "workspace:^",
     "@dubai/ui": "workspace:*",
     "@dubai/validators": "workspace:*",
+    "@supabase/ssr": "catalog:",
     "@supabase/supabase-js": "catalog:",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-query": "catalog:",
@@ -27,6 +29,7 @@
     "next": "~16.1.6",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "server-only": "^0.0.1",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },

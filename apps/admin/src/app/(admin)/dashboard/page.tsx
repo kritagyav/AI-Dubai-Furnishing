@@ -1,44 +1,40 @@
+"use client";
+
+import Link from "next/link";
+import { useTRPC } from "~/trpc/react";
+import { useQuery } from "@tanstack/react-query";
+
 function StatCard({
   label,
   value,
-  change,
+  href,
 }: {
   label: string;
   value: string;
-  change?: string;
+  href?: string;
 }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+  const inner = (
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
       <p className="text-sm font-medium text-gray-500">{label}</p>
       <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-      {change && (
-        <p className="mt-1 text-sm text-green-600">{change}</p>
-      )}
     </div>
   );
-}
-
-function ActivityItem({
-  action,
-  detail,
-  time,
-}: {
-  action: string;
-  detail: string;
-  time: string;
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0">
-      <div>
-        <p className="text-sm font-medium text-gray-900">{action}</p>
-        <p className="text-xs text-gray-500">{detail}</p>
-      </div>
-      <span className="text-xs text-gray-400">{time}</span>
-    </div>
-  );
+  return href ? <Link href={href}>{inner}</Link> : inner;
 }
 
 export default function AdminDashboardPage() {
+  const trpc = useTRPC();
+  const stats = useQuery(trpc.admin.platformStats.queryOptions());
+  const pending = useQuery(
+    trpc.admin.listPendingRetailers.queryOptions({ limit: 5 }),
+  );
+  const supportMetrics = useQuery(trpc.support.metrics.queryOptions());
+
+  const s = stats.data;
+  const openTickets =
+    (supportMetrics.data?.statuses.open ?? 0) +
+    (supportMetrics.data?.statuses.inProgress ?? 0);
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900">
@@ -47,47 +43,111 @@ export default function AdminDashboardPage() {
 
       {/* KPI Cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Orders" value="--" change="Connect API" />
-        <StatCard label="Revenue (AED)" value="--" change="Connect API" />
-        <StatCard label="Active Retailers" value="--" />
-        <StatCard label="Open Tickets" value="--" />
+        <StatCard
+          label="Total Orders"
+          value={s ? String(s.orders.total) : "--"}
+          href="/orders"
+        />
+        <StatCard
+          label="Revenue (AED)"
+          value={
+            s
+              ? (s.orders.revenueFils / 100).toLocaleString("en-AE", {
+                  minimumFractionDigits: 2,
+                })
+              : "--"
+          }
+        />
+        <StatCard
+          label="Active Retailers"
+          value={s ? String(s.retailers.approved) : "--"}
+          href="/retailer"
+        />
+        <StatCard
+          label="Open Tickets"
+          value={supportMetrics.data ? String(openTickets) : "--"}
+          href="/support"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Orders */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Recent Orders
-          </h2>
-          <div className="text-sm text-gray-500">
-            <ActivityItem
-              action="Order placed"
-              detail="Connect tRPC to see live data"
-              time="--"
-            />
-            <p className="py-4 text-center text-gray-400">
-              API integration pending
-            </p>
-          </div>
-        </div>
-
         {/* Pending Approvals */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Pending Approvals
+            Pending Retailer Applications
+          </h2>
+          {pending.data?.items.length === 0 && (
+            <p className="py-4 text-center text-sm text-gray-400">
+              No pending applications
+            </p>
+          )}
+          <div className="space-y-3">
+            {pending.data?.items.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {r.companyName}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {r.contactEmail} &middot; {r.tradeLicenseNumber}
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {new Date(r.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+          {(pending.data?.items.length ?? 0) > 0 && (
+            <Link
+              href="/retailer"
+              className="mt-3 block text-center text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              View all retailers
+            </Link>
+          )}
+        </div>
+
+        {/* Support Metrics */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Support Overview
           </h2>
           <div className="space-y-3">
-            <ActivityItem
-              action="Retailer Applications"
-              detail="Review and approve new retailers"
-              time="--"
-            />
-            <ActivityItem
-              action="Product Validation"
-              detail="Validate new product listings"
-              time="--"
-            />
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Open</span>
+              <span className="font-medium text-yellow-600">
+                {supportMetrics.data?.statuses.open ?? "--"}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">In Progress</span>
+              <span className="font-medium text-blue-600">
+                {supportMetrics.data?.statuses.inProgress ?? "--"}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Waiting on Customer</span>
+              <span className="font-medium text-purple-600">
+                {supportMetrics.data?.statuses.waitingOnCustomer ?? "--"}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Resolved</span>
+              <span className="font-medium text-green-600">
+                {supportMetrics.data?.statuses.resolved ?? "--"}
+              </span>
+            </div>
           </div>
+          <Link
+            href="/support"
+            className="mt-4 block text-center text-sm font-medium text-blue-600 hover:text-blue-700"
+          >
+            Go to support center
+          </Link>
         </div>
 
         {/* Platform Health */}
@@ -121,18 +181,30 @@ export default function AdminDashboardPage() {
             Quick Actions
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <button className="rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100">
+            <Link
+              href="/retailer"
+              className="rounded-md bg-blue-50 px-4 py-2 text-center text-sm font-medium text-blue-700 hover:bg-blue-100"
+            >
               Review Retailers
-            </button>
-            <button className="rounded-md bg-green-50 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-100">
-              Create Slots
-            </button>
-            <button className="rounded-md bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100">
-              View Reports
-            </button>
-            <button className="rounded-md bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100">
-              Manage Users
-            </button>
+            </Link>
+            <Link
+              href="/deliveries"
+              className="rounded-md bg-green-50 px-4 py-2 text-center text-sm font-medium text-green-700 hover:bg-green-100"
+            >
+              Manage Deliveries
+            </Link>
+            <Link
+              href="/orders"
+              className="rounded-md bg-purple-50 px-4 py-2 text-center text-sm font-medium text-purple-700 hover:bg-purple-100"
+            >
+              View Orders
+            </Link>
+            <Link
+              href="/corporate"
+              className="rounded-md bg-amber-50 px-4 py-2 text-center text-sm font-medium text-amber-700 hover:bg-amber-100"
+            >
+              Corporate Accounts
+            </Link>
           </div>
         </div>
       </div>

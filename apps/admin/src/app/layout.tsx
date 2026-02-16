@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { TRPCReactProvider } from "~/trpc/react";
+
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -58,7 +60,9 @@ export default function RootLayout({
             </div>
           </div>
         </nav>
-        <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+        <TRPCReactProvider>
+          <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+        </TRPCReactProvider>
       </body>
     </html>
   );

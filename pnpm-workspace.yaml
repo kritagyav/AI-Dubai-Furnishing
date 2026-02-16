@@ -4,74 +4,74 @@ packages:
   - tooling/*
 
 catalog:
-  "@eslint/js": ^9.38.0
-  "@supabase/auth-helpers-nextjs": ^0.10.0
-  "@supabase/ssr": ^0.8.0
-  "@supabase/supabase-js": ^2.95.2
-  "@tailwindcss/postcss": ^4.1.16
-  "@tailwindcss/vite": ^4.1.16
-  "@tanstack/react-form": ^1.23.8
-  "@tanstack/react-query": ^5.90.8
-  "@trpc/client": ^11.9.0
-  "@trpc/server": ^11.9.0
-  "@trpc/tanstack-react-query": ^11.9.0
-  "@types/node": ^22.18.12
-  "@vitejs/plugin-react": 5.1.0
-  eslint: ^9.38.0
-  hono: ^4.11.4
-  prettier: ^3.6.2
-  prisma: ^7.3.0
-  "@prisma/client": ^7.3.0
-  tailwindcss: ^4.1.16
-  tsx: ^4.21.0
-  dotenv: ^16.5.0
-  typescript: ^5.9.3
-  zod: ^4.1.12
-  "@fast-check/vitest": ^0.2.4
-  "@playwright/test": ^1.58.0
-  "@storybook/addon-a11y": ^8.6.14
-  "@storybook/addon-essentials": ^8.6.14
-  "@storybook/addon-interactions": ^8.6.14
-  "@storybook/addon-links": ^8.6.14
-  "@storybook/react": ^8.6.14
-  "@storybook/react-vite": ^8.6.14
-  "@storybook/test": ^8.6.14
-  "@testing-library/react": ^16.3.0
-  "@vitest/coverage-v8": ^4.0.18
-  "@vitest/ui": ^4.0.18
+  '@eslint/js': ^9.38.0
+  '@fast-check/vitest': ^0.2.4
+  '@playwright/test': ^1.58.0
+  '@prisma/client': ^7.3.0
+  '@sentry/nextjs': ^10.38.0
+  '@sentry/node': ^10.38.0
+  '@sentry/react-native': ^7.12.0
+  '@storybook/addon-a11y': ^8.6.14
+  '@storybook/addon-essentials': ^8.6.14
+  '@storybook/addon-interactions': ^8.6.14
+  '@storybook/addon-links': ^8.6.14
+  '@storybook/react': ^8.6.14
+  '@storybook/react-vite': ^8.6.14
+  '@storybook/test': ^8.6.14
+  '@supabase/auth-helpers-nextjs': ^0.10.0
+  '@supabase/ssr': ^0.8.0
+  '@supabase/supabase-js': ^2.95.2
+  '@tailwindcss/postcss': ^4.1.16
+  '@tailwindcss/vite': ^4.1.16
+  '@tanstack/react-form': ^1.23.8
+  '@tanstack/react-query': ^5.90.8
+  '@testing-library/react': ^16.3.0
+  '@trpc/client': ^11.9.0
+  '@trpc/server': ^11.9.0
+  '@trpc/tanstack-react-query': ^11.9.0
+  '@types/node': ^22.18.12
+  '@vitejs/plugin-react': 5.1.0
+  '@vitest/coverage-v8': ^4.0.18
+  '@vitest/ui': ^4.0.18
   chromatic: ^15.0.0
+  dotenv: ^16.5.0
+  eslint: ^9.38.0
   fast-check: ^4.5.3
+  hono: ^4.11.4
   jest-axe: ^10.0.0
   jsdom: ^26.1.0
-  storybook: ^8.6.14
-  vite: 7.1.12
-  vitest: ^4.0.18
-  zustand: ^5.0.10
+  next-axiom: ^1.10.0
   pino: ^10.3.0
   pino-pretty: ^13.0.0
-  next-axiom: ^1.10.0
-  "@sentry/nextjs": ^10.38.0
-  "@sentry/react-native": ^7.12.0
-  "@sentry/node": ^10.38.0
+  prettier: ^3.6.2
+  prisma: ^7.3.0
+  storybook: ^8.6.14
+  tailwindcss: ^4.1.16
+  tsx: ^4.21.0
+  typescript: ^5.9.3
+  vite: 7.1.12
+  vitest: ^4.0.18
+  zod: ^4.1.12
+  zustand: ^5.0.10
 
 catalogs:
   react19:
-    "@types/react": ~19.1.0
-    "@types/react-dom": ~19.1.0
+    '@types/react': ~19.1.0
+    '@types/react-dom': ~19.1.0
     react: 19.1.4
     react-dom: 19.1.4
 
 linkWorkspacePackages: true
 
 onlyBuiltDependencies:
-  - "@tailwindcss/oxide"
+  - '@tailwindcss/oxide'
   - esbuild
 
 overrides:
-  "@types/minimatch": 5.1.2
+  '@types/minimatch': 5.1.2
   lightningcss: 1.30.1
   vite: 7.1.12
 
 publicHoistPattern:
-  - "@ianvs/prettier-plugin-sort-imports"
+  - '@ianvs/prettier-plugin-sort-imports'
   - prettier-plugin-tailwindcss

@@ -1,3 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { useTRPC } from "~/trpc/react";
+import { useQuery } from "@tanstack/react-query";
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
     DRAFT: "bg-gray-100 text-gray-800",
@@ -14,12 +20,37 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? "bg-gray-100 text-gray-800"}`}
     >
-      {status.replace("_", " ")}
+      {status.replace(/_/g, " ")}
     </span>
   );
 }
 
+const ORDER_STATUSES = [
+  "",
+  "PENDING_PAYMENT",
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+] as const;
+
 export default function OrdersPage() {
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const trpc = useTRPC();
+
+  type OrderStatus = "DRAFT" | "PENDING_PAYMENT" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
+
+  const orders = useQuery(
+    trpc.admin.listAllOrders.queryOptions({
+      limit: 50,
+      ...(statusFilter ? { status: statusFilter as OrderStatus } : {}),
+    }),
+  );
+
+  const stats = useQuery(trpc.admin.platformStats.queryOptions());
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -31,52 +62,36 @@ export default function OrdersPage() {
             View, track, and manage all customer orders
           </p>
         </div>
-        <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-          Export Orders
-        </button>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Pending Payment</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">--</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Processing</p>
-          <p className="mt-1 text-2xl font-bold text-blue-600">--</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Shipped</p>
-          <p className="mt-1 text-2xl font-bold text-purple-600">--</p>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Delivered</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">--</p>
+        <div className="text-right">
+          <p className="text-sm text-gray-500">Total Revenue</p>
+          <p className="text-lg font-bold text-gray-900">
+            AED{" "}
+            {stats.data
+              ? (stats.data.orders.revenueFils / 100).toLocaleString("en-AE", {
+                  minimumFractionDigits: 2,
+                })
+              : "--"}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="mb-4 flex items-center gap-3">
-        <select className="rounded-md border border-gray-300 px-3 py-2 text-sm">
+        <select
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
           <option value="">All Statuses</option>
-          <option value="PENDING_PAYMENT">Pending Payment</option>
-          <option value="PAID">Paid</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="CANCELLED">Cancelled</option>
-          <option value="REFUNDED">Refunded</option>
+          {ORDER_STATUSES.filter(Boolean).map((s) => (
+            <option key={s} value={s}>
+              {s.replace(/_/g, " ")}
+            </option>
+          ))}
         </select>
-        <input
-          type="date"
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-        <input
-          type="text"
-          placeholder="Search by order ref..."
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <span className="text-sm text-gray-500">
+          {orders.data ? `${orders.data.items.length} orders` : "Loading..."}
+        </span>
       </div>
 
       {/* Orders Table */}
@@ -86,9 +101,6 @@ export default function OrdersPage() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Order Ref
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Customer
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Status
@@ -102,20 +114,50 @@ export default function OrdersPage() {
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                Actions
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            <tr>
-              <td
-                colSpan={7}
-                className="px-6 py-12 text-center text-sm text-gray-400"
-              >
-                Connect tRPC to display order data
-              </td>
-            </tr>
+            {orders.isLoading && (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-6 py-12 text-center text-sm text-gray-400"
+                >
+                  Loading orders...
+                </td>
+              </tr>
+            )}
+            {orders.data?.items.length === 0 && (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-6 py-12 text-center text-sm text-gray-400"
+                >
+                  No orders found
+                </td>
+              </tr>
+            )}
+            {orders.data?.items.map((order) => (
+              <tr key={order.id} className="hover:bg-gray-50">
+                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                  {order.orderRef}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                  <StatusBadge status={order.status} />
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {order._count.lineItems}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                  {(order.totalFils / 100).toLocaleString("en-AE", {
+                    minimumFractionDigits: 2,
+                  })}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

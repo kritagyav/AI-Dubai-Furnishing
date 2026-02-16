@@ -1,6 +1,6 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { paginationInput, retailerDecisionInput } from "@dubai/validators";
+import { paginationInput, retailerDecisionInput, listOrdersInput } from "@dubai/validators";
 import { z } from "zod/v4";
 
 import { adminProcedure, auditedProcedure } from "../trpc";
@@ -111,5 +111,189 @@ export const adminRouter = {
       });
 
       return updated;
+    }),
+
+  // ─── All retailers (any status) ───
+
+  listRetailers: adminProcedure
+    .input(
+      paginationInput.extend({
+        status: z
+          .enum(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"])
+          .optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const where = input.status ? { status: input.status } : {};
+
+      const retailers = await ctx.db.retailer.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          companyName: true,
+          tradeLicenseNumber: true,
+          contactEmail: true,
+          businessType: true,
+          status: true,
+          commissionRate: true,
+          createdAt: true,
+          _count: { select: { products: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (retailers.length > input.limit) {
+        const next = retailers.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items: retailers, nextCursor };
+    }),
+
+  // ─── All orders (platform-wide) ───
+
+  listAllOrders: adminProcedure
+    .input(listOrdersInput)
+    .query(async ({ ctx, input }) => {
+      const where = input.status ? { status: input.status } : {};
+
+      const items = await ctx.db.order.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          orderRef: true,
+          userId: true,
+          status: true,
+          totalFils: true,
+          createdAt: true,
+          _count: { select: { lineItems: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items, nextCursor };
+    }),
+
+  // ─── Platform-wide aggregate stats ───
+
+  platformStats: adminProcedure.query(async ({ ctx }) => {
+    const [
+      orderCount,
+      revenueAgg,
+      retailerCounts,
+      ticketCounts,
+    ] = await Promise.all([
+      ctx.db.order.count(),
+      ctx.db.order.aggregate({ _sum: { totalFils: true } }),
+      ctx.db.retailer.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+      ctx.db.supportTicket.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+    ]);
+
+    const retailerMap = Object.fromEntries(
+      retailerCounts.map((r) => [r.status, r._count._all]),
+    );
+    const ticketMap = Object.fromEntries(
+      ticketCounts.map((t) => [t.status, t._count._all]),
+    );
+
+    return {
+      orders: {
+        total: orderCount,
+        revenueFils: revenueAgg._sum.totalFils ?? 0,
+      },
+      retailers: {
+        approved: retailerMap["APPROVED"] ?? 0,
+        pending: retailerMap["PENDING"] ?? 0,
+        total:
+          (retailerMap["APPROVED"] ?? 0) +
+          (retailerMap["PENDING"] ?? 0) +
+          (retailerMap["REJECTED"] ?? 0) +
+          (retailerMap["SUSPENDED"] ?? 0),
+      },
+      tickets: {
+        open: ticketMap["OPEN"] ?? 0,
+        inProgress: ticketMap["IN_PROGRESS"] ?? 0,
+        waitingOnCustomer: ticketMap["WAITING_ON_CUSTOMER"] ?? 0,
+        resolved: ticketMap["RESOLVED"] ?? 0,
+      },
+    };
+  }),
+
+  // ─── Corporate accounts ───
+
+  listCorporateAccounts: adminProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      const items = await ctx.db.corporateAccount.findMany({
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          companyName: true,
+          contactEmail: true,
+          contactPhone: true,
+          discountBps: true,
+          maxEmployees: true,
+          isActive: true,
+          createdAt: true,
+          _count: { select: { employees: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items, nextCursor };
+    }),
+
+  // ─── Agent partners ───
+
+  listAgentPartners: adminProcedure
+    .input(paginationInput)
+    .query(async ({ ctx, input }) => {
+      const items = await ctx.db.agentPartner.findMany({
+        orderBy: { createdAt: "desc" },
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          companyName: true,
+          commissionRate: true,
+          status: true,
+          totalReferrals: true,
+          totalEarningsFils: true,
+          createdAt: true,
+          _count: { select: { referrals: true } },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (items.length > input.limit) {
+        const next = items.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items, nextCursor };
     }),
 } satisfies TRPCRouterRecord;
