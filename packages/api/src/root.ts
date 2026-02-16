@@ -1,9 +1,11 @@
 import { createTRPCRouter } from "./trpc";
 
 import { adminRouter } from "./admin/router";
+import { agentRouter } from "./agent/router";
 import { analyticsRouter } from "./analytics/router";
 import { catalogRouter } from "./catalog/router";
 import { commerceRouter } from "./commerce/router";
+import { corporateRouter } from "./corporate/router";
 import { deliveryRouter } from "./delivery/router";
 import { engagementRouter } from "./engagement/router";
 import { ledgerRouter } from "./ledger/router";
@@ -26,6 +28,8 @@ export const appRouter = createTRPCRouter({
   retailer: retailerRouter,
   delivery: deliveryRouter,
   admin: adminRouter,
+  agent: agentRouter,
+  corporate: corporateRouter,
   support: supportRouter,
   analytics: analyticsRouter,
   engagement: engagementRouter,

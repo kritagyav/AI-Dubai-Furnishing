@@ -10,7 +10,9 @@ export type JobName =
   | "delivery.remind"
   | "package.generate"
   | "cart.abandon-check"
-  | "analytics.track";
+  | "analytics.track"
+  | "re-engagement.process"
+  | "catalog.health-check";
 
 export interface InventorySyncPayload {
   retailerId: string;
@@ -72,6 +74,14 @@ export interface AnalyticsTrackPayload {
   timestamp?: string;
 }
 
+export interface ReEngagementProcessPayload {
+  batchSize?: number;
+}
+
+export interface CatalogHealthCheckPayload {
+  retailerId: string;
+}
+
 export type JobPayloadMap = {
   "inventory.sync": InventorySyncPayload;
   "notification.send": NotificationSendPayload;
@@ -80,6 +90,8 @@ export type JobPayloadMap = {
   "package.generate": PackageGeneratePayload;
   "cart.abandon-check": CartAbandonCheckPayload;
   "analytics.track": AnalyticsTrackPayload;
+  "re-engagement.process": ReEngagementProcessPayload;
+  "catalog.health-check": CatalogHealthCheckPayload;
 };
 
 export type JobHandler<T extends JobName> = (

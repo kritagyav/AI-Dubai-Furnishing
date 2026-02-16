@@ -23,6 +23,8 @@ import { handleCommissionCalculate } from "./jobs/commission";
 import { handleNotificationSend } from "./jobs/notification";
 import { handlePackageGenerate } from "./jobs/package-generate";
 import { handleAnalyticsTrack } from "./jobs/analytics-track";
+import { handleReEngagement } from "./jobs/re-engagement";
+import { handleCatalogHealthCheck } from "./jobs/catalog-health";
 import { enqueue } from "@dubai/queue";
 
 initSentry();
@@ -58,6 +60,8 @@ const jobHandlers: Record<string, (payload: never) => Promise<void>> = {
   "package.generate": handlePackageGenerate as (payload: never) => Promise<void>,
   "cart.abandon-check": handleCartAbandonCheck as (payload: never) => Promise<void>,
   "analytics.track": handleAnalyticsTrack as (payload: never) => Promise<void>,
+  "re-engagement.process": handleReEngagement as (payload: never) => Promise<void>,
+  "catalog.health-check": handleCatalogHealthCheck as (payload: never) => Promise<void>,
 };
 
 // ─── Scheduled Scanners ───
@@ -131,6 +135,15 @@ async function scanAbandonedCarts() {
 }
 
 /**
+ * Scan for active re-engagement sequences due for processing.
+ * Enqueues a single re-engagement.process job to handle the batch.
+ */
+async function scanReEngagement() {
+  await enqueue("re-engagement.process", {});
+  logger.info("Re-engagement scan: enqueued processing job");
+}
+
+/**
  * Scan for upcoming deliveries and enqueue reminder jobs.
  */
 async function scanDeliveryReminders() {
@@ -157,6 +170,7 @@ const schedulerHandlers: Record<string, () => Promise<void>> = {
   "scheduler.inventory-scan": scanInventorySync,
   "scheduler.cart-abandon-scan": scanAbandonedCarts,
   "scheduler.delivery-remind-scan": scanDeliveryReminders,
+  "scheduler.re-engagement-scan": scanReEngagement,
 };
 
 // ─── BullMQ Worker ───
@@ -209,6 +223,13 @@ async function registerRepeatableJobs() {
   // Delivery reminder scan: every hour
   await queue.add("scheduler.delivery-remind-scan", {}, {
     repeat: { every: 60 * 60 * 1000 },
+    removeOnComplete: { count: 10 },
+    removeOnFail: { count: 50 },
+  });
+
+  // Re-engagement scan: every 15 minutes
+  await queue.add("scheduler.re-engagement-scan", {}, {
+    repeat: { every: 15 * 60 * 1000 },
     removeOnComplete: { count: 10 },
     removeOnFail: { count: 50 },
   });

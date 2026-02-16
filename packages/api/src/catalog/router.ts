@@ -11,7 +11,7 @@ import {
 import { trackEvent } from "@dubai/queue";
 import { z } from "zod/v4";
 
-import { adminProcedure, retailerProcedure } from "../trpc";
+import { adminProcedure, publicProcedure, retailerProcedure } from "../trpc";
 
 type JsonValue = PrismaTypes.InputJsonValue;
 
@@ -527,5 +527,75 @@ export const catalogRouter = {
         issuesFound,
         breakdown: { staleProducts, missingFields, brokenImages, pricingIssues },
       };
+    }),
+
+  // ─── Public Product Browsing ───
+
+  /**
+   * Browse products publicly (for gallery and discovery pages).
+   * Returns active, in-stock products from approved retailers.
+   */
+  browseProducts: publicProcedure
+    .input(
+      paginationInput.extend({
+        category: z.string().optional(),
+        search: z.string().max(200).optional(),
+        minPriceFils: z.number().int().nonnegative().optional(),
+        maxPriceFils: z.number().int().positive().optional(),
+        sortBy: z.enum(["newest", "price_asc", "price_desc"]).default("newest"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const where: PrismaTypes.RetailerProductWhereInput = {
+        validationStatus: "ACTIVE",
+        stockQuantity: { gt: 0 },
+        retailer: { status: "APPROVED" },
+        ...(input.category ? { category: input.category as "SOFA" } : {}),
+        ...(input.search
+          ? { name: { contains: input.search, mode: "insensitive" as const } }
+          : {}),
+        ...((input.minPriceFils !== undefined || input.maxPriceFils !== undefined)
+          ? {
+              priceFils: {
+                ...(input.minPriceFils !== undefined ? { gte: input.minPriceFils } : {}),
+                ...(input.maxPriceFils !== undefined ? { lte: input.maxPriceFils } : {}),
+              },
+            }
+          : {}),
+      };
+
+      const orderBy: PrismaTypes.RetailerProductOrderByWithRelationInput =
+        input.sortBy === "price_asc"
+          ? { priceFils: "asc" }
+          : input.sortBy === "price_desc"
+            ? { priceFils: "desc" }
+            : { createdAt: "desc" };
+
+      const products = await ctx.db.retailerProduct.findMany({
+        where,
+        orderBy,
+        take: input.limit + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          priceFils: true,
+          photos: true,
+          materials: true,
+          colors: true,
+          retailer: {
+            select: { companyName: true },
+          },
+        },
+      });
+
+      let nextCursor: string | undefined;
+      if (products.length > input.limit) {
+        const next = products.pop();
+        nextCursor = next?.id;
+      }
+
+      return { items: products, nextCursor };
     }),
 } satisfies TRPCRouterRecord;

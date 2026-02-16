@@ -598,3 +598,43 @@ export const listTicketsInput = paginationInput.extend({
   category: ticketCategoryEnum.optional(),
   priority: ticketPriorityEnum.optional(),
 });
+
+// ═══════════════════════════════════════════
+// Corporate Accounts
+// ═══════════════════════════════════════════
+
+export const createCorporateAccountInput = z.object({
+  companyName: z.string().min(1).max(200),
+  contactEmail: z.email(),
+  contactPhone: z.string().max(20).optional(),
+  maxEmployees: z.number().int().min(1).max(10000).default(50),
+  discountBps: z.number().int().min(0).max(5000).default(0),
+});
+
+export const updateCorporateAccountInput = z.object({
+  accountId: z.uuid(),
+  companyName: z.string().min(1).max(200).optional(),
+  contactEmail: z.email().optional(),
+  contactPhone: z.string().max(20).optional(),
+  maxEmployees: z.number().int().min(1).max(10000).optional(),
+  discountBps: z.number().int().min(0).max(5000).optional(),
+});
+
+// ═══════════════════════════════════════════
+// Agent Partners
+// ═══════════════════════════════════════════
+
+export const registerAgentInput = z.object({
+  companyName: z.string().max(200).optional(),
+  licenseNumber: z.string().max(100).optional(),
+});
+
+export const updateAgentStatusInput = z.object({
+  agentId: z.uuid(),
+  status: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED"]),
+});
+
+export const updateAgentCommissionInput = z.object({
+  agentId: z.uuid(),
+  commissionRate: z.number().int().min(0).max(10000),
+});

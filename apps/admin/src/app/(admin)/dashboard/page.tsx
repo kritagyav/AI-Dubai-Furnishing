@@ -29,6 +29,7 @@ export default function AdminDashboardPage() {
     trpc.admin.listPendingRetailers.queryOptions({ limit: 5 }),
   );
   const supportMetrics = useQuery(trpc.support.metrics.queryOptions());
+  const health = useQuery(trpc.admin.platformHealth.queryOptions());
 
   const s = stats.data;
   const openTickets =
@@ -158,19 +159,27 @@ export default function AdminDashboardPage() {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">API</span>
-              <span className="font-medium text-green-600">Operational</span>
+              <span className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}>
+                {health.data?.api ?? "--"}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Database</span>
-              <span className="font-medium text-green-600">Operational</span>
+              <span className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}>
+                {health.data?.database ?? "--"}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Worker</span>
-              <span className="font-medium text-green-600">Running</span>
+              <span className={`font-medium ${health.data?.worker === "Running" ? "text-green-600" : health.data?.worker === "Idle" ? "text-yellow-600" : "text-gray-400"}`}>
+                {health.data?.worker ?? "--"}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">AI Service</span>
-              <span className="font-medium text-yellow-600">Standby</span>
+              <span className="text-gray-600">Orders (1h)</span>
+              <span className="font-medium text-gray-900">
+                {health.data?.recentOrders ?? "--"}
+              </span>
             </div>
           </div>
         </div>

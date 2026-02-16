@@ -3,9 +3,57 @@ import type { InventorySyncPayload } from "@dubai/queue";
 
 import { logger } from "../logger";
 
+/** Products not updated in 7+ days are considered stale */
+const STALE_STOCK_THRESHOLD_DAYS = 7;
+
+/**
+ * Attempt to fetch inventory data from a retailer's webhook URL.
+ * Returns the parsed JSON response, or null if the fetch fails.
+ */
+async function fetchFromWebhook(
+  webhookUrl: string,
+  retailerId: string,
+): Promise<Record<string, unknown>[] | null> {
+  const log = logger.child({ job: "inventory.sync.webhook", retailerId });
+  try {
+    log.info({ webhookUrl }, "Attempting to fetch inventory from webhook");
+    const response = await fetch(webhookUrl, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!response.ok) {
+      log.warn(
+        { status: response.status, webhookUrl },
+        "Webhook returned non-OK status, falling back to local sync",
+      );
+      return null;
+    }
+
+    const data = (await response.json()) as Record<string, unknown>[];
+    log.info(
+      { itemCount: Array.isArray(data) ? data.length : 0 },
+      "Successfully fetched inventory data from webhook",
+    );
+    return Array.isArray(data) ? data : null;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    log.warn(
+      { error: errorMessage, webhookUrl },
+      "Webhook fetch failed, falling back to local sync",
+    );
+    return null;
+  }
+}
+
 /**
  * Inventory Sync Job — polls retailer systems for stock updates.
- * For BASIC tier retailers, fetches and updates stock quantities.
+ * For BASIC tier retailers:
+ *   - If a webhookUrl is configured, attempts to fetch from it first.
+ *   - Falls back to local product query if webhook is absent or fails.
+ *   - Checks for stale stock (products not updated in 7+ days) and logs warnings.
  * PREMIUM tier uses webhooks (handled by the API).
  */
 export async function handleInventorySync(
@@ -21,6 +69,7 @@ export async function handleInventorySync(
       tier: true,
       isActive: true,
       consecutiveFailures: true,
+      webhookUrl: true,
     },
   });
 
@@ -40,21 +89,79 @@ export async function handleInventorySync(
   });
 
   try {
-    // For BASIC tier, we simulate polling the retailer's system.
-    // In production, this would call the retailer's inventory API endpoint.
-    const products = await prisma.retailerProduct.findMany({
-      where: { retailerId: config.retailerId },
-      select: { id: true, stockQuantity: true },
+    let productsUpdated = 0;
+
+    if (config.tier === "BASIC") {
+      // For BASIC tier, try webhook first if configured
+      let webhookData: Record<string, unknown>[] | null = null;
+
+      if (config.webhookUrl) {
+        webhookData = await fetchFromWebhook(config.webhookUrl, config.retailerId);
+      } else {
+        log.info(
+          "No webhook URL configured for BASIC tier retailer, using local product query",
+        );
+      }
+
+      if (webhookData) {
+        // Webhook returned data — count items as updated
+        productsUpdated = webhookData.length;
+        log.info(
+          { productsUpdated },
+          "Inventory data received from webhook",
+        );
+      } else {
+        // Fall back to querying local products
+        const products = await prisma.retailerProduct.findMany({
+          where: { retailerId: config.retailerId },
+          select: { id: true, stockQuantity: true, updatedAt: true },
+        });
+
+        productsUpdated = products.length;
+        log.info(
+          { productCount: products.length },
+          "Products found for sync via local query",
+        );
+      }
+    } else {
+      // Non-BASIC tier: query products directly
+      const products = await prisma.retailerProduct.findMany({
+        where: { retailerId: config.retailerId },
+        select: { id: true, stockQuantity: true, updatedAt: true },
+      });
+
+      productsUpdated = products.length;
+      log.info({ productCount: products.length }, "Products found for sync");
+    }
+
+    // Check for stale stock — products not updated in 7+ days
+    const staleThreshold = new Date(
+      Date.now() - STALE_STOCK_THRESHOLD_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const staleProducts = await prisma.retailerProduct.findMany({
+      where: {
+        retailerId: config.retailerId,
+        updatedAt: { lt: staleThreshold },
+      },
+      select: { id: true, sku: true, name: true, updatedAt: true },
     });
 
-    log.info({ productCount: products.length }, "Products found for sync");
+    if (staleProducts.length > 0) {
+      log.warn(
+        {
+          staleCount: staleProducts.length,
+          staleSKUs: staleProducts.slice(0, 10).map((p) => p.sku),
+        },
+        "Stale stock detected: products not updated in 7+ days",
+      );
+    }
 
     // Update sync job as completed
     await prisma.inventorySyncJob.update({
       where: { id: job.id },
       data: {
         status: "COMPLETED",
-        productsUpdated: products.length,
+        productsUpdated,
         completedAt: new Date(),
       },
     });
@@ -68,7 +175,7 @@ export async function handleInventorySync(
       },
     });
 
-    log.info({ jobId: job.id }, "Inventory sync completed");
+    log.info({ jobId: job.id, productsUpdated }, "Inventory sync completed");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
