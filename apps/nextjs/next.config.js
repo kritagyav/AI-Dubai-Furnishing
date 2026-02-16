@@ -7,11 +7,18 @@ const jiti = createJiti(import.meta.url);
 // Import env files to validate at build time. Use jiti so we can load .ts files in here.
 await jiti.import("./src/env");
 
+import { fileURLToPath } from "url";
+import { resolve, dirname } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const monorepoRoot = resolve(__dirname, "../..");
+
 /** @type {import("next").NextConfig} */
 const config = {
   turbopack: {
-    root: "../..",
+    root: monorepoRoot,
   },
+  outputFileTracingRoot: monorepoRoot,
 
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
