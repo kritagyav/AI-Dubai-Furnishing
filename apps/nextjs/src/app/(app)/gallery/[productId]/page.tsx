@@ -4,13 +4,12 @@
  * Product Detail Page — shows full product info, photos, retailer info,
  * and related products. Public access via catalog.getProductDetail.
  */
-
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { ErrorState, Skeleton } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
-import { Skeleton, ErrorState } from "@dubai/ui";
 
 import { trackAction } from "~/lib/analytics";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
@@ -134,7 +133,7 @@ export default function ProductDetailPage() {
         {/* Photo gallery */}
         <div className="space-y-3">
           {/* Main photo */}
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-muted">
+          <div className="bg-muted flex aspect-square items-center justify-center overflow-hidden rounded-lg">
             {photos.length > 0 ? (
               <img
                 src={photos[selectedPhoto]}
@@ -177,7 +176,8 @@ export default function ProductDetailPage() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <span className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium">
-                {CATEGORY_LABELS[data.category] ?? data.category.replace(/_/g, " ")}
+                {CATEGORY_LABELS[String(data.category)] ??
+                  String(data.category).replace(/_/g, " ")}
               </span>
               {data.stockQuantity > 0 ? (
                 <span className="rounded-full bg-[var(--color-success-light)] px-3 py-1 text-xs font-medium text-[var(--color-success-dark)]">
@@ -288,12 +288,10 @@ export default function ProductDetailPage() {
               return (
                 <button
                   key={related.id}
-                  onClick={() =>
-                    router.push(`/gallery/${related.id}`)
-                  }
+                  onClick={() => router.push(`/gallery/${related.id}`)}
                   className="group overflow-hidden rounded-lg border text-left transition hover:shadow-md"
                 >
-                  <div className="flex h-40 items-center justify-center bg-muted">
+                  <div className="bg-muted flex h-40 items-center justify-center">
                     {relFirstPhoto ? (
                       <img
                         src={relFirstPhoto}

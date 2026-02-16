@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -31,7 +32,13 @@ export default function RetailerDashboardPage() {
     trpc.admin.listRetailers.queryOptions({
       limit: 50,
       ...(statusFilter
-        ? { status: statusFilter as "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" }
+        ? {
+            status: statusFilter as
+              | "PENDING"
+              | "APPROVED"
+              | "REJECTED"
+              | "SUSPENDED",
+          }
         : {}),
     }),
   );
@@ -96,22 +103,22 @@ export default function RetailerDashboardPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Company
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 License
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Products
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Commission
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Joined
               </th>
             </tr>
@@ -145,19 +152,19 @@ export default function RetailerDashboardPage() {
                   </p>
                   <p className="text-xs text-gray-500">{r.contactEmail}</p>
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {r.tradeLicenseNumber}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={r.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={r.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {r._count.products}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {(r.commissionRate / 100).toFixed(2)}%
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(r.createdAt).toLocaleDateString()}
                 </td>
               </tr>
@@ -180,12 +187,10 @@ export default function RetailerDashboardPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">
-                      {r.companyName}
-                    </p>
+                    <p className="font-medium text-gray-900">{r.companyName}</p>
                     <p className="text-sm text-gray-500">
-                      {r.contactEmail} &middot; License:{" "}
-                      {r.tradeLicenseNumber} &middot; {r.businessType}
+                      {r.contactEmail} &middot; License: {r.tradeLicenseNumber}{" "}
+                      &middot; {r.businessType}
                     </p>
                   </div>
                   <div className="flex gap-2">

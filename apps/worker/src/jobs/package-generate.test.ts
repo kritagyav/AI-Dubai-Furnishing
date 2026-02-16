@@ -35,7 +35,10 @@ vi.mock("@dubai/ai-client", () => {
 const { prisma } = await import("@dubai/db");
 
 const db = prisma as unknown as {
-  package: { findUnique: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+  package: {
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+  };
   userPreference: { findFirst: ReturnType<typeof vi.fn> };
   retailerProduct: { findMany: ReturnType<typeof vi.fn> };
   packageItem: { createMany: ReturnType<typeof vi.fn> };
@@ -44,7 +47,9 @@ const db = prisma as unknown as {
 
 // ─── Helpers ───
 
-function payload(overrides?: Partial<PackageGeneratePayload>): PackageGeneratePayload {
+function payload(
+  overrides?: Partial<PackageGeneratePayload>,
+): PackageGeneratePayload {
   return {
     packageId: "pkg-1",
     projectId: "proj-1",
@@ -135,8 +140,18 @@ describe("handlePackageGenerate", () => {
 
     expect(db.packageItem.createMany).toHaveBeenCalledWith({
       data: [
-        { packageId: "pkg-1", productId: "prod-1", quantity: 1, unitPriceFils: 50000 },
-        { packageId: "pkg-1", productId: "prod-2", quantity: 1, unitPriceFils: 20000 },
+        {
+          packageId: "pkg-1",
+          productId: "prod-1",
+          quantity: 1,
+          unitPriceFils: 50000,
+        },
+        {
+          packageId: "pkg-1",
+          productId: "prod-2",
+          quantity: 1,
+          unitPriceFils: 20000,
+        },
       ],
     });
 
@@ -230,7 +245,9 @@ describe("handlePackageGenerate", () => {
       },
     ]);
     mockGeneratePackageRecommendation.mockResolvedValue({
-      selectedProducts: [{ productId: "prod-1", quantity: 1, reasoning: "Fallback" }],
+      selectedProducts: [
+        { productId: "prod-1", quantity: 1, reasoning: "Fallback" },
+      ],
       totalPriceFils: 30000,
       packageReasoning: "Basic selection",
       source: "fallback",

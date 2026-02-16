@@ -38,15 +38,31 @@ export default function OrdersScreen() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "PENDING_PAYMENT":
-        return { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending Payment" };
+        return {
+          bg: "bg-yellow-100",
+          text: "text-yellow-800",
+          label: "Pending Payment",
+        };
       case "PAID":
         return { bg: "bg-green-100", text: "text-green-800", label: "Paid" };
       case "PROCESSING":
-        return { bg: "bg-blue-100", text: "text-blue-800", label: "Processing" };
+        return {
+          bg: "bg-blue-100",
+          text: "text-blue-800",
+          label: "Processing",
+        };
       case "SHIPPED":
-        return { bg: "bg-indigo-100", text: "text-indigo-800", label: "Shipped" };
+        return {
+          bg: "bg-indigo-100",
+          text: "text-indigo-800",
+          label: "Shipped",
+        };
       case "DELIVERED":
-        return { bg: "bg-green-100", text: "text-green-800", label: "Delivered" };
+        return {
+          bg: "bg-green-100",
+          text: "text-green-800",
+          label: "Delivered",
+        };
       case "CANCELLED":
         return { bg: "bg-red-100", text: "text-red-800", label: "Cancelled" };
       case "REFUNDED":
@@ -86,7 +102,7 @@ export default function OrdersScreen() {
             }}
             onEndReachedThreshold={0.5}
             renderItem={({ item }) => {
-              const style = getStatusStyle(item.status);
+              const style = getStatusStyle(String(item.status));
               return (
                 <Pressable
                   onPress={() =>

@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -54,10 +54,21 @@ async function main() {
     },
   });
 
-  console.log("Seeded users:", { priya: priya.id, ahmed: ahmed.id, layla: layla.id });
+  console.log("Seeded users:", {
+    priya: priya.id,
+    ahmed: ahmed.id,
+    layla: layla.id,
+  });
 
   // Seed delivery slots for next 14 days across Dubai areas
-  const areas = ["Dubai Marina", "Downtown Dubai", "JBR", "Business Bay", "Deira", "Jumeirah"];
+  const areas = [
+    "Dubai Marina",
+    "Downtown Dubai",
+    "JBR",
+    "Business Bay",
+    "Deira",
+    "Jumeirah",
+  ];
   const timeSlots = [
     { startTime: "09:00", endTime: "12:00" },
     { startTime: "12:00", endTime: "15:00" },
@@ -93,7 +104,9 @@ async function main() {
     }
   }
 
-  console.log(`Seeded ${slotsCreated} delivery slots across ${areas.length} areas for 14 days`);
+  console.log(
+    `Seeded ${slotsCreated} delivery slots across ${areas.length} areas for 14 days`,
+  );
 
   // Seed a sample retailer with products for Ahmed
   const retailer = await prisma.retailer.upsert({
@@ -112,18 +125,66 @@ async function main() {
 
   const sampleProducts: Array<{
     name: string;
-    category: "SOFA" | "BED" | "DINING_TABLE" | "DESK" | "WARDROBE" | "BOOKSHELF" | "LIGHTING" | "RUG";
+    category:
+      | "SOFA"
+      | "BED"
+      | "DINING_TABLE"
+      | "DESK"
+      | "WARDROBE"
+      | "BOOKSHELF"
+      | "LIGHTING"
+      | "RUG";
     priceFils: number;
     sku: string;
   }> = [
-    { name: "Modern Leather Sofa", category: "SOFA", priceFils: 450000, sku: "ARS-SOFA-001" },
-    { name: "King Size Platform Bed", category: "BED", priceFils: 380000, sku: "ARS-BED-001" },
-    { name: "Oak Dining Table (6 Seater)", category: "DINING_TABLE", priceFils: 280000, sku: "ARS-DIN-001" },
-    { name: "Walnut Executive Desk", category: "DESK", priceFils: 220000, sku: "ARS-DSK-001" },
-    { name: "Sliding Door Wardrobe", category: "WARDROBE", priceFils: 350000, sku: "ARS-WRD-001" },
-    { name: "Contemporary Bookshelf", category: "BOOKSHELF", priceFils: 120000, sku: "ARS-BKS-001" },
-    { name: "Pendant Light Fixture", category: "LIGHTING", priceFils: 45000, sku: "ARS-LGT-001" },
-    { name: "Persian Silk Rug (3x5m)", category: "RUG", priceFils: 680000, sku: "ARS-RUG-001" },
+    {
+      name: "Modern Leather Sofa",
+      category: "SOFA",
+      priceFils: 450000,
+      sku: "ARS-SOFA-001",
+    },
+    {
+      name: "King Size Platform Bed",
+      category: "BED",
+      priceFils: 380000,
+      sku: "ARS-BED-001",
+    },
+    {
+      name: "Oak Dining Table (6 Seater)",
+      category: "DINING_TABLE",
+      priceFils: 280000,
+      sku: "ARS-DIN-001",
+    },
+    {
+      name: "Walnut Executive Desk",
+      category: "DESK",
+      priceFils: 220000,
+      sku: "ARS-DSK-001",
+    },
+    {
+      name: "Sliding Door Wardrobe",
+      category: "WARDROBE",
+      priceFils: 350000,
+      sku: "ARS-WRD-001",
+    },
+    {
+      name: "Contemporary Bookshelf",
+      category: "BOOKSHELF",
+      priceFils: 120000,
+      sku: "ARS-BKS-001",
+    },
+    {
+      name: "Pendant Light Fixture",
+      category: "LIGHTING",
+      priceFils: 45000,
+      sku: "ARS-LGT-001",
+    },
+    {
+      name: "Persian Silk Rug (3x5m)",
+      category: "RUG",
+      priceFils: 680000,
+      sku: "ARS-RUG-001",
+    },
   ];
 
   let productsCreated = 0;
@@ -152,7 +213,9 @@ async function main() {
     }
   }
 
-  console.log(`Seeded retailer "${retailer.companyName}" with ${productsCreated} products`);
+  console.log(
+    `Seeded retailer "${retailer.companyName}" with ${productsCreated} products`,
+  );
 }
 
 main()

@@ -23,8 +23,7 @@ export const logging: MiddlewareHandler = async (c, next) => {
 
   const duration = Date.now() - start;
   const status = c.res.status;
-  const levelName =
-    status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+  const levelName = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
 
   console.log(
     JSON.stringify({

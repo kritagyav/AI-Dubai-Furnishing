@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { serverEnv, clientEnv } from "./env";
+
+import { clientEnv, serverEnv } from "./env";
 
 describe("serverEnv schema", () => {
   it("accepts valid server environment variables", () => {

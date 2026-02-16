@@ -14,7 +14,10 @@ export default function AdminLoading() {
         <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
         <div className="mt-4 space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-12 w-full animate-pulse rounded bg-gray-100" />
+            <div
+              key={i}
+              className="h-12 w-full animate-pulse rounded bg-gray-100"
+            />
           ))}
         </div>
       </div>

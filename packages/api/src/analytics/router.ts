@@ -1,9 +1,10 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { getDashboardMetricsInput } from "@dubai/validators";
+import { z } from "zod/v4";
+
 import { prisma } from "@dubai/db";
 import { trackEvent } from "@dubai/queue";
-import { z } from "zod/v4";
+import { getDashboardMetricsInput } from "@dubai/validators";
 
 import { authedProcedure, retailerProcedure } from "../trpc";
 
@@ -28,7 +29,7 @@ export const analyticsRouter = {
         select: { id: true, status: true },
       });
 
-      if (!retailer || retailer.status !== "APPROVED") {
+      if (retailer?.status !== "APPROVED") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Retailer account not approved",
@@ -43,7 +44,8 @@ export const analyticsRouter = {
         fromDate = new Date(input.fromDate);
         toDate = new Date(input.toDate);
       } else {
-        const days = input.timeRange === "7d" ? 7 : input.timeRange === "90d" ? 90 : 30;
+        const days =
+          input.timeRange === "7d" ? 7 : input.timeRange === "90d" ? 90 : 30;
         fromDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       }
 
@@ -117,45 +119,54 @@ export const analyticsRouter = {
       const productIds = retailerProducts.map((p) => p.id);
 
       // Count product.viewed events for this retailer's products (impressions)
-      const impressions = productIds.length > 0
-        ? await prisma.analyticsEvent.count({
-            where: {
-              event: "product.viewed",
-              timestamp: { gte: fromDate, lte: toDate },
-              properties: {
-                path: ["productId"],
-                array_contains: productIds,
-              },
-            },
-          }).catch(() => 0)
-        : 0;
+      const impressions =
+        productIds.length > 0
+          ? await prisma.analyticsEvent
+              .count({
+                where: {
+                  event: "product.viewed",
+                  timestamp: { gte: fromDate, lte: toDate },
+                  properties: {
+                    path: ["productId"],
+                    array_contains: productIds,
+                  },
+                },
+              })
+              .catch(() => 0)
+          : 0;
 
       // Count package.generated events (package selections)
-      const packageSelections = await prisma.analyticsEvent.count({
-        where: {
-          event: "package.generated",
-          userId: ctx.user.id,
-          timestamp: { gte: fromDate, lte: toDate },
-        },
-      }).catch(() => 0);
+      const packageSelections = await prisma.analyticsEvent
+        .count({
+          where: {
+            event: "package.generated",
+            userId: ctx.user.id,
+            timestamp: { gte: fromDate, lte: toDate },
+          },
+        })
+        .catch(() => 0);
 
       // Count package.accepted events (conversions)
-      const conversions = await prisma.analyticsEvent.count({
-        where: {
-          event: "package.accepted",
-          userId: ctx.user.id,
-          timestamp: { gte: fromDate, lte: toDate },
-        },
-      }).catch(() => 0);
+      const conversions = await prisma.analyticsEvent
+        .count({
+          where: {
+            event: "package.accepted",
+            userId: ctx.user.id,
+            timestamp: { gte: fromDate, lte: toDate },
+          },
+        })
+        .catch(() => 0);
 
       // Count order.paid events (confirmed orders)
-      const confirmedOrders = await prisma.analyticsEvent.count({
-        where: {
-          event: "order.paid",
-          userId: ctx.user.id,
-          timestamp: { gte: fromDate, lte: toDate },
-        },
-      }).catch(() => 0);
+      const confirmedOrders = await prisma.analyticsEvent
+        .count({
+          where: {
+            event: "order.paid",
+            userId: ctx.user.id,
+            timestamp: { gte: fromDate, lte: toDate },
+          },
+        })
+        .catch(() => 0);
 
       return {
         period: { from: fromDate.toISOString(), to: toDate.toISOString() },
@@ -207,7 +218,10 @@ export const analyticsRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       // Return products with their basic stats
@@ -236,42 +250,50 @@ export const analyticsRouter = {
       const productIds = products.map((p) => p.id);
 
       // Fetch all product.viewed events for these products
-      const viewEvents = productIds.length > 0
-        ? await prisma.analyticsEvent.findMany({
-            where: {
-              event: "product.viewed",
-            },
-            select: {
-              properties: true,
-            },
-          }).then((events) =>
-            events.reduce<Record<string, number>>((acc, e) => {
-              const props = e.properties as Record<string, unknown> | null;
-              const pid = props?.productId as string | undefined;
-              if (pid && productIds.includes(pid)) {
-                acc[pid] = (acc[pid] ?? 0) + 1;
-              }
-              return acc;
-            }, {}),
-          ).catch(() => ({} as Record<string, number>))
-        : ({} as Record<string, number>);
+      const viewEvents =
+        productIds.length > 0
+          ? await prisma.analyticsEvent
+              .findMany({
+                where: {
+                  event: "product.viewed",
+                },
+                select: {
+                  properties: true,
+                },
+              })
+              .then((events) =>
+                events.reduce<Record<string, number>>((acc, e) => {
+                  const props = e.properties as Record<string, unknown> | null;
+                  const pid = props?.productId as string | undefined;
+                  if (pid && productIds.includes(pid)) {
+                    acc[pid] = (acc[pid] ?? 0) + 1;
+                  }
+                  return acc;
+                }, {}),
+              )
+              .catch(() => ({}) as Record<string, number>)
+          : ({} as Record<string, number>);
 
       // Get order counts per product from OrderLineItem
-      const orderCounts = productIds.length > 0
-        ? await prisma.orderLineItem.groupBy({
-            by: ["productId"],
-            where: {
-              productId: { in: productIds },
-              retailerId: retailer.id,
-            },
-            _count: true,
-          }).then((groups) =>
-            groups.reduce<Record<string, number>>((acc, g) => {
-              acc[g.productId] = g._count;
-              return acc;
-            }, {}),
-          ).catch(() => ({} as Record<string, number>))
-        : ({} as Record<string, number>);
+      const orderCounts =
+        productIds.length > 0
+          ? await prisma.orderLineItem
+              .groupBy({
+                by: ["productId"],
+                where: {
+                  productId: { in: productIds },
+                  retailerId: retailer.id,
+                },
+                _count: true,
+              })
+              .then((groups) =>
+                groups.reduce<Record<string, number>>((acc, g) => {
+                  acc[g.productId] = g._count;
+                  return acc;
+                }, {}),
+              )
+              .catch(() => ({}) as Record<string, number>)
+          : ({} as Record<string, number>);
 
       const productsWithMetrics = products.map((product) => {
         const views = viewEvents[product.id] ?? 0;
@@ -300,7 +322,7 @@ export const analyticsRouter = {
         source: z.enum(["gallery", "package", "search"]),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(({ ctx, input }) => {
       trackEvent("product.viewed", ctx.user.id, {
         productId: input.productId,
         source: input.source,
@@ -328,7 +350,7 @@ export const analyticsRouter = {
         select: { id: true, status: true },
       });
 
-      if (!retailer || retailer.status !== "APPROVED") {
+      if (retailer?.status !== "APPROVED") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Retailer account not approved",
@@ -343,35 +365,51 @@ export const analyticsRouter = {
         fromDate = new Date(input.fromDate);
         toDate = new Date(input.toDate);
       } else {
-        const days = input.timeRange === "7d" ? 7 : input.timeRange === "90d" ? 90 : 30;
+        const days =
+          input.timeRange === "7d" ? 7 : input.timeRange === "90d" ? 90 : 30;
         fromDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       }
 
       const timeFilter = { gte: fromDate, lte: toDate };
 
       // Query each funnel step from AnalyticsEvent (unscoped)
-      const [impressions, packageSelections, cartAdditions, orders, paidOrders] =
-        await Promise.all([
-          prisma.analyticsEvent.count({
+      const [
+        impressions,
+        packageSelections,
+        cartAdditions,
+        orders,
+        paidOrders,
+      ] = await Promise.all([
+        prisma.analyticsEvent
+          .count({
             where: { event: "product.viewed", timestamp: timeFilter },
-          }).catch(() => 0),
+          })
+          .catch(() => 0),
 
-          prisma.analyticsEvent.count({
+        prisma.analyticsEvent
+          .count({
             where: { event: "package.generated", timestamp: timeFilter },
-          }).catch(() => 0),
+          })
+          .catch(() => 0),
 
-          prisma.analyticsEvent.count({
+        prisma.analyticsEvent
+          .count({
             where: { event: "cart.item_added", timestamp: timeFilter },
-          }).catch(() => 0),
+          })
+          .catch(() => 0),
 
-          prisma.analyticsEvent.count({
+        prisma.analyticsEvent
+          .count({
             where: { event: "order.created", timestamp: timeFilter },
-          }).catch(() => 0),
+          })
+          .catch(() => 0),
 
-          prisma.analyticsEvent.count({
+        prisma.analyticsEvent
+          .count({
             where: { event: "order.paid", timestamp: timeFilter },
-          }).catch(() => 0),
-        ]);
+          })
+          .catch(() => 0),
+      ]);
 
       // Compute conversion rates between each step
       function rate(from: number, to: number): number {

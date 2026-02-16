@@ -1,12 +1,13 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+
+import { enqueue, trackEvent } from "@dubai/queue";
 import {
   generatePackageInput,
   listPackagesInput,
   reviewPackageInput,
   updatePackageStatusInput,
 } from "@dubai/validators";
-import { enqueue, trackEvent } from "@dubai/queue";
 
 import { authedProcedure } from "../trpc";
 
@@ -44,16 +45,6 @@ export const packageRouter = {
           });
         }
       }
-
-      // Get user preferences for AI context
-      const preference = await ctx.db.userPreference.findFirst({
-        where: { userId: ctx.user.id, projectId: input.projectId },
-        select: {
-          budgetMinFils: true,
-          budgetMaxFils: true,
-          stylePreferences: true,
-        },
-      });
 
       // Create package record in GENERATING state
       const pkg = await ctx.db.package.create({

@@ -8,7 +8,9 @@ interface ZoneContextProps {
   zone: ZoneName;
 }
 
-const ZoneContext = React.createContext<ZoneContextProps | undefined>(undefined);
+const ZoneContext = React.createContext<ZoneContextProps | undefined>(
+  undefined,
+);
 
 interface ZoneProviderProps extends React.PropsWithChildren {
   zone: ZoneName;

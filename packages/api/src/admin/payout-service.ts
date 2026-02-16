@@ -27,10 +27,12 @@ export interface TransferStatusResult {
 // ─── Internal Helpers ───
 
 function getApiKey(): string | undefined {
+  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/prefer-nullish-coalescing -- bootstrap env read
   return process.env.BANK_PAYOUT_API_KEY || undefined;
 }
 
 function getApiUrl(): string | undefined {
+  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/prefer-nullish-coalescing -- bootstrap env read
   return process.env.BANK_PAYOUT_API_URL || undefined;
 }
 
@@ -61,16 +63,13 @@ export class PayoutService {
     if (isDevelopmentFallback()) {
       const transactionRef = `payout_sim_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
-      console.log(
-        `[payout-service] DEV: Simulating bank transfer`,
-        {
-          transactionRef,
-          recipientIban: params.recipientIban,
-          amount: params.amount,
-          currency: params.currency,
-          reference: params.reference,
-        },
-      );
+      console.log(`[payout-service] DEV: Simulating bank transfer`, {
+        transactionRef,
+        recipientIban: params.recipientIban,
+        amount: params.amount,
+        currency: params.currency,
+        reference: params.reference,
+      });
 
       devTransfers.set(transactionRef, { status: "PROCESSING" });
 

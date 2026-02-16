@@ -4,12 +4,11 @@
  * Retailer Dashboard — Stories 5.1/5.2.
  * Shows application status or (if approved) product stats and catalog link.
  */
-
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
 import { Spinner } from "@dubai/ui";
+import { Button } from "@dubai/ui/button";
 
 import { StatCard } from "~/components/StatCard";
 import { useTRPCClient } from "~/trpc/react";
@@ -26,7 +25,12 @@ export default function RetailerDashboardPage() {
   const [dashboard, setDashboard] = useState<{
     companyName: string;
     commissionRate: number;
-    productStats: { total: number; active: number; pending: number; rejected: number };
+    productStats: {
+      total: number;
+      active: number;
+      pending: number;
+      rejected: number;
+    };
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,8 +70,8 @@ export default function RetailerDashboardPage() {
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
         <h1 className="text-3xl font-bold">Retailer Portal</h1>
         <p className="text-muted-foreground">
-          Join the Dubai Furnishing Marketplace and reach customers
-          furnishing apartments across Dubai.
+          Join the Dubai Furnishing Marketplace and reach customers furnishing
+          apartments across Dubai.
         </p>
         <Button onClick={() => router.push("/retailer/register")}>
           Apply Now
@@ -103,7 +107,9 @@ export default function RetailerDashboardPage() {
         {status.rejectionReason && (
           <div className="bg-muted rounded-lg p-4 text-left">
             <p className="text-sm font-medium">Reason:</p>
-            <p className="text-muted-foreground text-sm">{status.rejectionReason}</p>
+            <p className="text-muted-foreground text-sm">
+              {status.rejectionReason}
+            </p>
           </div>
         )}
       </div>
@@ -118,15 +124,22 @@ export default function RetailerDashboardPage() {
           {dashboard?.companyName ?? "Retailer Dashboard"}
         </h1>
         <p className="text-muted-foreground mt-1">
-          Commission rate: {((dashboard?.commissionRate ?? 0) / 100).toFixed(2)}%
+          Commission rate: {((dashboard?.commissionRate ?? 0) / 100).toFixed(2)}
+          %
         </p>
       </div>
 
       {dashboard && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total Products" value={dashboard.productStats.total} />
+          <StatCard
+            label="Total Products"
+            value={dashboard.productStats.total}
+          />
           <StatCard label="Active" value={dashboard.productStats.active} />
-          <StatCard label="Pending Review" value={dashboard.productStats.pending} />
+          <StatCard
+            label="Pending Review"
+            value={dashboard.productStats.pending}
+          />
           <StatCard label="Rejected" value={dashboard.productStats.rejected} />
         </div>
       )}

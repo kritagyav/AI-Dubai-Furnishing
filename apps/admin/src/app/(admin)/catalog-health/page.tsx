@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function SeverityBadge({ severity }: { severity: string }) {
   const colors: Record<string, string> = {
@@ -67,9 +68,7 @@ export default function CatalogHealthPage() {
       setLastResult(result);
       void queryClient.invalidateQueries();
     } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Failed to run health check",
-      );
+      alert(err instanceof Error ? err.message : "Failed to run health check");
     } finally {
       setRunning(false);
     }
@@ -195,22 +194,22 @@ export default function CatalogHealthPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Severity
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Description
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Recommendation
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Created
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Action
               </th>
             </tr>
@@ -238,11 +237,11 @@ export default function CatalogHealthPage() {
             )}
             {issues.data?.items.map((issue) => (
               <tr key={issue.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                  {issue.issueType.replace(/_/g, " ")}
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
+                  {(issue.issueType as string).replace(/_/g, " ")}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <SeverityBadge severity={issue.severity} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <SeverityBadge severity={issue.severity as string} />
                 </td>
                 <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-900">
                   {issue.description}
@@ -250,10 +249,10 @@ export default function CatalogHealthPage() {
                 <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-500">
                   {issue.recommendation ?? "-"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(issue.createdAt).toLocaleDateString()}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
                   <button
                     onClick={() => handleResolveIssue(issue.id)}
                     disabled={resolving === issue.id}

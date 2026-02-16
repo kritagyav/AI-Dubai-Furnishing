@@ -7,7 +7,6 @@
  * useResumableState: Provides "Continue where you left off" data.
  * useOfflineSync: Flushes queued offline actions on reconnect.
  */
-
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -51,7 +50,7 @@ export function useDeviceSession(opts: DeviceSessionOptions) {
   useEffect(() => {
     if (!opts.isAuthenticated || registeredRef.current || isRegistering) return;
 
-    setIsRegistering(true);
+    setIsRegistering(true); // eslint-disable-line react-hooks/set-state-in-effect -- loading gate before async
     registeredRef.current = true;
 
     void opts
@@ -73,22 +72,19 @@ export function useDeviceSession(opts: DeviceSessionOptions) {
   }, [opts.isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track navigation changes
+  const { updateActivityState } = opts;
   const trackNavigation = useCallback(
-    (
-      path: string,
-      screen?: string,
-      contextData?: Record<string, unknown>,
-    ) => {
+    (path: string, screen?: string, contextData?: Record<string, unknown>) => {
       if (!sessionId) return;
 
-      void opts.updateActivityState({
+      void updateActivityState({
         sessionId,
         currentPath: path,
         currentScreen: screen,
         contextData,
       });
     },
-    [sessionId, opts.updateActivityState], // eslint-disable-line react-hooks/exhaustive-deps
+    [sessionId, updateActivityState],
   );
 
   return { sessionId, trackNavigation, isRegistering };
@@ -134,7 +130,7 @@ export function useResumableState(opts: UseResumableStateOptions) {
       return;
 
     fetchedRef.current = true;
-    setIsLoading(true);
+    setIsLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- loading gate before async
 
     void opts
       .getResumableState({ currentSessionId: opts.sessionId })
@@ -181,12 +177,13 @@ export function useOfflineSync(opts: UseOfflineSyncOptions) {
 
   // Check pending count on mount
   useEffect(() => {
-    setPendingCount(getOfflineQueue().length);
+    setPendingCount(getOfflineQueue().length); // eslint-disable-line react-hooks/set-state-in-effect -- sync initial count
   }, []);
 
   // Flush queue when online
+  const { isAuthenticated, submitOfflineAction } = opts;
   const flushQueue = useCallback(async () => {
-    if (!opts.isAuthenticated || isSyncing) return;
+    if (!isAuthenticated || isSyncing) return;
 
     const queue = getOfflineQueue();
     if (queue.length === 0) return;
@@ -195,7 +192,7 @@ export function useOfflineSync(opts: UseOfflineSyncOptions) {
 
     for (const item of queue) {
       try {
-        await opts.submitOfflineAction({
+        await submitOfflineAction({
           idempotencyKey: item.idempotencyKey,
           action: item.action,
           payload: item.payload,
@@ -209,7 +206,7 @@ export function useOfflineSync(opts: UseOfflineSyncOptions) {
 
     setPendingCount(getOfflineQueue().length);
     setIsSyncing(false);
-  }, [opts.isAuthenticated, isSyncing, opts.submitOfflineAction]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isSyncing, submitOfflineAction]);
 
   // Auto-flush on online event
   useEffect(() => {
@@ -224,9 +221,9 @@ export function useOfflineSync(opts: UseOfflineSyncOptions) {
   // Flush on mount if online
   useEffect(() => {
     if (typeof navigator !== "undefined" && navigator.onLine) {
-      void flushQueue();
+      void flushQueue(); // eslint-disable-line react-hooks/set-state-in-effect -- trigger async flush
     }
-  }, [opts.isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     isSyncing,

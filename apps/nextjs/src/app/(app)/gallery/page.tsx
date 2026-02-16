@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { ZoneProvider } from "@dubai/ui/zones";
 
 import { trackPageView } from "~/lib/analytics";
@@ -99,7 +99,7 @@ export default function GalleryPage() {
       {/* Product grid */}
       {products.isLoading && <SkeletonScreen rows={4} />}
 
-      {products.data && products.data.items.length === 0 && (
+      {products.data?.items.length === 0 && (
         <EmptyState
           title="No products found"
           description="Try adjusting your filters or search terms."
@@ -120,7 +120,7 @@ export default function GalleryPage() {
                   onClick={() => router.push(`/gallery/${product.id}`)}
                   className="group overflow-hidden rounded-lg border text-left transition hover:shadow-md"
                 >
-                  <div className="flex h-48 items-center justify-center bg-muted">
+                  <div className="bg-muted flex h-48 items-center justify-center">
                     {firstPhoto ? (
                       <img
                         src={firstPhoto}
@@ -146,7 +146,7 @@ export default function GalleryPage() {
                         })}
                       </span>
                       <span className="text-muted-foreground bg-muted rounded px-2 py-0.5 text-xs">
-                        {product.category.replace(/_/g, " ")}
+                        {String(product.category).replace(/_/g, " ")}
                       </span>
                     </div>
                     {materials && materials.length > 0 && (
@@ -154,7 +154,7 @@ export default function GalleryPage() {
                         {materials.join(", ")}
                       </p>
                     )}
-                    <span className="mt-3 block w-full rounded-md border px-3 py-2 text-center text-sm font-medium transition group-hover:bg-muted/50">
+                    <span className="group-hover:bg-muted/50 mt-3 block w-full rounded-md border px-3 py-2 text-center text-sm font-medium transition">
                       View Details
                     </span>
                   </div>

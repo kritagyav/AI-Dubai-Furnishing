@@ -1,7 +1,11 @@
 import { createHmac } from "node:crypto";
-
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -12,7 +16,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -23,11 +32,6 @@ vi.mock("@upstash/redis", () => ({
 vi.mock("../audit", () => ({
   writeAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
-
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -85,9 +89,7 @@ describe("webhook.receiveInventoryWebhook", () => {
 
     const result = await caller.webhook.receiveInventoryWebhook({
       retailerId: RETAILER_ID,
-      products: [
-        { sku: "SKU-001", stockQuantity: 25, priceFils: 5000 },
-      ],
+      products: [{ sku: "SKU-001", stockQuantity: 25, priceFils: 5000 }],
     });
 
     expect(result.updated).toBe(1);
@@ -123,9 +125,7 @@ describe("webhook.receiveInventoryWebhook", () => {
 
     const result = await caller.webhook.receiveInventoryWebhook({
       retailerId: RETAILER_ID,
-      products: [
-        { sku: "UNKNOWN-SKU", stockQuantity: 10 },
-      ],
+      products: [{ sku: "UNKNOWN-SKU", stockQuantity: 10 }],
     });
 
     expect(result.updated).toBe(0);

@@ -1,6 +1,6 @@
 import path from "node:path";
-import { defineConfig } from "prisma/config";
 import dotenv from "dotenv";
+import { defineConfig } from "prisma/config";
 
 // Load root .env file (two levels up from packages/db)
 dotenv.config({ path: path.resolve(import.meta.dirname ?? ".", "../../.env") });
@@ -13,6 +13,8 @@ export default defineConfig({
   },
   datasource: {
     // Use DATABASE_URL from env if available; fallback for prisma generate (which doesn't need a real DB)
-    url: process.env.DATABASE_URL ?? "postgresql://placeholder:placeholder@localhost:5432/placeholder",
+    url:
+      process.env.DATABASE_URL ??
+      "postgresql://placeholder:placeholder@localhost:5432/placeholder",
   },
 });

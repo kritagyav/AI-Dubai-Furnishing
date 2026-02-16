@@ -1,7 +1,7 @@
-import { prisma } from "@dubai/db";
+import type { AvailableProduct } from "@dubai/ai-client";
 import type { PackageGeneratePayload } from "@dubai/queue";
 import { AIClient } from "@dubai/ai-client";
-import type { AvailableProduct } from "@dubai/ai-client";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 
@@ -39,7 +39,10 @@ export async function handlePackageGenerate(
   }
 
   if (pkg.status !== "GENERATING") {
-    log.warn({ status: pkg.status }, "Package not in GENERATING state, skipping");
+    log.warn(
+      { status: pkg.status },
+      "Package not in GENERATING state, skipping",
+    );
     return;
   }
 
@@ -97,7 +100,9 @@ export async function handlePackageGenerate(
       name: p.name,
       category: p.category as AvailableProduct["category"],
       priceFils: p.priceFils,
-      materials: Array.isArray(p.materials) ? (p.materials as string[]) : undefined,
+      materials: Array.isArray(p.materials)
+        ? (p.materials as string[])
+        : undefined,
       colors: Array.isArray(p.colors) ? (p.colors as string[]) : undefined,
       stockQuantity: p.stockQuantity,
     }));
@@ -114,7 +119,10 @@ export async function handlePackageGenerate(
     });
 
     log.info(
-      { source: recommendation.source, itemCount: recommendation.selectedProducts.length },
+      {
+        source: recommendation.source,
+        itemCount: recommendation.selectedProducts.length,
+      },
       "AI recommendation received",
     );
 
@@ -147,7 +155,8 @@ export async function handlePackageGenerate(
         status: "READY",
         totalPriceFils: recommendation.totalPriceFils,
         styleTag: payload.styleTag ?? stylePreferences[0] ?? null,
-        aiModelVersion: recommendation.source === "ai" ? "ai-v1" : "fallback-v1",
+        aiModelVersion:
+          recommendation.source === "ai" ? "ai-v1" : "fallback-v1",
         generatedAt: new Date(),
       },
     });

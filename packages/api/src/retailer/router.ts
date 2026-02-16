@@ -1,5 +1,6 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+
 import type { Prisma } from "@dubai/db";
 import {
   inventoryUpdateInput,
@@ -52,7 +53,9 @@ export const retailerRouter = {
             contactEmail: input.contactEmail,
             contactPhone: input.contactPhone ?? null,
             businessType: input.businessType ?? null,
-            ...(warehouseJson !== undefined ? { warehouseDetails: warehouseJson } : {}),
+            ...(warehouseJson !== undefined
+              ? { warehouseDetails: warehouseJson }
+              : {}),
             status: "PENDING",
           },
           select: {
@@ -97,7 +100,8 @@ export const retailerRouter = {
       if (retailer.status !== "PENDING") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Documents can only be submitted while application is pending",
+          message:
+            "Documents can only be submitted while application is pending",
         });
       }
 
@@ -149,7 +153,7 @@ export const retailerRouter = {
       },
     });
 
-    if (!retailer || retailer.status !== "APPROVED") {
+    if (retailer?.status !== "APPROVED") {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Retailer account not approved",
@@ -172,8 +176,9 @@ export const retailerRouter = {
 
     for (const group of productStats) {
       if (group.validationStatus === "ACTIVE") stats.active = group._count;
-      else if (group.validationStatus === "PENDING") stats.pending = group._count;
-      else if (group.validationStatus === "REJECTED") stats.rejected = group._count;
+      else if (group.validationStatus === "PENDING")
+        stats.pending = group._count;
+      else stats.rejected = group._count;
     }
 
     return {
@@ -197,7 +202,7 @@ export const retailerRouter = {
         select: { id: true, status: true },
       });
 
-      if (!retailer || retailer.status !== "APPROVED") {
+      if (retailer?.status !== "APPROVED") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only approved retailers can configure sync",
@@ -299,7 +304,7 @@ export const retailerRouter = {
         select: { id: true, tenantId: true, status: true },
       });
 
-      if (!retailer || retailer.status !== "APPROVED") {
+      if (retailer?.status !== "APPROVED") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only approved retailers can push inventory updates",
@@ -335,7 +340,9 @@ export const retailerRouter = {
             where: { id: product.id },
             data: {
               stockQuantity: item.stockQuantity,
-              ...(item.priceFils !== undefined ? { priceFils: item.priceFils } : {}),
+              ...(item.priceFils !== undefined
+                ? { priceFils: item.priceFils }
+                : {}),
             },
           });
           updated++;

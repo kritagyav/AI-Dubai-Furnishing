@@ -1,11 +1,35 @@
 {
   "elevation": {
     "$description": "Warm shadow system — uses rgba(44,41,38,x) not pure black",
-    "0": { "$value": "none", "$type": "shadow", "$description": "No elevation" },
-    "1": { "$value": "0 1px 2px 0 rgba(44,41,38,0.06)", "$type": "shadow", "$description": "Subtle lift — cards at rest" },
-    "2": { "$value": "0 2px 4px 0 rgba(44,41,38,0.08)", "$type": "shadow", "$description": "Raised — hover cards" },
-    "3": { "$value": "0 4px 8px -1px rgba(44,41,38,0.10), 0 2px 4px -1px rgba(44,41,38,0.06)", "$type": "shadow", "$description": "Floating — dropdowns, popovers" },
-    "4": { "$value": "0 8px 16px -2px rgba(44,41,38,0.12), 0 4px 6px -1px rgba(44,41,38,0.06)", "$type": "shadow", "$description": "Overlay — modals, drawers" },
-    "5": { "$value": "0 16px 32px -4px rgba(44,41,38,0.16), 0 8px 12px -2px rgba(44,41,38,0.08)", "$type": "shadow", "$description": "Dramatic depth — hero cards, featured" }
+    "0": {
+      "$value": "none",
+      "$type": "shadow",
+      "$description": "No elevation"
+    },
+    "1": {
+      "$value": "0 1px 2px 0 rgba(44,41,38,0.06)",
+      "$type": "shadow",
+      "$description": "Subtle lift — cards at rest"
+    },
+    "2": {
+      "$value": "0 2px 4px 0 rgba(44,41,38,0.08)",
+      "$type": "shadow",
+      "$description": "Raised — hover cards"
+    },
+    "3": {
+      "$value": "0 4px 8px -1px rgba(44,41,38,0.10), 0 2px 4px -1px rgba(44,41,38,0.06)",
+      "$type": "shadow",
+      "$description": "Floating — dropdowns, popovers"
+    },
+    "4": {
+      "$value": "0 8px 16px -2px rgba(44,41,38,0.12), 0 4px 6px -1px rgba(44,41,38,0.06)",
+      "$type": "shadow",
+      "$description": "Overlay — modals, drawers"
+    },
+    "5": {
+      "$value": "0 16px 32px -4px rgba(44,41,38,0.16), 0 8px 12px -2px rgba(44,41,38,0.08)",
+      "$type": "shadow",
+      "$description": "Dramatic depth — hero cards, featured"
+    }
   }
 }

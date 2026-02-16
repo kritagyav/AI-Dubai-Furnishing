@@ -34,7 +34,9 @@ const db = prisma as unknown as {
 
 // ─── Helpers ───
 
-function payload(overrides?: Partial<InventorySyncPayload>): InventorySyncPayload {
+function payload(
+  overrides?: Partial<InventorySyncPayload>,
+): InventorySyncPayload {
   return {
     retailerId: "ret-1",
     configId: "config-1",
@@ -60,7 +62,9 @@ describe("handleInventorySync", () => {
     await handleInventorySync(payload());
 
     expect(db.inventorySyncJob.create).not.toHaveBeenCalled();
-    expect(mockLog.warn).toHaveBeenCalledWith("Sync config not found or inactive, skipping");
+    expect(mockLog.warn).toHaveBeenCalledWith(
+      "Sync config not found or inactive, skipping",
+    );
   });
 
   it("skips when config is inactive", async () => {
@@ -120,7 +124,11 @@ describe("handleInventorySync", () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       headers: new Headers({ "X-Response-Signature": "sig" }),
-      json: () => Promise.resolve([{ sku: "A1", stock: 10 }, { sku: "A2", stock: 5 }]),
+      json: () =>
+        Promise.resolve([
+          { sku: "A1", stock: 10 },
+          { sku: "A2", stock: 5 },
+        ]),
     });
     vi.stubGlobal("fetch", mockFetch);
 
@@ -199,7 +207,12 @@ describe("handleInventorySync", () => {
     db.retailerProduct.findMany
       .mockResolvedValueOnce([{ id: "p1", stockQuantity: 10, updatedAt: now }]) // main query
       .mockResolvedValueOnce([
-        { id: "p2", sku: "STALE-SKU", name: "Old Product", updatedAt: eightDaysAgo },
+        {
+          id: "p2",
+          sku: "STALE-SKU",
+          name: "Old Product",
+          updatedAt: eightDaysAgo,
+        },
       ]); // stale check
 
     await handleInventorySync(payload());
@@ -261,9 +274,12 @@ describe("handleInventorySync", () => {
     const disableCall = updateCalls.find(
       (call: unknown[]) =>
         (call[0] as Record<string, unknown>).data &&
-        ((call[0] as Record<string, Record<string, unknown>>).data).isActive === false,
+        (call[0] as Record<string, Record<string, unknown>>).data.isActive ===
+          false,
     );
     expect(disableCall).toBeDefined();
-    expect(mockLog.error).toHaveBeenCalledWith("Sync disabled after 5 consecutive failures");
+    expect(mockLog.error).toHaveBeenCalledWith(
+      "Sync disabled after 5 consecutive failures",
+    );
   });
 });

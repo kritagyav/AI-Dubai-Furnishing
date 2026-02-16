@@ -4,12 +4,11 @@
  * Retailer Catalog — Story 5.2: Product Catalog API Integration.
  * Lists products with status filtering, links to upload.
  */
-
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
@@ -116,7 +115,9 @@ export default function RetailerCatalogPage() {
                 <th className="px-4 py-3 text-left font-medium">Product</th>
                 <th className="px-4 py-3 text-left font-medium">SKU</th>
                 <th className="px-4 py-3 text-left font-medium">Category</th>
-                <th className="px-4 py-3 text-right font-medium">Price (AED)</th>
+                <th className="px-4 py-3 text-right font-medium">
+                  Price (AED)
+                </th>
                 <th className="px-4 py-3 text-right font-medium">Stock</th>
                 <th className="px-4 py-3 text-left font-medium">Status</th>
                 <th className="px-4 py-3 text-right font-medium">Actions</th>

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 const AREAS = [
   "DUBAI_MARINA",
@@ -32,7 +33,7 @@ export default function DeliverySlotsPage() {
 
   const slots = useQuery(
     trpc.delivery.listSlots.queryOptions({
-      date: viewDate || new Date().toISOString().split("T")[0]!,
+      date: viewDate || (new Date().toISOString().split("T")[0] ?? ""),
       ...(viewArea ? { area: viewArea } : {}),
     }),
   );
@@ -107,7 +108,9 @@ export default function DeliverySlotsPage() {
               disabled={creating || !createDate || !createArea}
               className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {creating ? "Creating..." : "Create Standard Slots (4 time windows)"}
+              {creating
+                ? "Creating..."
+                : "Create Standard Slots (4 time windows)"}
             </button>
             <p className="text-xs text-gray-400">
               Creates 09:00-12:00, 12:00-15:00, 15:00-18:00, 18:00-21:00 slots
@@ -164,22 +167,22 @@ export default function DeliverySlotsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Time Window
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Area
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Capacity
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Booked
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Available
               </th>
             </tr>
@@ -207,22 +210,22 @@ export default function DeliverySlotsPage() {
             )}
             {slots.data?.map((slot) => (
               <tr key={slot.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {new Date(slot.date).toLocaleDateString()}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {slot.startTime} - {slot.endTime}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {slot.area ? slot.area.replace(/_/g, " ") : "All"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {slot.capacity}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {slot.booked}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
                   <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                       slot.available > 0

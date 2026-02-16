@@ -4,9 +4,8 @@
  * New Project — Story 2.1: Create & Manage Furnishing Projects.
  * Simple form to create a new furnishing project.
  */
-
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@dubai/ui/button";
 
@@ -78,19 +77,13 @@ export default function NewProjectPage() {
           />
         </div>
 
-        {error && (
-          <p className="text-destructive text-sm">{error}</p>
-        )}
+        {error && <p className="text-destructive text-sm">{error}</p>}
 
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={submitting || !name.trim()}>
             {submitting ? "Creating..." : "Create Project"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-          >
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
         </div>

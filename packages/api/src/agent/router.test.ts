@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -21,11 +31,6 @@ vi.mock("@upstash/redis", () => ({
 vi.mock("../audit", () => ({
   writeAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
-
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -211,19 +216,23 @@ describe("agent.convertReferral", () => {
     });
 
     // Mock $transaction to execute the callback
-    db.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
-      const tx = {
-        referral: { update: vi.fn().mockResolvedValue({
-          id: "ref-1",
-          referralCode: "REF-ABCD1234",
-          orderId: ORDER_ID,
-          commissionFils: 50000,
-          convertedAt: new Date(),
-        }) },
-        agentPartner: { update: vi.fn().mockResolvedValue({}) },
-      };
-      return cb(tx);
-    });
+    db.$transaction.mockImplementation(
+      async (cb: (tx: any) => Promise<any>) => {
+        const tx = {
+          referral: {
+            update: vi.fn().mockResolvedValue({
+              id: "ref-1",
+              referralCode: "REF-ABCD1234",
+              orderId: ORDER_ID,
+              commissionFils: 50000,
+              convertedAt: new Date(),
+            }),
+          },
+          agentPartner: { update: vi.fn().mockResolvedValue({}) },
+        };
+        return cb(tx);
+      },
+    );
 
     const result = await caller.agent.convertReferral({
       referralCode: "REF-ABCD1234",

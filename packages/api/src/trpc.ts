@@ -120,12 +120,13 @@ const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
 
   if (limiter) {
     const identifier =
-      (ctx.session?.user?.id) ??
+      ctx.session?.user.id ??
       ctx.headers.get("x-forwarded-for") ??
       ctx.headers.get("x-real-ip") ??
       "anonymous";
 
-    const { success, limit, remaining, reset } = await limiter.limit(identifier);
+    const { success, limit, remaining, reset } =
+      await limiter.limit(identifier);
 
     if (!success) {
       throw new TRPCError({
@@ -237,7 +238,12 @@ const corporateScopedDbMiddleware = t.middleware(async ({ ctx, next }) => {
   const tenantId = (ctx as Record<string, unknown>).tenantId as string;
 
   return next({
-    ctx: { db: scopedClient(tenantId, "corporateAccountId") as unknown as PrismaClient },
+    ctx: {
+      db: scopedClient(
+        tenantId,
+        "corporateAccountId",
+      ) as unknown as PrismaClient,
+    },
   });
 });
 
@@ -324,13 +330,17 @@ export const agentProcedure = authedProcedure.use(roleMiddleware(["AGENT"]));
 const auditMiddleware = t.middleware(async ({ ctx, next, path }) => {
   const result = await next();
 
-  const user = (ctx as Record<string, unknown>).user as {
-    id: string;
-    role: string;
-  } | undefined;
+  const user = (ctx as Record<string, unknown>).user as
+    | {
+        id: string;
+        role: string;
+      }
+    | undefined;
 
   if (user) {
-    const correlationId = (ctx as Record<string, unknown>).correlationId as string | undefined;
+    const correlationId = (ctx as Record<string, unknown>).correlationId as
+      | string
+      | undefined;
 
     try {
       await writeAuditLog(ctx.db, {

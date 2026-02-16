@@ -1,15 +1,15 @@
 {
   "input": {
     "$description": "Input/form component tokens",
-    "bg":           { "$value": "{color.surface.primary}", "$type": "color" },
-    "border":       { "$value": "{color.border.default}", "$type": "color" },
+    "bg": { "$value": "{color.surface.primary}", "$type": "color" },
+    "border": { "$value": "{color.border.default}", "$type": "color" },
     "border-hover": { "$value": "{color.border.strong}", "$type": "color" },
     "border-focus": { "$value": "{color.border.focus}", "$type": "color" },
-    "focus-ring":   { "$value": "{color.interactive.subtle}", "$type": "color" },
-    "text":         { "$value": "{color.text.primary}", "$type": "color" },
-    "placeholder":  { "$value": "{color.text.tertiary}", "$type": "color" },
-    "radius":       { "$value": "{radius.md}", "$type": "dimension" },
-    "padding-x":    { "$value": "{space.4}", "$type": "dimension" },
-    "padding-y":    { "$value": "{space.3}", "$type": "dimension" }
+    "focus-ring": { "$value": "{color.interactive.subtle}", "$type": "color" },
+    "text": { "$value": "{color.text.primary}", "$type": "color" },
+    "placeholder": { "$value": "{color.text.tertiary}", "$type": "color" },
+    "radius": { "$value": "{radius.md}", "$type": "dimension" },
+    "padding-x": { "$value": "{space.4}", "$type": "dimension" },
+    "padding-y": { "$value": "{space.3}", "$type": "dimension" }
   }
 }

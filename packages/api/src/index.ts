@@ -17,6 +17,10 @@ type RouterInputs = inferRouterInputs<AppRouter>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { type AppRouter, appRouter } from "./root";
-export { createCallerFactory, createTRPCContext, auditedProcedure } from "./trpc";
+export {
+  createCallerFactory,
+  createTRPCContext,
+  auditedProcedure,
+} from "./trpc";
 export type { RouterInputs, RouterOutputs };
 export { type AppError, type AppErrorCode, APP_ERROR_CODES } from "./errors";

@@ -24,14 +24,19 @@ const { prisma } = await import("@dubai/db");
 
 const db = prisma as unknown as {
   order: { findUnique: ReturnType<typeof vi.fn> };
-  commission: { findFirst: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn> };
+  commission: {
+    findFirst: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
   retailer: { findUnique: ReturnType<typeof vi.fn> };
   ledgerEntry: { create: ReturnType<typeof vi.fn> };
 };
 
 // ─── Helpers ───
 
-function payload(overrides?: Partial<CommissionCalculatePayload>): CommissionCalculatePayload {
+function payload(
+  overrides?: Partial<CommissionCalculatePayload>,
+): CommissionCalculatePayload {
   return { orderId: "order-1", ...overrides };
 }
 

@@ -1,6 +1,9 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import type { Prisma, PrismaClient } from "@dubai/db";
+import { z } from "zod/v4";
+
+import type { PrismaClient } from "@dubai/db";
+import { aiClient, classifyRoomTypeByName } from "@dubai/ai-client";
 import {
   addRoomPhotoInput,
   createProjectInput,
@@ -14,12 +17,8 @@ import {
   updateRoomInput,
   uploadFloorPlanInput,
 } from "@dubai/validators";
-import { aiClient, classifyRoomTypeByName } from "@dubai/ai-client";
-import { z } from "zod/v4";
 
 import { authedProcedure } from "../trpc";
-
-type JsonValue = Prisma.InputJsonValue;
 
 // ═══════════════════════════════════════════
 // Helper: verify user owns the project
@@ -138,7 +137,10 @@ export const roomRouter = {
       });
 
       if (!project) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found",
+        });
       }
 
       return project;
@@ -258,7 +260,9 @@ export const roomRouter = {
           ...(input.widthCm !== undefined ? { widthCm: input.widthCm } : {}),
           ...(input.lengthCm !== undefined ? { lengthCm: input.lengthCm } : {}),
           ...(input.heightCm !== undefined ? { heightCm: input.heightCm } : {}),
-          ...(input.displayUnit !== undefined ? { displayUnit: input.displayUnit } : {}),
+          ...(input.displayUnit !== undefined
+            ? { displayUnit: input.displayUnit }
+            : {}),
         },
         select: {
           id: true,
@@ -326,7 +330,10 @@ export const roomRouter = {
     .input(deleteRoomPhotoInput)
     .mutation(async ({ ctx, input }) => {
       const photo = await ctx.db.roomPhoto.findFirst({
-        where: { id: input.photoId, room: { project: { userId: ctx.user.id } } },
+        where: {
+          id: input.photoId,
+          room: { project: { userId: ctx.user.id } },
+        },
         select: { id: true },
       });
 
@@ -455,7 +462,10 @@ export const roomRouter = {
         source = result.source === "ai" ? "AI_SUGGESTED" : "AI_SUGGESTED";
 
         // If AI gave low confidence or returned OTHER, try name-based fallback
-        if (result.source === "fallback" || (result.confidence < 0.3 && result.type === "OTHER")) {
+        if (
+          result.source === "fallback" ||
+          (result.confidence < 0.3 && result.type === "OTHER")
+        ) {
           const nameBased = classifyRoomTypeByName(room.name);
           if (nameBased.confidence > result.confidence) {
             detectedType = nameBased.type;

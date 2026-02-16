@@ -3,20 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  HomeIcon,
-  FolderOpenIcon,
-  ImageIcon,
-  ShoppingCartIcon,
-  PackageIcon,
   BookmarkIcon,
-  LifeBuoyIcon,
-
-  UserIcon,
-  ShieldIcon,
-  MonitorSmartphoneIcon,
-  LayoutDashboardIcon,
   BoxIcon,
+  FolderOpenIcon,
+  HomeIcon,
+  ImageIcon,
+  LayoutDashboardIcon,
+  LifeBuoyIcon,
+  MonitorSmartphoneIcon,
+  PackageIcon,
+  ShieldIcon,
+  ShoppingCartIcon,
   UploadIcon,
+  UserIcon,
 } from "lucide-react";
 
 import {
@@ -55,7 +54,11 @@ const accountNav = [
 ];
 
 const retailerNav = [
-  { href: "/retailer/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+  {
+    href: "/retailer/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboardIcon,
+  },
   { href: "/retailer/catalog", label: "Catalog", icon: BoxIcon },
   { href: "/retailer/catalog/upload", label: "Upload", icon: UploadIcon },
 ];
@@ -71,10 +74,7 @@ export function AppSidebar({ userEmail, isRetailer }: AppSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 px-2 py-1.5"
-        >
+        <Link href="/dashboard" className="flex items-center gap-2 px-2 py-1.5">
           <span className="text-lg font-bold tracking-tight">
             Dubai <span className="text-primary">Furnishing</span>
           </span>
@@ -88,7 +88,11 @@ export function AppSidebar({ userEmail, isRetailer }: AppSidebarProps) {
             <SidebarMenu>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={item.label}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    tooltip={item.label}
+                  >
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -108,7 +112,11 @@ export function AppSidebar({ userEmail, isRetailer }: AppSidebarProps) {
             <SidebarMenu>
               {accountNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={item.label}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    tooltip={item.label}
+                  >
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.label}</span>
@@ -129,7 +137,11 @@ export function AppSidebar({ userEmail, isRetailer }: AppSidebarProps) {
                 <SidebarMenu>
                   {retailerNav.map((item) => (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive(item.href)} tooltip={item.label}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(item.href)}
+                        tooltip={item.label}
+                      >
                         <Link href={item.href}>
                           <item.icon />
                           <span>{item.label}</span>

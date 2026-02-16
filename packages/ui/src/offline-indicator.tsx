@@ -19,12 +19,12 @@ export function OfflineIndicator({
   pendingCount = 0,
   className,
 }: OfflineIndicatorProps) {
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(
+    typeof window !== "undefined" ? !navigator.onLine : false,
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    setIsOffline(!navigator.onLine);
 
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
@@ -45,7 +45,7 @@ export function OfflineIndicator({
       role="status"
       aria-live="polite"
       className={cn(
-        "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 flex items-center gap-2 border-b px-4 py-2 text-sm",
+        "flex items-center gap-2 border-b border-yellow-200 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-200",
         className,
       )}
     >

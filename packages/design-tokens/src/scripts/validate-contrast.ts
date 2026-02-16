@@ -21,11 +21,7 @@ function srgbToLinear(c: number): number {
 }
 
 function relativeLuminance(hex: string): number {
-  const [r, g, b] = hexToRgb(hex).map(srgbToLinear) as [
-    number,
-    number,
-    number,
-  ];
+  const [r, g, b] = hexToRgb(hex).map(srgbToLinear) as [number, number, number];
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 

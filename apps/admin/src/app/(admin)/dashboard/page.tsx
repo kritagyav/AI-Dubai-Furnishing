@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useTRPC } from "~/trpc/react";
 import { useQuery } from "@tanstack/react-query";
+
+import { useTRPC } from "~/trpc/react";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -70,7 +71,7 @@ function RevenueKPICard({
 function DailyRevenueChart({
   data,
 }: {
-  data: Array<{ date: string; revenueFils: number }>;
+  data: { date: string; revenueFils: number }[];
 }) {
   const maxRevenue = Math.max(...data.map((d) => d.revenueFils), 1);
 
@@ -81,10 +82,7 @@ function DailyRevenueChart({
       </h2>
       <div className="flex items-end gap-1" style={{ height: "120px" }}>
         {data.map((d) => {
-          const heightPct = Math.max(
-            (d.revenueFils / maxRevenue) * 100,
-            2,
-          );
+          const heightPct = Math.max((d.revenueFils / maxRevenue) * 100, 2);
           return (
             <div
               key={d.date}
@@ -120,9 +118,7 @@ export default function AdminDashboardPage() {
   );
   const supportMetrics = useQuery(trpc.support.metrics.queryOptions());
   const health = useQuery(trpc.admin.platformHealth.queryOptions());
-  const revenue = useQuery(
-    trpc.admin.revenueMetrics.queryOptions({ period }),
-  );
+  const revenue = useQuery(trpc.admin.revenueMetrics.queryOptions({ period }));
   const disputes = useQuery(trpc.admin.disputeMetrics.queryOptions());
 
   const s = stats.data;
@@ -135,9 +131,7 @@ export default function AdminDashboardPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Platform Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Platform Dashboard</h1>
         {/* Period Selector */}
         <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1">
           {(["7d", "30d", "90d"] as const).map((p) => (
@@ -221,9 +215,7 @@ export default function AdminDashboardPage() {
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Daily Revenue
             </h2>
-            <p className="py-8 text-center text-sm text-gray-400">
-              Loading...
-            </p>
+            <p className="py-8 text-center text-sm text-gray-400">Loading...</p>
           </div>
         )}
 
@@ -303,20 +295,15 @@ export default function AdminDashboardPage() {
             </div>
             {d && Object.keys(d.byReason).length > 0 && (
               <div className="mt-3 border-t border-gray-100 pt-3">
-                <p className="mb-2 text-xs font-medium uppercase text-gray-500">
+                <p className="mb-2 text-xs font-medium text-gray-500 uppercase">
                   By Category
                 </p>
                 {Object.entries(d.byReason).map(([reason, count]) => (
-                  <div
-                    key={reason}
-                    className="flex justify-between text-sm"
-                  >
+                  <div key={reason} className="flex justify-between text-sm">
                     <span className="text-gray-600">
                       {reason.replace(/_/g, " ")}
                     </span>
-                    <span className="font-medium text-gray-900">
-                      {count}
-                    </span>
+                    <span className="font-medium text-gray-900">{count}</span>
                   </div>
                 ))}
               </div>
@@ -411,19 +398,25 @@ export default function AdminDashboardPage() {
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">API</span>
-              <span className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}>
+              <span
+                className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}
+              >
                 {health.data?.api ?? "--"}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Database</span>
-              <span className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}>
+              <span
+                className={`font-medium ${health.data ? "text-green-600" : "text-gray-400"}`}
+              >
                 {health.data?.database ?? "--"}
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Worker</span>
-              <span className={`font-medium ${health.data?.worker === "Running" ? "text-green-600" : health.data?.worker === "Idle" ? "text-yellow-600" : "text-gray-400"}`}>
+              <span
+                className={`font-medium ${health.data?.worker === "Running" ? "text-green-600" : health.data?.worker === "Idle" ? "text-yellow-600" : "text-gray-400"}`}
+              >
                 {health.data?.worker ?? "--"}
               </span>
             </div>

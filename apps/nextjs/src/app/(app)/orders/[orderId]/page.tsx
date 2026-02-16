@@ -89,9 +89,12 @@ export default function OrderDetailPage() {
     );
   }
 
-  const cancellable = ["DRAFT", "PENDING_PAYMENT", "PAID", "PROCESSING"].includes(
-    order.status,
-  );
+  const cancellable = [
+    "DRAFT",
+    "PENDING_PAYMENT",
+    "PAID",
+    "PROCESSING",
+  ].includes(order.status);
 
   return (
     <div className="space-y-6">
@@ -112,7 +115,7 @@ export default function OrderDetailPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-2 font-semibold">Order Details</h2>
-          <div className="text-sm space-y-1">
+          <div className="space-y-1 text-sm">
             <p>
               <span className="text-muted-foreground">Placed:</span>{" "}
               {new Date(order.createdAt).toLocaleString()}
@@ -135,7 +138,7 @@ export default function OrderDetailPage() {
         {order.shippingAddress && (
           <div className="bg-card rounded-lg p-4 shadow-xs">
             <h2 className="mb-2 font-semibold">Shipping Address</h2>
-            <div className="text-sm space-y-1">
+            <div className="space-y-1 text-sm">
               <p>{order.shippingAddress.line1}</p>
               {order.shippingAddress.line2 && (
                 <p>{order.shippingAddress.line2}</p>
@@ -158,7 +161,10 @@ export default function OrderDetailPage() {
         </div>
         <div className="divide-y">
           {order.lineItems.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-4">
+            <div
+              key={item.id}
+              className="flex items-center justify-between p-4"
+            >
               <div>
                 <p className="font-medium">{item.productName}</p>
                 <p className="text-muted-foreground text-xs">
@@ -195,10 +201,15 @@ export default function OrderDetailPage() {
           <h2 className="mb-2 font-semibold">Payments</h2>
           <div className="space-y-2">
             {order.payments.map((p) => (
-              <div key={p.id} className="flex items-center justify-between text-sm">
+              <div
+                key={p.id}
+                className="flex items-center justify-between text-sm"
+              >
                 <div>
                   <span className="font-medium">{p.method}</span>{" "}
-                  <span className="text-muted-foreground">&middot; {p.status}</span>
+                  <span className="text-muted-foreground">
+                    &middot; {p.status}
+                  </span>
                 </div>
                 <span>AED {(p.amountFils / 100).toFixed(2)}</span>
               </div>

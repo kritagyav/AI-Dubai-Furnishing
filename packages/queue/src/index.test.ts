@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import type {
-  InventorySyncPayload,
-  NotificationSendPayload,
+  AnalyticsEventName,
+  AnalyticsTrackPayload,
+  CartAbandonCheckPayload,
   CommissionCalculatePayload,
   DeliveryRemindPayload,
-  PackageGeneratePayload,
-  CartAbandonCheckPayload,
-  AnalyticsTrackPayload,
+  InventorySyncPayload,
   JobName,
-  AnalyticsEventName,
   JobPayloadMap,
+  NotificationSendPayload,
+  PackageGeneratePayload,
 } from "./index";
 
 // ═══════════════════════════════════════════

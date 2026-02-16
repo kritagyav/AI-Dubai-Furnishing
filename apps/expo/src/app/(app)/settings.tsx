@@ -1,8 +1,15 @@
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 import { Stack, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import Constants from "expo-constants";
 
 import { supabase } from "~/lib/supabase";
 import { trpc } from "~/utils/api";
@@ -18,9 +25,10 @@ export default function SettingsScreen() {
       {
         text: "Sign Out",
         style: "destructive",
-        onPress: async () => {
-          await supabase.auth.signOut();
-          router.replace("/(auth)/login" as never);
+        onPress: () => {
+          void supabase.auth.signOut().then(() => {
+            router.replace("/(auth)/login" as never);
+          });
         },
       },
     ]);

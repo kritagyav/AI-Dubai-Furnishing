@@ -2,20 +2,17 @@
 
 import { useState } from "react";
 
+import { getSupabaseBrowserClient } from "@dubai/auth/client";
+import { useAuth } from "@dubai/auth/hooks";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
 import { Label } from "@dubai/ui/label";
-
-import { useAuth } from "@dubai/auth/hooks";
-import { getSupabaseBrowserClient } from "@dubai/auth/client";
 
 import { AvatarUpload } from "~/components/AvatarUpload";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [name, setName] = useState(
-    String(user?.user_metadata.full_name ?? ""),
-  );
+  const [name, setName] = useState(String(user?.user_metadata.full_name ?? ""));
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -41,7 +38,9 @@ export default function ProfilePage() {
 
       <AvatarUpload
         userId={user?.id ?? ""}
-        {...(user?.user_metadata.avatar_url ? { currentAvatar: String(user.user_metadata.avatar_url) } : {})}
+        {...(user?.user_metadata.avatar_url
+          ? { currentAvatar: String(user.user_metadata.avatar_url) }
+          : {})}
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -70,7 +69,9 @@ export default function ProfilePage() {
         </div>
 
         {success && (
-          <p className="text-sm text-[var(--color-success-default)]">Profile updated.</p>
+          <p className="text-sm text-[var(--color-success-default)]">
+            Profile updated.
+          </p>
         )}
 
         <Button type="submit" disabled={saving}>

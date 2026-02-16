@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 
 import { Button } from "@dubai/ui/button";
 
-import { trackPageView, trackAction } from "~/lib/analytics";
+import { env } from "~/env";
+import { trackAction, trackPageView } from "~/lib/analytics";
 import { useTRPCClient } from "~/trpc/react";
 
 type Step = "address" | "payment" | "confirmation";
@@ -35,9 +36,9 @@ declare global {
   }
 }
 
-const CHECKOUT_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY ?? "";
-const IS_DEV = !CHECKOUT_PUBLIC_KEY || CHECKOUT_PUBLIC_KEY === "pk_test_placeholder";
+const CHECKOUT_PUBLIC_KEY = env.NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY ?? "";
+const IS_DEV =
+  !CHECKOUT_PUBLIC_KEY || CHECKOUT_PUBLIC_KEY === "pk_test_placeholder";
 
 export default function CheckoutPage() {
   const client = useTRPCClient();
@@ -72,12 +73,7 @@ export default function CheckoutPage() {
   const framesInitialized = useRef(false);
 
   const initCheckoutFrames = useCallback(() => {
-    if (
-      framesInitialized.current ||
-      IS_DEV ||
-      typeof window === "undefined" ||
-      !window.Frames
-    )
+    if (framesInitialized.current || IS_DEV || typeof window === "undefined")
       return;
 
     window.Frames.init({
@@ -117,9 +113,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (step === "payment" && paymentMethod === "CARD" && !IS_DEV) {
       // Frames script may already be loaded
-      if (window.Frames) {
-        initCheckoutFrames();
-      }
+      initCheckoutFrames();
     }
   }, [step, paymentMethod, initCheckoutFrames]);
 
@@ -170,7 +164,9 @@ export default function CheckoutPage() {
       setStep("confirmation");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Payment failed. Please try again.";
+        err instanceof Error
+          ? err.message
+          : "Payment failed. Please try again.";
       setPaymentError(message);
     } finally {
       setSubmitting(false);
@@ -181,13 +177,14 @@ export default function CheckoutPage() {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success-light)]">
-          <span className="text-2xl text-[var(--color-success-default)]">&#10003;</span>
+          <span className="text-2xl text-[var(--color-success-default)]">
+            &#10003;
+          </span>
         </div>
         <h1 className="text-3xl font-bold">Order Confirmed!</h1>
         <p className="text-muted-foreground">
-          Your order{" "}
-          <span className="font-mono font-semibold">{orderRef}</span> has been
-          placed successfully.
+          Your order <span className="font-mono font-semibold">{orderRef}</span>{" "}
+          has been placed successfully.
         </p>
         <div className="flex justify-center gap-3">
           <Button onClick={() => router.push(`/orders/${orderId}`)}>
@@ -228,7 +225,7 @@ export default function CheckoutPage() {
       </div>
 
       {step === "address" && (
-        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
+        <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">Shipping Address</h2>
 
           <div>
@@ -319,7 +316,7 @@ export default function CheckoutPage() {
       )}
 
       {step === "payment" && (
-        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
+        <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">Payment Method</h2>
           <p className="text-muted-foreground text-sm">
             Order ref: <span className="font-mono">{orderRef}</span>
@@ -336,7 +333,7 @@ export default function CheckoutPage() {
           )}
 
           <div className="space-y-2">
-            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
+            <label className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-md border p-3">
               <input
                 type="radio"
                 name="payment"
@@ -351,7 +348,7 @@ export default function CheckoutPage() {
                 </p>
               </div>
             </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
+            <label className="hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-md border p-3">
               <input
                 type="radio"
                 name="payment"
@@ -401,8 +398,7 @@ export default function CheckoutPage() {
           <Button
             className="w-full"
             disabled={
-              submitting ||
-              (paymentMethod === "CARD" && !IS_DEV && !cardValid)
+              submitting || (paymentMethod === "CARD" && !IS_DEV && !cardValid)
             }
             onClick={handlePayment}
           >

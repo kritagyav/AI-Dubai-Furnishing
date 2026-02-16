@@ -37,9 +37,11 @@
   },
   "devDependencies": {
     "@dubai/prettier-config": "workspace:*",
+    "@ianvs/prettier-plugin-sort-imports": "catalog:",
     "@turbo/gen": "^2.5.8",
     "dotenv-cli": "^10.0.0",
     "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
     "turbo": "^2.5.8",
     "typescript": "catalog:"
   },

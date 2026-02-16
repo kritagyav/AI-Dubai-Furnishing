@@ -2,7 +2,7 @@
   "color": {
     "neutral": {
       "$description": "Warm neutral foundation — no pure black or pure white",
-      "50":  { "$value": "#FAFAF7", "$type": "color" },
+      "50": { "$value": "#FAFAF7", "$type": "color" },
       "100": { "$value": "#F5F0EB", "$type": "color" },
       "150": { "$value": "#EDE7E0", "$type": "color" },
       "200": { "$value": "#DDD6CD", "$type": "color" },
@@ -44,27 +44,27 @@
     },
     "success": {
       "$description": "Warm-toned success states",
-      "light":   { "$value": "#E8F5E8", "$type": "color" },
+      "light": { "$value": "#E8F5E8", "$type": "color" },
       "default": { "$value": "#5C8A5C", "$type": "color" },
-      "dark":    { "$value": "#3D6B3D", "$type": "color" }
+      "dark": { "$value": "#3D6B3D", "$type": "color" }
     },
     "error": {
       "$description": "Warm-toned error states",
-      "light":   { "$value": "#FBEAE8", "$type": "color" },
+      "light": { "$value": "#FBEAE8", "$type": "color" },
       "default": { "$value": "#C4554D", "$type": "color" },
-      "dark":    { "$value": "#963F38", "$type": "color" }
+      "dark": { "$value": "#963F38", "$type": "color" }
     },
     "warning": {
       "$description": "Warm-toned warning states",
-      "light":   { "$value": "#FDF3E4", "$type": "color" },
+      "light": { "$value": "#FDF3E4", "$type": "color" },
       "default": { "$value": "#C88A35", "$type": "color" },
-      "dark":    { "$value": "#8D6124", "$type": "color" }
+      "dark": { "$value": "#8D6124", "$type": "color" }
     },
     "info": {
       "$description": "Info states — cool-shifted but warm-adjacent",
-      "light":   { "$value": "#E8EDF2", "$type": "color" },
+      "light": { "$value": "#E8EDF2", "$type": "color" },
       "default": { "$value": "#5E6B7A", "$type": "color" },
-      "dark":    { "$value": "#4A5563", "$type": "color" }
+      "dark": { "$value": "#4A5563", "$type": "color" }
     }
   }
 }

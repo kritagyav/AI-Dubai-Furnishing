@@ -67,15 +67,31 @@ export default function OrderDetailScreen() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case "PENDING_PAYMENT":
-        return { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending Payment" };
+        return {
+          bg: "bg-yellow-100",
+          text: "text-yellow-800",
+          label: "Pending Payment",
+        };
       case "PAID":
         return { bg: "bg-green-100", text: "text-green-800", label: "Paid" };
       case "PROCESSING":
-        return { bg: "bg-blue-100", text: "text-blue-800", label: "Processing" };
+        return {
+          bg: "bg-blue-100",
+          text: "text-blue-800",
+          label: "Processing",
+        };
       case "SHIPPED":
-        return { bg: "bg-indigo-100", text: "text-indigo-800", label: "Shipped" };
+        return {
+          bg: "bg-indigo-100",
+          text: "text-indigo-800",
+          label: "Shipped",
+        };
       case "DELIVERED":
-        return { bg: "bg-green-100", text: "text-green-800", label: "Delivered" };
+        return {
+          bg: "bg-green-100",
+          text: "text-green-800",
+          label: "Delivered",
+        };
       case "CANCELLED":
         return { bg: "bg-red-100", text: "text-red-800", label: "Cancelled" };
       case "REFUNDED":
@@ -85,8 +101,11 @@ export default function OrderDetailScreen() {
     }
   };
 
-  const statusStyle = getStatusStyle(order.status);
-  const shippingAddress = order.shippingAddress as Record<string, string> | null;
+  const statusStyle = getStatusStyle(String(order.status));
+  const shippingAddress = order.shippingAddress as Record<
+    string,
+    string
+  > | null;
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={["bottom"]}>
@@ -221,7 +240,7 @@ export default function OrderDetailScreen() {
                 {delivery.trackingUrl ? (
                   <Pressable
                     onPress={() =>
-                      void Linking.openURL(delivery.trackingUrl!)
+                      void Linking.openURL(delivery.trackingUrl ?? "")
                     }
                     className="mt-3 rounded-lg bg-blue-600 p-3"
                   >

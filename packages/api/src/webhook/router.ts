@@ -1,5 +1,4 @@
 import { createHmac } from "node:crypto";
-
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -123,8 +122,7 @@ export const webhookRouter = {
 
       // Verify webhook signature if signing secret is configured
       const signingSecret =
-        syncConfig.webhookSecret ??
-        process.env.WEBHOOK_SIGNING_SECRET;
+        syncConfig.webhookSecret ?? process.env.WEBHOOK_SIGNING_SECRET;
 
       if (signingSecret) {
         // Try headers first, fall back to body fields
@@ -139,7 +137,12 @@ export const webhookRouter = {
           products: input.products,
         });
 
-        verifyWebhookSignature(bodyForSigning, signature, timestamp, signingSecret);
+        verifyWebhookSignature(
+          bodyForSigning,
+          signature,
+          timestamp,
+          signingSecret,
+        );
       }
 
       // Process the inventory updates

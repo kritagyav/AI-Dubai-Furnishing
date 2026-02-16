@@ -12,6 +12,9 @@ catalogs:
     '@fast-check/vitest':
       specifier: ^0.2.4
       version: 0.2.4
+    '@ianvs/prettier-plugin-sort-imports':
+      specifier: ^4.7.0
+      version: 4.7.1
     '@playwright/test':
       specifier: ^1.58.0
       version: 1.58.2
@@ -120,6 +123,9 @@ catalogs:
     prettier:
       specifier: ^3.6.2
       version: 3.8.1
+    prettier-plugin-tailwindcss:
+      specifier: ^0.7.1
+      version: 0.7.2
     prisma:
       specifier: ^7.3.0
       version: 7.3.0
@@ -170,6 +176,9 @@ importers:
       '@dubai/prettier-config':
         specifier: workspace:*
         version: link:tooling/prettier
+      '@ianvs/prettier-plugin-sort-imports':
+        specifier: 'catalog:'
+        version: 4.7.1(prettier@3.8.1)
       '@turbo/gen':
         specifier: ^2.5.8
         version: 2.8.3(@types/node@25.2.1)(typescript@5.9.3)
@@ -179,6 +188,9 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.8.1
+      prettier-plugin-tailwindcss:
+        specifier: 'catalog:'
+        version: 0.7.2(@ianvs/prettier-plugin-sort-imports@4.7.1(prettier@3.8.1))(prettier@3.8.1)
       turbo:
         specifier: ^2.5.8
         version: 2.8.3

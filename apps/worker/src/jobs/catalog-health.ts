@@ -1,5 +1,5 @@
-import { prisma } from "@dubai/db";
 import type { CatalogHealthCheckPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 
@@ -12,7 +12,11 @@ const STALE_THRESHOLD_DAYS = 30;
 
 interface DetectedIssue {
   productId: string;
-  issueType: "STALE_STOCK" | "MISSING_FIELDS" | "PRICING_ANOMALY" | "BROKEN_IMAGE";
+  issueType:
+    | "STALE_STOCK"
+    | "MISSING_FIELDS"
+    | "PRICING_ANOMALY"
+    | "BROKEN_IMAGE";
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   recommendation?: string;

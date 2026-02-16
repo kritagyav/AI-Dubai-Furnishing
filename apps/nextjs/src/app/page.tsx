@@ -25,7 +25,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <ZoneProvider zone="warmth">
-        <section className="container flex flex-col items-center gap-6 pb-16 pt-24 text-center md:pt-32">
+        <section className="container flex flex-col items-center gap-6 pt-24 pb-16 text-center md:pt-32">
           <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
             AI-Powered Interior Design for Your{" "}
             <span className="text-primary">Dubai Home</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { QueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   createTRPCClient,
@@ -33,7 +33,9 @@ export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
  * Raw tRPC client for direct `.query()` / `.mutate()` calls
  * outside of React Query hooks (e.g., in event handlers).
  */
-let rawClientSingleton: ReturnType<typeof createTRPCClient<AppRouter>> | undefined;
+let rawClientSingleton:
+  | ReturnType<typeof createTRPCClient<AppRouter>>
+  | undefined;
 
 function getRawClient() {
   return (rawClientSingleton ??= createTRPCClient<AppRouter>({
@@ -58,8 +60,7 @@ function getRawClient() {
 
 /** Hook to access the raw tRPC client for direct calls. */
 export function useTRPCClient() {
-  const clientRef = useRef(getRawClient());
-  return clientRef.current;
+  return useMemo(() => getRawClient(), []);
 }
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {

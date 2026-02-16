@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Imports ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies ───
 
@@ -18,7 +23,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -34,11 +44,6 @@ vi.mock("@dubai/ai-client", () => ({
   aiClient: mockAiClient,
   classifyRoomTypeByName: mockClassifyRoomTypeByName,
 }));
-
-// ─── Imports ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -164,7 +169,9 @@ describe("room.createProject", () => {
     const ctx = unauthCtx(db);
     const caller = createCaller(ctx);
 
-    await expect(caller.room.createProject({ name: "Test" })).rejects.toThrow(TRPCError);
+    await expect(caller.room.createProject({ name: "Test" })).rejects.toThrow(
+      TRPCError,
+    );
   });
 });
 
@@ -313,7 +320,9 @@ describe("room.deleteProject", () => {
     const result = await caller.room.deleteProject({ projectId: TEST_UUID });
 
     expect(result.success).toBe(true);
-    expect(db.project.delete).toHaveBeenCalledWith({ where: { id: TEST_UUID } });
+    expect(db.project.delete).toHaveBeenCalledWith({
+      where: { id: TEST_UUID },
+    });
   });
 
   it("rejects other user's project", async () => {
@@ -455,9 +464,9 @@ describe("room.getRoom", () => {
 
     db.room.findFirst.mockResolvedValue(null);
 
-    await expect(
-      caller.room.getRoom({ roomId: TEST_UUID }),
-    ).rejects.toThrow("Room not found");
+    await expect(caller.room.getRoom({ roomId: TEST_UUID })).rejects.toThrow(
+      "Room not found",
+    );
   });
 });
 
@@ -524,9 +533,9 @@ describe("room.deleteRoom", () => {
 
     db.room.findFirst.mockResolvedValue(null);
 
-    await expect(
-      caller.room.deleteRoom({ roomId: TEST_UUID }),
-    ).rejects.toThrow("Room not found");
+    await expect(caller.room.deleteRoom({ roomId: TEST_UUID })).rejects.toThrow(
+      "Room not found",
+    );
   });
 });
 
@@ -636,7 +645,9 @@ describe("room.detectRoomType", () => {
         photos: [{ storageUrl: "https://storage.example.com/photo.jpg" }],
       });
 
-    mockAiClient.classifyRoomType.mockRejectedValue(new Error("AI unavailable"));
+    mockAiClient.classifyRoomType.mockRejectedValue(
+      new Error("AI unavailable"),
+    );
 
     mockClassifyRoomTypeByName.mockReturnValue({
       type: "BEDROOM",
@@ -777,7 +788,9 @@ describe("room.addPhoto", () => {
       orderIndex: 1,
     });
 
-    expect(result.thumbnailUrl).toBe("https://storage.example.com/photo-thumb.jpg");
+    expect(result.thumbnailUrl).toBe(
+      "https://storage.example.com/photo-thumb.jpg",
+    );
   });
 });
 
@@ -832,7 +845,9 @@ describe("room.uploadFloorPlan", () => {
     });
 
     expect(result.floorPlanUrl).toBe("https://storage.example.com/plan.pdf");
-    expect(result.floorPlanThumbUrl).toBe("https://storage.example.com/plan-thumb.jpg");
+    expect(result.floorPlanThumbUrl).toBe(
+      "https://storage.example.com/plan-thumb.jpg",
+    );
   });
 
   it("rejects floor plan for project not owned by user", async () => {

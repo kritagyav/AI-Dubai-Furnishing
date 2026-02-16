@@ -1,11 +1,12 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod/v4";
+
 import {
   createCorporateAccountInput,
-  updateCorporateAccountInput,
   paginationInput,
+  updateCorporateAccountInput,
 } from "@dubai/validators";
-import { z } from "zod/v4";
 
 import { adminProcedure } from "../trpc";
 
@@ -66,9 +67,12 @@ export const corporateRouter = {
       // Build data object, converting undefined to omit and handling nullable fields
       const data: Record<string, unknown> = {};
       if (rest.companyName !== undefined) data.companyName = rest.companyName;
-      if (rest.contactEmail !== undefined) data.contactEmail = rest.contactEmail;
-      if (rest.contactPhone !== undefined) data.contactPhone = rest.contactPhone ?? null;
-      if (rest.maxEmployees !== undefined) data.maxEmployees = rest.maxEmployees;
+      if (rest.contactEmail !== undefined)
+        data.contactEmail = rest.contactEmail;
+      if (rest.contactPhone !== undefined)
+        data.contactPhone = rest.contactPhone ?? null;
+      if (rest.maxEmployees !== undefined)
+        data.maxEmployees = rest.maxEmployees;
       if (rest.discountBps !== undefined) data.discountBps = rest.discountBps;
 
       const updated = await ctx.db.corporateAccount.update({
@@ -135,7 +139,11 @@ export const corporateRouter = {
     .mutation(async ({ ctx, input }) => {
       const account = await ctx.db.corporateAccount.findUnique({
         where: { id: input.accountId },
-        select: { id: true, maxEmployees: true, _count: { select: { employees: true } } },
+        select: {
+          id: true,
+          maxEmployees: true,
+          _count: { select: { employees: true } },
+        },
       });
 
       if (!account) {

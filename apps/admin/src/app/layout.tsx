@@ -39,10 +39,7 @@ export default function RootLayout({
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex h-14 items-center justify-between">
               <div className="flex items-center gap-1">
-                <Link
-                  href="/"
-                  className="text-lg font-bold text-white"
-                >
+                <Link href="/" className="text-lg font-bold text-white">
                   Dubai Furnishing
                 </Link>
                 <span className="ml-2 rounded bg-amber-500 px-2 py-0.5 text-xs font-semibold text-black">

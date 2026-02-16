@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -50,9 +51,7 @@ export default function SettlementsPage() {
   const settlements = useQuery(
     trpc.admin.listAllSettlements.queryOptions({
       limit: 50,
-      ...(statusFilter
-        ? { status: statusFilter as SettlementStatus }
-        : {}),
+      ...(statusFilter ? { status: statusFilter as SettlementStatus } : {}),
     }),
   );
 
@@ -94,9 +93,7 @@ export default function SettlementsPage() {
       setUpdateTransactionRef("");
       void queryClient.invalidateQueries();
     } catch (err) {
-      alert(
-        err instanceof Error ? err.message : "Failed to update settlement",
-      );
+      alert(err instanceof Error ? err.message : "Failed to update settlement");
     } finally {
       setUpdating(false);
     }
@@ -241,25 +238,25 @@ export default function SettlementsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Retailer
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Commissions
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Amount (AED)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Transaction Ref
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Payout Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Created
               </th>
             </tr>
@@ -287,29 +284,29 @@ export default function SettlementsPage() {
             )}
             {settlements.data?.items.map((s) => (
               <tr key={s.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {s.retailer.companyName}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={s.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={s.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {s.commissionCount}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {(s.totalAmountFils / 100).toLocaleString("en-AE", {
                     minimumFractionDigits: 2,
                   })}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {s.transactionRef ?? "-"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {s.payoutDate
                     ? new Date(s.payoutDate).toLocaleDateString()
                     : "-"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(s.createdAt).toLocaleDateString()}
                 </td>
               </tr>

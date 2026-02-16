@@ -90,7 +90,7 @@ export interface OfflineSyncPayload {
   userId: string;
 }
 
-export type JobPayloadMap = {
+export interface JobPayloadMap {
   "inventory.sync": InventorySyncPayload;
   "notification.send": NotificationSendPayload;
   "commission.calculate": CommissionCalculatePayload;
@@ -101,7 +101,7 @@ export type JobPayloadMap = {
   "re-engagement.process": ReEngagementProcessPayload;
   "catalog.health-check": CatalogHealthCheckPayload;
   "offline.sync": OfflineSyncPayload;
-};
+}
 
 export type JobHandler<T extends JobName> = (
   payload: JobPayloadMap[T],
@@ -130,17 +130,15 @@ function parseRedisConnection(url: string) {
  * Get or create the shared BullMQ queue instance.
  */
 export function getQueue(): Queue {
-  if (!queueInstance) {
-    queueInstance = new Queue(QUEUE_NAME, {
-      connection: parseRedisConnection(getRedisUrl()),
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: "exponential", delay: 1000 },
-        removeOnComplete: { count: 1000 },
-        removeOnFail: { count: 5000 },
-      },
-    });
-  }
+  queueInstance ??= new Queue(QUEUE_NAME, {
+    connection: parseRedisConnection(getRedisUrl()),
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 1000 },
+      removeOnComplete: { count: 1000 },
+      removeOnFail: { count: 5000 },
+    },
+  });
   return queueInstance;
 }
 

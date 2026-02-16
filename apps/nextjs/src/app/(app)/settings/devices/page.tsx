@@ -4,11 +4,10 @@
  * Active Devices settings page — Story 1.9.
  * Lists all active sessions with device info and allows revoking them.
  */
-
 import { useCallback, useEffect, useState } from "react";
 
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
 import { useTRPCClient } from "~/trpc/react";
 
@@ -38,7 +37,11 @@ function DeviceIcon({ type }: { type: string | null }) {
       aria-label={label}
     >
       <span className="text-lg">
-        {type === "mobile" ? "\u{1F4F1}" : type === "tablet" ? "\u{1F4CB}" : "\u{1F4BB}"}
+        {type === "mobile"
+          ? "\u{1F4F1}"
+          : type === "tablet"
+            ? "\u{1F4CB}"
+            : "\u{1F4BB}"}
       </span>
     </div>
   );
@@ -133,7 +136,9 @@ export default function DevicesPage() {
                 <DeviceIcon type={session.deviceType} />
                 <div>
                   <p className="text-foreground text-sm font-medium">
-                    {session.deviceName ?? session.deviceType ?? "Unknown device"}
+                    {session.deviceName ??
+                      session.deviceType ??
+                      "Unknown device"}
                     {index === 0 && (
                       <span className="text-muted-foreground ml-2 text-xs">
                         (this device)

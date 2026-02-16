@@ -1,11 +1,12 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod/v4";
+
 import {
   disputeCommissionInput,
   listCommissionsInput,
   listSettlementsInput,
 } from "@dubai/validators";
-import { z } from "zod/v4";
 
 import { retailerProcedure } from "../trpc";
 
@@ -30,7 +31,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const where: Record<string, unknown> = { retailerId: retailer.id };
@@ -104,7 +108,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const commission = await ctx.db.commission.findFirst({
@@ -144,7 +151,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const commission = await ctx.db.commission.findFirst({
@@ -195,7 +205,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const settlements = await ctx.db.settlement.findMany({
@@ -239,7 +252,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const settlement = await ctx.db.settlement.findFirst({
@@ -281,7 +297,10 @@ export const ledgerRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const entries = await ctx.db.ledgerEntry.findMany({

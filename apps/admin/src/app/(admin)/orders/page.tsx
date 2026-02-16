@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC } from "~/trpc/react";
 import { useQuery } from "@tanstack/react-query";
+
+import { useTRPC } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -42,7 +43,16 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const trpc = useTRPC();
 
-  type OrderStatus = "DRAFT" | "PENDING_PAYMENT" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED" | "DISPUTED";
+  type OrderStatus =
+    | "DRAFT"
+    | "PENDING_PAYMENT"
+    | "PAID"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED"
+    | "REFUNDED"
+    | "DISPUTED";
 
   const orders = useQuery(
     trpc.admin.listAllOrders.queryOptions({
@@ -57,9 +67,7 @@ export default function OrdersPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Order Management
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
           <p className="mt-1 text-sm text-gray-500">
             View, track, and manage all customer orders
           </p>
@@ -101,19 +109,19 @@ export default function OrdersPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Order Ref
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Items
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Total (AED)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Date
               </th>
             </tr>
@@ -141,21 +149,21 @@ export default function OrdersPage() {
             )}
             {orders.data?.items.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {order.orderRef}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={order.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={order.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {order._count.lineItems}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {(order.totalFils / 100).toLocaleString("en-AE", {
                     minimumFractionDigits: 2,
                   })}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(order.createdAt).toLocaleDateString()}
                 </td>
               </tr>

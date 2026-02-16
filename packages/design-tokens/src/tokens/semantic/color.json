@@ -2,81 +2,184 @@
   "color": {
     "$description": "Semantic color tokens — light mode (default)",
     "surface": {
-      "primary":   { "$value": "{color.neutral.50}", "$type": "color", "$description": "Main page background" },
-      "secondary": { "$value": "{color.neutral.100}", "$type": "color", "$description": "Card / section backgrounds" },
-      "tertiary":  { "$value": "{color.neutral.150}", "$type": "color", "$description": "Subtle dividers, inset areas" },
-      "inverse":   { "$value": "{color.neutral.900}", "$type": "color", "$description": "Dark surface for contrast sections" }
+      "primary": {
+        "$value": "{color.neutral.50}",
+        "$type": "color",
+        "$description": "Main page background"
+      },
+      "secondary": {
+        "$value": "{color.neutral.100}",
+        "$type": "color",
+        "$description": "Card / section backgrounds"
+      },
+      "tertiary": {
+        "$value": "{color.neutral.150}",
+        "$type": "color",
+        "$description": "Subtle dividers, inset areas"
+      },
+      "inverse": {
+        "$value": "{color.neutral.900}",
+        "$type": "color",
+        "$description": "Dark surface for contrast sections"
+      }
     },
     "text": {
-      "primary":     { "$value": "{color.neutral.900}", "$type": "color", "$description": "Headings, body text" },
-      "secondary":   { "$value": "{color.neutral.600}", "$type": "color", "$description": "Supporting text, labels" },
-      "tertiary":    { "$value": "{color.neutral.500}", "$type": "color", "$description": "Placeholder, disabled" },
-      "inverse":     { "$value": "{color.neutral.50}", "$type": "color", "$description": "Text on dark surfaces" },
-      "link":        { "$value": "{color.sage.400}", "$type": "color", "$description": "Hyperlinks" }
+      "primary": {
+        "$value": "{color.neutral.900}",
+        "$type": "color",
+        "$description": "Headings, body text"
+      },
+      "secondary": {
+        "$value": "{color.neutral.600}",
+        "$type": "color",
+        "$description": "Supporting text, labels"
+      },
+      "tertiary": {
+        "$value": "{color.neutral.500}",
+        "$type": "color",
+        "$description": "Placeholder, disabled"
+      },
+      "inverse": {
+        "$value": "{color.neutral.50}",
+        "$type": "color",
+        "$description": "Text on dark surfaces"
+      },
+      "link": {
+        "$value": "{color.sage.400}",
+        "$type": "color",
+        "$description": "Hyperlinks"
+      }
     },
     "border": {
-      "default":   { "$value": "{color.neutral.200}", "$type": "color", "$description": "Standard borders" },
-      "subtle":    { "$value": "{color.neutral.150}", "$type": "color", "$description": "Subtle dividers" },
-      "strong":    { "$value": "{color.neutral.400}", "$type": "color", "$description": "Emphasized borders" },
-      "focus":     { "$value": "{color.sage.400}", "$type": "color", "$description": "Focus ring color" }
+      "default": {
+        "$value": "{color.neutral.200}",
+        "$type": "color",
+        "$description": "Standard borders"
+      },
+      "subtle": {
+        "$value": "{color.neutral.150}",
+        "$type": "color",
+        "$description": "Subtle dividers"
+      },
+      "strong": {
+        "$value": "{color.neutral.400}",
+        "$type": "color",
+        "$description": "Emphasized borders"
+      },
+      "focus": {
+        "$value": "{color.sage.400}",
+        "$type": "color",
+        "$description": "Focus ring color"
+      }
     },
     "interactive": {
-      "default":   { "$value": "{color.sage.400}", "$type": "color", "$description": "Links, checkboxes, toggles" },
-      "hover":     { "$value": "{color.sage.500}", "$type": "color", "$description": "Interactive hover state" },
-      "active":    { "$value": "{color.sage.600}", "$type": "color", "$description": "Interactive pressed state" },
-      "subtle":    { "$value": "{color.sage.100}", "$type": "color", "$description": "Interactive subtle background" }
+      "default": {
+        "$value": "{color.sage.400}",
+        "$type": "color",
+        "$description": "Links, checkboxes, toggles"
+      },
+      "hover": {
+        "$value": "{color.sage.500}",
+        "$type": "color",
+        "$description": "Interactive hover state"
+      },
+      "active": {
+        "$value": "{color.sage.600}",
+        "$type": "color",
+        "$description": "Interactive pressed state"
+      },
+      "subtle": {
+        "$value": "{color.sage.100}",
+        "$type": "color",
+        "$description": "Interactive subtle background"
+      }
     },
     "cta": {
-      "primary":       { "$value": "{color.terracotta.400}", "$type": "color", "$description": "Primary action button bg" },
-      "primary-hover": { "$value": "{color.terracotta.500}", "$type": "color", "$description": "Primary CTA hover" },
-      "primary-active":{ "$value": "{color.terracotta.600}", "$type": "color", "$description": "Primary CTA pressed" },
-      "primary-text":  { "$value": "{color.neutral.50}", "$type": "color", "$description": "Text on primary CTA" },
-      "subtle":        { "$value": "{color.terracotta.100}", "$type": "color", "$description": "Subtle CTA background" }
+      "primary": {
+        "$value": "{color.terracotta.400}",
+        "$type": "color",
+        "$description": "Primary action button bg"
+      },
+      "primary-hover": {
+        "$value": "{color.terracotta.500}",
+        "$type": "color",
+        "$description": "Primary CTA hover"
+      },
+      "primary-active": {
+        "$value": "{color.terracotta.600}",
+        "$type": "color",
+        "$description": "Primary CTA pressed"
+      },
+      "primary-text": {
+        "$value": "{color.neutral.50}",
+        "$type": "color",
+        "$description": "Text on primary CTA"
+      },
+      "subtle": {
+        "$value": "{color.terracotta.100}",
+        "$type": "color",
+        "$description": "Subtle CTA background"
+      }
     },
     "data": {
-      "primary":   { "$value": "{color.slate.400}", "$type": "color", "$description": "Charts, metrics, data viz" },
-      "secondary": { "$value": "{color.slate.300}", "$type": "color", "$description": "Secondary data elements" },
-      "surface":   { "$value": "{color.slate.100}", "$type": "color", "$description": "Data section backgrounds" }
+      "primary": {
+        "$value": "{color.slate.400}",
+        "$type": "color",
+        "$description": "Charts, metrics, data viz"
+      },
+      "secondary": {
+        "$value": "{color.slate.300}",
+        "$type": "color",
+        "$description": "Secondary data elements"
+      },
+      "surface": {
+        "$value": "{color.slate.100}",
+        "$type": "color",
+        "$description": "Data section backgrounds"
+      }
     }
   },
   "color-dark": {
     "$description": "Semantic color tokens — dark mode overrides",
     "surface": {
-      "primary":   { "$value": "{color.neutral.900}", "$type": "color" },
+      "primary": { "$value": "{color.neutral.900}", "$type": "color" },
       "secondary": { "$value": "{color.neutral.800}", "$type": "color" },
-      "tertiary":  { "$value": "{color.neutral.700}", "$type": "color" },
-      "inverse":   { "$value": "{color.neutral.50}", "$type": "color" }
+      "tertiary": { "$value": "{color.neutral.700}", "$type": "color" },
+      "inverse": { "$value": "{color.neutral.50}", "$type": "color" }
     },
     "text": {
-      "primary":     { "$value": "{color.neutral.50}", "$type": "color" },
-      "secondary":   { "$value": "{color.neutral.300}", "$type": "color" },
-      "tertiary":    { "$value": "{color.neutral.400}", "$type": "color" },
-      "inverse":     { "$value": "{color.neutral.900}", "$type": "color" },
-      "link":        { "$value": "{color.sage.300}", "$type": "color" }
+      "primary": { "$value": "{color.neutral.50}", "$type": "color" },
+      "secondary": { "$value": "{color.neutral.300}", "$type": "color" },
+      "tertiary": { "$value": "{color.neutral.400}", "$type": "color" },
+      "inverse": { "$value": "{color.neutral.900}", "$type": "color" },
+      "link": { "$value": "{color.sage.300}", "$type": "color" }
     },
     "border": {
-      "default":   { "$value": "{color.neutral.700}", "$type": "color" },
-      "subtle":    { "$value": "{color.neutral.800}", "$type": "color" },
-      "strong":    { "$value": "{color.neutral.500}", "$type": "color" },
-      "focus":     { "$value": "{color.sage.300}", "$type": "color" }
+      "default": { "$value": "{color.neutral.700}", "$type": "color" },
+      "subtle": { "$value": "{color.neutral.800}", "$type": "color" },
+      "strong": { "$value": "{color.neutral.500}", "$type": "color" },
+      "focus": { "$value": "{color.sage.300}", "$type": "color" }
     },
     "interactive": {
-      "default":   { "$value": "{color.sage.300}", "$type": "color" },
-      "hover":     { "$value": "{color.sage.400}", "$type": "color" },
-      "active":    { "$value": "{color.sage.500}", "$type": "color" },
-      "subtle":    { "$value": "{color.sage.600}", "$type": "color" }
+      "default": { "$value": "{color.sage.300}", "$type": "color" },
+      "hover": { "$value": "{color.sage.400}", "$type": "color" },
+      "active": { "$value": "{color.sage.500}", "$type": "color" },
+      "subtle": { "$value": "{color.sage.600}", "$type": "color" }
     },
     "cta": {
-      "primary":       { "$value": "{color.terracotta.300}", "$type": "color" },
+      "primary": { "$value": "{color.terracotta.300}", "$type": "color" },
       "primary-hover": { "$value": "{color.terracotta.400}", "$type": "color" },
-      "primary-active":{ "$value": "{color.terracotta.500}", "$type": "color" },
-      "primary-text":  { "$value": "{color.neutral.900}", "$type": "color" },
-      "subtle":        { "$value": "{color.terracotta.600}", "$type": "color" }
+      "primary-active": {
+        "$value": "{color.terracotta.500}",
+        "$type": "color"
+      },
+      "primary-text": { "$value": "{color.neutral.900}", "$type": "color" },
+      "subtle": { "$value": "{color.terracotta.600}", "$type": "color" }
     },
     "data": {
-      "primary":   { "$value": "{color.slate.300}", "$type": "color" },
+      "primary": { "$value": "{color.slate.300}", "$type": "color" },
       "secondary": { "$value": "{color.slate.400}", "$type": "color" },
-      "surface":   { "$value": "{color.slate.600}", "$type": "color" }
+      "surface": { "$value": "{color.slate.600}", "$type": "color" }
     }
   }
 }

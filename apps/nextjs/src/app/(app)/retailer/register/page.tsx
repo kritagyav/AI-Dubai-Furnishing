@@ -4,9 +4,8 @@
  * Retailer Registration — Story 5.1: Retailer Onboarding Portal.
  * Multi-step form for retailer application submission.
  */
-
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@dubai/ui/button";
 
@@ -52,9 +51,9 @@ export default function RetailerRegisterPage() {
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
         <h1 className="text-3xl font-bold">Application Submitted</h1>
         <p className="text-muted-foreground">
-          Thank you for applying to join the Dubai Furnishing Marketplace.
-          Our team will review your application within 1-3 business days.
-          You'll receive an email notification when a decision is made.
+          Thank you for applying to join the Dubai Furnishing Marketplace. Our
+          team will review your application within 1-3 business days. You'll
+          receive an email notification when a decision is made.
         </p>
         <Button onClick={() => router.push("/dashboard")}>
           Go to Dashboard
@@ -68,7 +67,8 @@ export default function RetailerRegisterPage() {
       <div>
         <h1 className="text-3xl font-bold">Retailer Application</h1>
         <p className="text-muted-foreground mt-1">
-          Join our marketplace and have your products included in AI-curated furnishing packages.
+          Join our marketplace and have your products included in AI-curated
+          furnishing packages.
         </p>
       </div>
 
@@ -173,7 +173,12 @@ export default function RetailerRegisterPage() {
         <div className="flex gap-3 pt-2">
           <Button
             type="submit"
-            disabled={submitting || !companyName.trim() || !tradeLicense.trim() || !email.trim()}
+            disabled={
+              submitting ||
+              !companyName.trim() ||
+              !tradeLicense.trim() ||
+              !email.trim()
+            }
           >
             {submitting ? "Submitting..." : "Submit Application"}
           </Button>

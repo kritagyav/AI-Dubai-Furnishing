@@ -4,29 +4,23 @@
 // scheduled scanners via BullMQ repeatable jobs.
 
 import { Worker } from "bullmq";
-import { prisma } from "@dubai/db";
-import {
-  QUEUE_NAME,
-  getQueue,
-  closeQueue,
-  type JobName,
-  type JobPayloadMap,
-} from "@dubai/queue";
 
-import { initSentry } from "./sentry";
-import { logger } from "./logger";
+import { prisma } from "@dubai/db";
+import { closeQueue, enqueue, getQueue, QUEUE_NAME } from "@dubai/queue";
+
 import { startHealthServer } from "./health";
-import { handleInventorySync } from "./jobs/inventory-sync";
-import { handleCartAbandonCheck } from "./jobs/cart-abandon";
-import { handleDeliveryRemind } from "./jobs/delivery-remind";
-import { handleCommissionCalculate } from "./jobs/commission";
-import { handleNotificationSend } from "./jobs/notification";
-import { handlePackageGenerate } from "./jobs/package-generate";
 import { handleAnalyticsTrack } from "./jobs/analytics-track";
-import { handleReEngagement } from "./jobs/re-engagement";
+import { handleCartAbandonCheck } from "./jobs/cart-abandon";
 import { handleCatalogHealthCheck } from "./jobs/catalog-health";
+import { handleCommissionCalculate } from "./jobs/commission";
+import { handleDeliveryRemind } from "./jobs/delivery-remind";
+import { handleInventorySync } from "./jobs/inventory-sync";
+import { handleNotificationSend } from "./jobs/notification";
 import { handleOfflineSync } from "./jobs/offline-sync";
-import { enqueue } from "@dubai/queue";
+import { handlePackageGenerate } from "./jobs/package-generate";
+import { handleReEngagement } from "./jobs/re-engagement";
+import { logger } from "./logger";
+import { initSentry } from "./sentry";
 
 initSentry();
 
@@ -37,6 +31,7 @@ startHealthServer();
 // ─── Redis Connection ───
 
 function getRedisUrl(): string {
+  // eslint-disable-next-line no-restricted-properties -- Worker reads Redis URL before env validation
   return process.env.BULLMQ_REDIS_URL ?? "redis://localhost:6379";
 }
 
@@ -53,16 +48,28 @@ const connection = parseRedisConnection(getRedisUrl());
 
 // ─── Job Dispatch Map ───
 
-const jobHandlers: Record<string, (payload: never) => Promise<void>> = {
+const jobHandlers: Record<string, (payload: never) => Promise<void> | void> = {
   "inventory.sync": handleInventorySync as (payload: never) => Promise<void>,
-  "notification.send": handleNotificationSend as (payload: never) => Promise<void>,
-  "commission.calculate": handleCommissionCalculate as (payload: never) => Promise<void>,
+  "notification.send": handleNotificationSend as (
+    payload: never,
+  ) => Promise<void>,
+  "commission.calculate": handleCommissionCalculate as (
+    payload: never,
+  ) => Promise<void>,
   "delivery.remind": handleDeliveryRemind as (payload: never) => Promise<void>,
-  "package.generate": handlePackageGenerate as (payload: never) => Promise<void>,
-  "cart.abandon-check": handleCartAbandonCheck as (payload: never) => Promise<void>,
-  "analytics.track": handleAnalyticsTrack as (payload: never) => Promise<void>,
-  "re-engagement.process": handleReEngagement as (payload: never) => Promise<void>,
-  "catalog.health-check": handleCatalogHealthCheck as (payload: never) => Promise<void>,
+  "package.generate": handlePackageGenerate as (
+    payload: never,
+  ) => Promise<void>,
+  "cart.abandon-check": handleCartAbandonCheck as (
+    payload: never,
+  ) => Promise<void>,
+  "analytics.track": handleAnalyticsTrack as (payload: never) => void,
+  "re-engagement.process": handleReEngagement as (
+    payload: never,
+  ) => Promise<void>,
+  "catalog.health-check": handleCatalogHealthCheck as (
+    payload: never,
+  ) => Promise<void>,
   "offline.sync": handleOfflineSync as (payload: never) => Promise<void>,
 };
 
@@ -97,7 +104,10 @@ async function scanInventorySync() {
     }
   }
 
-  logger.info({ enqueued, total: configs.length }, "Inventory sync scan complete");
+  logger.info(
+    { enqueued, total: configs.length },
+    "Inventory sync scan complete",
+  );
 }
 
 /**
@@ -133,7 +143,10 @@ async function scanAbandonedCarts() {
     }
   }
 
-  logger.info({ enqueued, total: carts.length }, "Abandoned cart scan complete");
+  logger.info(
+    { enqueued, total: carts.length },
+    "Abandoned cart scan complete",
+  );
 }
 
 /**
@@ -165,7 +178,10 @@ async function scanDeliveryReminders() {
     await enqueue("delivery.remind", { deliveryId: delivery.id });
   }
 
-  logger.info({ enqueued: deliveries.length }, "Delivery reminder scan complete");
+  logger.info(
+    { enqueued: deliveries.length },
+    "Delivery reminder scan complete",
+  );
 }
 
 const schedulerHandlers: Record<string, () => Promise<void>> = {
@@ -209,32 +225,48 @@ async function registerRepeatableJobs() {
   const queue = getQueue();
 
   // Inventory sync scan: every 5 minutes
-  await queue.add("scheduler.inventory-scan", {}, {
-    repeat: { every: 5 * 60 * 1000 },
-    removeOnComplete: { count: 10 },
-    removeOnFail: { count: 50 },
-  });
+  await queue.add(
+    "scheduler.inventory-scan",
+    {},
+    {
+      repeat: { every: 5 * 60 * 1000 },
+      removeOnComplete: { count: 10 },
+      removeOnFail: { count: 50 },
+    },
+  );
 
   // Cart abandon scan: every 30 minutes
-  await queue.add("scheduler.cart-abandon-scan", {}, {
-    repeat: { every: 30 * 60 * 1000 },
-    removeOnComplete: { count: 10 },
-    removeOnFail: { count: 50 },
-  });
+  await queue.add(
+    "scheduler.cart-abandon-scan",
+    {},
+    {
+      repeat: { every: 30 * 60 * 1000 },
+      removeOnComplete: { count: 10 },
+      removeOnFail: { count: 50 },
+    },
+  );
 
   // Delivery reminder scan: every hour
-  await queue.add("scheduler.delivery-remind-scan", {}, {
-    repeat: { every: 60 * 60 * 1000 },
-    removeOnComplete: { count: 10 },
-    removeOnFail: { count: 50 },
-  });
+  await queue.add(
+    "scheduler.delivery-remind-scan",
+    {},
+    {
+      repeat: { every: 60 * 60 * 1000 },
+      removeOnComplete: { count: 10 },
+      removeOnFail: { count: 50 },
+    },
+  );
 
   // Re-engagement scan: every 15 minutes
-  await queue.add("scheduler.re-engagement-scan", {}, {
-    repeat: { every: 15 * 60 * 1000 },
-    removeOnComplete: { count: 10 },
-    removeOnFail: { count: 50 },
-  });
+  await queue.add(
+    "scheduler.re-engagement-scan",
+    {},
+    {
+      repeat: { every: 15 * 60 * 1000 },
+      removeOnComplete: { count: 10 },
+      removeOnFail: { count: 50 },
+    },
+  );
 
   logger.info("Repeatable scheduler jobs registered");
 }

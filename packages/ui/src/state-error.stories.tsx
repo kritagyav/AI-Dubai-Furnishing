@@ -37,8 +37,7 @@ export const PackageGenerationFailed: Story = {
 export const NotFound: Story = {
   args: {
     title: "Page not found",
-    message:
-      "The page you're looking for doesn't exist or has been moved.",
+    message: "The page you're looking for doesn't exist or has been moved.",
     retryLabel: "Go to dashboard",
     onRetry: () => alert("Dashboard"),
   },

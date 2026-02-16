@@ -30,7 +30,9 @@ const db = prisma as unknown as {
 
 // ─── Helpers ───
 
-function payload(overrides?: Partial<CartAbandonCheckPayload>): CartAbandonCheckPayload {
+function payload(
+  overrides?: Partial<CartAbandonCheckPayload>,
+): CartAbandonCheckPayload {
   return { userId: "user-1", cartId: "cart-1", ...overrides };
 }
 
@@ -94,7 +96,9 @@ describe("handleCartAbandonCheck", () => {
 
     expect(db.abandonedCart.create).not.toHaveBeenCalled();
     expect(db.notification.create).not.toHaveBeenCalled();
-    expect(mockLog.info).toHaveBeenCalledWith("Cart empty or not found, skipping");
+    expect(mockLog.info).toHaveBeenCalledWith(
+      "Cart empty or not found, skipping",
+    );
   });
 
   it("skips if cart is empty", async () => {
@@ -109,7 +113,9 @@ describe("handleCartAbandonCheck", () => {
 
     expect(db.abandonedCart.create).not.toHaveBeenCalled();
     expect(db.notification.create).not.toHaveBeenCalled();
-    expect(mockLog.info).toHaveBeenCalledWith("Cart empty or not found, skipping");
+    expect(mockLog.info).toHaveBeenCalledWith(
+      "Cart empty or not found, skipping",
+    );
   });
 
   it("skips if user recently active", async () => {
@@ -126,6 +132,8 @@ describe("handleCartAbandonCheck", () => {
 
     expect(db.abandonedCart.create).not.toHaveBeenCalled();
     expect(db.notification.create).not.toHaveBeenCalled();
-    expect(mockLog.info).toHaveBeenCalledWith("Cart recently active, not abandoned");
+    expect(mockLog.info).toHaveBeenCalledWith(
+      "Cart recently active, not abandoned",
+    );
   });
 });

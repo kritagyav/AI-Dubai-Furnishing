@@ -1,5 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { enqueue, trackEvent } from "@dubai/queue";
+
+import {
+  capturePayment,
+  createPaymentIntent,
+  PaymentError,
+  refundPayment,
+} from "./payment-service";
+import { commerceRouter } from "./router";
 
 // Mock external dependencies before importing the router
 vi.mock("@dubai/queue", () => ({
@@ -20,15 +30,6 @@ vi.mock("./payment-service", () => ({
     }
   },
 }));
-
-import { commerceRouter } from "./router";
-import { enqueue, trackEvent } from "@dubai/queue";
-import {
-  createPaymentIntent,
-  capturePayment,
-  refundPayment,
-  PaymentError,
-} from "./payment-service";
 
 // ─── Helpers ───
 
@@ -477,9 +478,7 @@ describe("commerce router", () => {
     it("rejects when a product is no longer available", async () => {
       db.cart.findUnique.mockResolvedValue({
         id: "cart-1",
-        items: [
-          { productId: "prod-1", quantity: 1, priceFils: 10000 },
-        ],
+        items: [{ productId: "prod-1", quantity: 1, priceFils: 10000 }],
       });
       db.retailerProduct.findMany.mockResolvedValue([]); // product gone
 
@@ -501,9 +500,7 @@ describe("commerce router", () => {
     it("rejects when stock is insufficient", async () => {
       db.cart.findUnique.mockResolvedValue({
         id: "cart-1",
-        items: [
-          { productId: "prod-1", quantity: 5, priceFils: 10000 },
-        ],
+        items: [{ productId: "prod-1", quantity: 5, priceFils: 10000 }],
       });
       db.retailerProduct.findMany.mockResolvedValue([
         {
@@ -613,7 +610,11 @@ describe("commerce router", () => {
       await expect(
         callProcedure(commerceRouter.processPayment, {
           ctx: authedCtx(db),
-          input: { orderId: "order-missing", method: "CARD", token: "tok_test" },
+          input: {
+            orderId: "order-missing",
+            method: "CARD",
+            token: "tok_test",
+          },
         }),
       ).rejects.toThrow("Order not found");
     });

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 interface Attachment {
   key: string;
@@ -61,9 +62,7 @@ function AttachmentList({ attachments }: { attachments: unknown }) {
             <span className="inline-block rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-600">
               {att.contentType}
             </span>
-            <span className="text-blue-600 underline">
-              {att.filename}
-            </span>
+            <span className="text-blue-600 underline">{att.filename}</span>
             <span className="text-gray-400">(key: {att.key})</span>
           </li>
         ))}
@@ -85,7 +84,12 @@ export default function SupportDashboardPage() {
   const [replyBody, setReplyBody] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
 
-  type TicketStatus = "OPEN" | "IN_PROGRESS" | "WAITING_ON_CUSTOMER" | "RESOLVED" | "CLOSED";
+  type TicketStatus =
+    | "OPEN"
+    | "IN_PROGRESS"
+    | "WAITING_ON_CUSTOMER"
+    | "RESOLVED"
+    | "CLOSED";
   type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
   const metrics = useQuery(trpc.support.metrics.queryOptions());
@@ -100,7 +104,7 @@ export default function SupportDashboardPage() {
 
   const ticketDetail = useQuery(
     trpc.support.getTicket.queryOptions(
-      { ticketId: selectedTicketId! },
+      { ticketId: selectedTicketId ?? "" },
       { enabled: !!selectedTicketId },
     ),
   );
@@ -158,12 +162,12 @@ export default function SupportDashboardPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PriorityBadge priority={ticket.priority} />
-                  <StatusBadge status={ticket.status} />
+                  <PriorityBadge priority={ticket.priority as string} />
+                  <StatusBadge status={ticket.status as string} />
                 </div>
               </div>
               <p className="mt-4 text-sm text-gray-700">{ticket.description}</p>
-              <AttachmentList attachments={ticket.attachments} />
+              <AttachmentList attachments={ticket.attachments as unknown} />
               <p className="mt-3 text-xs text-gray-400">
                 Created {new Date(ticket.createdAt).toLocaleString()}
               </p>
@@ -185,7 +189,7 @@ export default function SupportDashboardPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase text-gray-600">
+                    <span className="text-xs font-medium text-gray-600 uppercase">
                       {msg.senderRole} ({msg.senderId})
                     </span>
                     <span className="text-xs text-gray-400">
@@ -193,7 +197,7 @@ export default function SupportDashboardPage() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-gray-800">{msg.body}</p>
-                  <AttachmentList attachments={msg.attachments} />
+                  <AttachmentList attachments={msg.attachments as unknown} />
                 </div>
               ))}
             </div>
@@ -298,9 +302,7 @@ export default function SupportDashboardPage() {
           <option value="URGENT">Urgent</option>
         </select>
         <span className="text-sm text-gray-500">
-          {tickets.data
-            ? `${tickets.data.items.length} tickets`
-            : "Loading..."}
+          {tickets.data ? `${tickets.data.items.length} tickets` : "Loading..."}
         </span>
       </div>
 
@@ -309,25 +311,25 @@ export default function SupportDashboardPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Ref
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Subject
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Priority
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Messages
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Created
               </th>
             </tr>
@@ -359,25 +361,25 @@ export default function SupportDashboardPage() {
                 className="cursor-pointer hover:bg-gray-50"
                 onClick={() => setSelectedTicketId(ticket.id)}
               >
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {ticket.ticketRef}
                 </td>
                 <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-900">
                   {ticket.subject}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {ticket.category.replace(/_/g, " ")}
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+                  {(ticket.category as string).replace(/_/g, " ")}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <PriorityBadge priority={ticket.priority} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <PriorityBadge priority={ticket.priority as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={ticket.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={ticket.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {ticket._count.messages}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(ticket.createdAt).toLocaleDateString()}
                 </td>
               </tr>

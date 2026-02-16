@@ -1,5 +1,5 @@
-import { prisma } from "@dubai/db";
 import type { DeliveryRemindPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 
@@ -26,7 +26,7 @@ export async function handleDeliveryRemind(
     },
   });
 
-  if (!delivery || delivery.status !== "SCHEDULED") {
+  if (delivery?.status !== "SCHEDULED") {
     log.warn("Delivery not found or not scheduled, skipping");
     return;
   }

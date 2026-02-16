@@ -5,9 +5,8 @@
  * Story 1.9: Registers device, tracks navigation, shows "Continue where you left off",
  * and syncs offline actions.
  */
-
-import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useAuth } from "@dubai/auth/hooks";
 import {
@@ -92,7 +91,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           path={resumable.path}
           onContinue={handleContinue}
           onDismiss={dismiss}
-          className="mx-auto max-w-7xl px-4 mt-2"
+          className="mx-auto mt-2 max-w-7xl px-4"
         />
       )}
       {children}

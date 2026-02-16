@@ -1,20 +1,13 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
-
-type TicketStatus =
-  | "OPEN"
-  | "IN_PROGRESS"
-  | "WAITING_ON_CUSTOMER"
-  | "RESOLVED"
-  | "CLOSED";
 
 type TicketCategory =
   | "ORDER_ISSUE"
@@ -94,7 +87,7 @@ export default function SupportPage() {
 
   const ticketDetail = useQuery(
     trpc.support.get.queryOptions(
-      { ticketId: selectedTicketId! },
+      { ticketId: selectedTicketId ?? "" },
       { enabled: !!selectedTicketId },
     ),
   );
@@ -183,9 +176,7 @@ export default function SupportPage() {
           &larr; Back to Tickets
         </button>
 
-        {ticketDetail.isLoading && (
-          <SkeletonScreen rows={4} header />
-        )}
+        {ticketDetail.isLoading && <SkeletonScreen rows={4} header />}
 
         {ticket && (
           <>
@@ -195,10 +186,10 @@ export default function SupportPage() {
                   <h1 className="text-2xl font-bold">{ticket.subject}</h1>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {ticket.ticketRef} &middot;{" "}
-                    {ticket.category.replace(/_/g, " ")}
+                    {String(ticket.category).replace(/_/g, " ")}
                   </p>
                 </div>
-                <StatusBadge status={ticket.status} />
+                <StatusBadge status={String(ticket.status)} />
               </div>
               <p className="mt-4 text-sm">{ticket.description}</p>
 
@@ -209,23 +200,17 @@ export default function SupportPage() {
                   <div className="mt-4">
                     <p className="text-sm font-medium">Attachments:</p>
                     <ul className="mt-1 space-y-1">
-                      {(ticket.attachments as Attachment[]).map(
-                        (att, i) => (
-                          <li
-                            key={i}
-                            className="text-primary text-sm"
-                          >
-                            {att.filename} ({att.contentType})
-                          </li>
-                        ),
-                      )}
+                      {(ticket.attachments as Attachment[]).map((att, i) => (
+                        <li key={i} className="text-primary text-sm">
+                          {att.filename} ({att.contentType})
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 )}
 
               <p className="text-muted-foreground mt-2 text-xs">
-                Created{" "}
-                {new Date(ticket.createdAt).toLocaleDateString()}
+                Created {new Date(ticket.createdAt).toLocaleDateString()}
               </p>
             </div>
 
@@ -241,7 +226,9 @@ export default function SupportPage() {
                 <div
                   key={msg.id}
                   className={`bg-card rounded-lg p-4 shadow-xs ${
-                    msg.senderRole === "customer" ? "bg-accent/50" : "bg-muted/50"
+                    msg.senderRole === "customer"
+                      ? "bg-accent/50"
+                      : "bg-muted/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -261,16 +248,11 @@ export default function SupportPage() {
                       <div className="mt-2">
                         <p className="text-xs font-medium">Attachments:</p>
                         <ul className="mt-1 space-y-1">
-                          {(msg.attachments as Attachment[]).map(
-                            (att, i) => (
-                              <li
-                                key={i}
-                                className="text-primary text-xs"
-                              >
-                                {att.filename} ({att.contentType})
-                              </li>
-                            ),
-                          )}
+                          {(msg.attachments as Attachment[]).map((att, i) => (
+                            <li key={i} className="text-primary text-xs">
+                              {att.filename} ({att.contentType})
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )}
@@ -335,9 +317,7 @@ export default function SupportPage() {
             <label className="text-sm font-medium">Category</label>
             <select
               value={category}
-              onChange={(e) =>
-                setCategory(e.target.value as TicketCategory)
-              }
+              onChange={(e) => setCategory(e.target.value as TicketCategory)}
               className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
             >
               {CATEGORIES.map((c) => (
@@ -413,9 +393,7 @@ export default function SupportPage() {
         <Button onClick={() => setView("create")}>New Ticket</Button>
       </div>
 
-      {tickets.isLoading && (
-        <SkeletonScreen rows={3} />
-      )}
+      {tickets.isLoading && <SkeletonScreen rows={3} />}
 
       {tickets.data?.items.length === 0 && (
         <EmptyState
@@ -435,18 +413,18 @@ export default function SupportPage() {
                 setSelectedTicketId(ticket.id);
                 setView("detail");
               }}
-              className="bg-card w-full rounded-lg p-4 shadow-xs text-left transition hover:shadow-md"
+              className="bg-card w-full rounded-lg p-4 text-left shadow-xs transition hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold">{ticket.subject}</h3>
                   <p className="text-muted-foreground text-xs">
                     {ticket.ticketRef} &middot;{" "}
-                    {ticket.category.replace(/_/g, " ")} &middot;{" "}
+                    {String(ticket.category).replace(/_/g, " ")} &middot;{" "}
                     {new Date(ticket.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <StatusBadge status={ticket.status} />
+                <StatusBadge status={String(ticket.status)} />
               </div>
             </button>
           ))}

@@ -4,7 +4,7 @@ import { baseConfig } from "@dubai/eslint-config/base";
 
 export default defineConfig(
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "**/*.test.ts", "src/seed.ts"],
   },
   baseConfig,
 );

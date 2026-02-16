@@ -1,7 +1,8 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { storageClient } from "@dubai/storage";
 import { z } from "zod/v4";
+
+import { storageClient } from "@dubai/storage";
 
 import { authedProcedure } from "../trpc";
 
@@ -50,17 +51,11 @@ export const storageRouter = {
         }
         case "floor_plan": {
           // Generate a project-scoped key
-          key = storageClient.getFloorPlanKey(
-            crypto.randomUUID(),
-            filename,
-          );
+          key = storageClient.getFloorPlanKey(crypto.randomUUID(), filename);
           break;
         }
         case "room_photo": {
-          key = storageClient.getRoomPhotoKey(
-            crypto.randomUUID(),
-            filename,
-          );
+          key = storageClient.getRoomPhotoKey(crypto.randomUUID(), filename);
           break;
         }
         case "ticket_attachment": {

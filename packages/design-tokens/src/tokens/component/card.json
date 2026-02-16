@@ -1,12 +1,12 @@
 {
   "card": {
     "$description": "Card component tokens",
-    "surface":    { "$value": "{color.surface.secondary}", "$type": "color" },
-    "border":     { "$value": "{color.border.subtle}", "$type": "color" },
-    "elevation":  { "$value": "{elevation.1}", "$type": "shadow" },
+    "surface": { "$value": "{color.surface.secondary}", "$type": "color" },
+    "border": { "$value": "{color.border.subtle}", "$type": "color" },
+    "elevation": { "$value": "{elevation.1}", "$type": "shadow" },
     "elevation-hover": { "$value": "{elevation.2}", "$type": "shadow" },
-    "radius":     { "$value": "{radius.lg}", "$type": "dimension" },
-    "padding":    { "$value": "{space.6}", "$type": "dimension" },
-    "gap":        { "$value": "{space.4}", "$type": "dimension" }
+    "radius": { "$value": "{radius.lg}", "$type": "dimension" },
+    "padding": { "$value": "{space.6}", "$type": "dimension" },
+    "gap": { "$value": "{space.4}", "$type": "dimension" }
   }
 }

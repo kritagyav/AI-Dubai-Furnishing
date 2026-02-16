@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   addToCartInput,
-  updateCartItemInput,
-  removeCartItemInput,
-  createOrderInput,
-  processPaymentInput,
   cancelOrderInput,
+  createOrderInput,
   listOrdersInput,
+  processPaymentInput,
+  removeCartItemInput,
+  updateCartItemInput,
 } from "./index";
 
 // ═══════════════════════════════════════════
@@ -34,9 +34,9 @@ describe("addToCartInput", () => {
   });
 
   it("rejects invalid UUID", () => {
-    expect(
-      addToCartInput.safeParse({ productId: "not-a-uuid" }).success,
-    ).toBe(false);
+    expect(addToCartInput.safeParse({ productId: "not-a-uuid" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects quantity of 0", () => {
@@ -219,8 +219,8 @@ describe("listOrdersInput", () => {
   });
 
   it("rejects invalid status", () => {
-    expect(
-      listOrdersInput.safeParse({ status: "INVALID" }).success,
-    ).toBe(false);
+    expect(listOrdersInput.safeParse({ status: "INVALID" }).success).toBe(
+      false,
+    );
   });
 });

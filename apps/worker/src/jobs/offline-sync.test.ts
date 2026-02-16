@@ -36,7 +36,10 @@ const db = prisma as unknown as {
   };
   userPreference: { upsert: ReturnType<typeof vi.fn> };
   project: { findFirst: ReturnType<typeof vi.fn> };
-  room: { findFirst: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn> };
+  room: {
+    findFirst: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
 };
 
 // ─── Helpers ───
@@ -58,7 +61,9 @@ describe("handleOfflineSync", () => {
 
     await handleOfflineSync(payload());
 
-    expect(mockLog.warn).toHaveBeenCalledWith("Offline action not found, skipping");
+    expect(mockLog.warn).toHaveBeenCalledWith(
+      "Offline action not found, skipping",
+    );
     expect(db.offlineAction.update).not.toHaveBeenCalled();
   });
 
@@ -180,7 +185,11 @@ describe("handleOfflineSync", () => {
       id: "action-1",
       userId: "user-1",
       action: "create_room",
-      payload: { projectId: "proj-1", name: "Living Room", type: "LIVING_ROOM" },
+      payload: {
+        projectId: "proj-1",
+        name: "Living Room",
+        type: "LIVING_ROOM",
+      },
       status: "pending",
     });
     db.project.findFirst.mockResolvedValue({ id: "proj-1" });

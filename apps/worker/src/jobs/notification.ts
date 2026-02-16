@@ -1,7 +1,7 @@
 import type { Prisma } from "@dubai/db";
+import type { NotificationSendPayload } from "@dubai/queue";
 import { prisma } from "@dubai/db";
 import { emailClient } from "@dubai/email";
-import type { NotificationSendPayload } from "@dubai/queue";
 
 import { logger } from "../logger";
 
@@ -23,7 +23,10 @@ const EMAIL_NOTIFICATION_TYPES = new Set([
 export async function handleNotificationSend(
   payload: NotificationSendPayload,
 ): Promise<void> {
-  const log = logger.child({ job: "notification.send", userId: payload.userId });
+  const log = logger.child({
+    job: "notification.send",
+    userId: payload.userId,
+  });
   log.info({ type: payload.type }, "Sending notification");
 
   // Determine channel based on notification type
@@ -40,9 +43,7 @@ export async function handleNotificationSend(
       channel,
       title: payload.title,
       body: payload.body,
-      ...(payload.data
-        ? { data: payload.data as Prisma.InputJsonValue }
-        : {}),
+      ...(payload.data ? { data: payload.data as Prisma.InputJsonValue } : {}),
       sentAt: new Date(),
     },
   });
@@ -67,7 +68,7 @@ export async function handleNotificationSend(
         // Send re-engagement email
         const step = (payload.data?.step as number | undefined) ?? 1;
         const cartItems = payload.data?.cartItems as
-          | Array<{ name: string; priceFils: number }>
+          | { name: string; priceFils: number }[]
           | undefined;
 
         const result = await emailClient.sendReEngagement(
@@ -78,7 +79,10 @@ export async function handleNotificationSend(
         );
 
         if (!result.success) {
-          log.error({ error: result.error }, "Failed to send re-engagement email");
+          log.error(
+            { error: result.error },
+            "Failed to send re-engagement email",
+          );
         } else {
           log.info({ emailId: result.id }, "Re-engagement email sent");
         }
@@ -91,7 +95,10 @@ export async function handleNotificationSend(
         );
 
         if (!result.success) {
-          log.error({ error: result.error }, "Failed to send transactional email");
+          log.error(
+            { error: result.error },
+            "Failed to send transactional email",
+          );
         } else {
           log.info({ emailId: result.id }, "Transactional email sent");
         }
@@ -99,7 +106,10 @@ export async function handleNotificationSend(
     } catch (err) {
       // Email delivery failure should not fail the job
       const message = err instanceof Error ? err.message : "Unknown error";
-      log.error({ error: message }, "Email delivery failed — notification record created but email not sent");
+      log.error(
+        { error: message },
+        "Email delivery failed — notification record created but email not sent",
+      );
     }
   }
 }

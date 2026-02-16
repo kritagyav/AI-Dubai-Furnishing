@@ -2,24 +2,72 @@
   "feedback": {
     "$description": "Semantic feedback color tokens for status/validation states",
     "success": {
-      "surface":  { "$value": "{color.success.light}", "$type": "color", "$description": "Success background" },
-      "default":  { "$value": "{color.success.default}", "$type": "color", "$description": "Success icon/border" },
-      "emphasis": { "$value": "{color.success.dark}", "$type": "color", "$description": "Success text on light bg" }
+      "surface": {
+        "$value": "{color.success.light}",
+        "$type": "color",
+        "$description": "Success background"
+      },
+      "default": {
+        "$value": "{color.success.default}",
+        "$type": "color",
+        "$description": "Success icon/border"
+      },
+      "emphasis": {
+        "$value": "{color.success.dark}",
+        "$type": "color",
+        "$description": "Success text on light bg"
+      }
     },
     "error": {
-      "surface":  { "$value": "{color.error.light}", "$type": "color", "$description": "Error background" },
-      "default":  { "$value": "{color.error.default}", "$type": "color", "$description": "Error icon/border" },
-      "emphasis": { "$value": "{color.error.dark}", "$type": "color", "$description": "Error text on light bg" }
+      "surface": {
+        "$value": "{color.error.light}",
+        "$type": "color",
+        "$description": "Error background"
+      },
+      "default": {
+        "$value": "{color.error.default}",
+        "$type": "color",
+        "$description": "Error icon/border"
+      },
+      "emphasis": {
+        "$value": "{color.error.dark}",
+        "$type": "color",
+        "$description": "Error text on light bg"
+      }
     },
     "warning": {
-      "surface":  { "$value": "{color.warning.light}", "$type": "color", "$description": "Warning background" },
-      "default":  { "$value": "{color.warning.default}", "$type": "color", "$description": "Warning icon/border" },
-      "emphasis": { "$value": "{color.warning.dark}", "$type": "color", "$description": "Warning text on light bg" }
+      "surface": {
+        "$value": "{color.warning.light}",
+        "$type": "color",
+        "$description": "Warning background"
+      },
+      "default": {
+        "$value": "{color.warning.default}",
+        "$type": "color",
+        "$description": "Warning icon/border"
+      },
+      "emphasis": {
+        "$value": "{color.warning.dark}",
+        "$type": "color",
+        "$description": "Warning text on light bg"
+      }
     },
     "info": {
-      "surface":  { "$value": "{color.info.light}", "$type": "color", "$description": "Info background" },
-      "default":  { "$value": "{color.info.default}", "$type": "color", "$description": "Info icon/border" },
-      "emphasis": { "$value": "{color.info.dark}", "$type": "color", "$description": "Info text on light bg" }
+      "surface": {
+        "$value": "{color.info.light}",
+        "$type": "color",
+        "$description": "Info background"
+      },
+      "default": {
+        "$value": "{color.info.default}",
+        "$type": "color",
+        "$description": "Info icon/border"
+      },
+      "emphasis": {
+        "$value": "{color.info.dark}",
+        "$type": "color",
+        "$description": "Info text on light bg"
+      }
     }
   }
 }

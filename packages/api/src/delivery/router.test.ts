@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { deliveryRouter } from "./router";
 
 // Mock external dependencies
 vi.mock("@dubai/queue", () => ({
   enqueue: vi.fn().mockResolvedValue(undefined),
   trackEvent: vi.fn(),
 }));
-
-import { deliveryRouter } from "./router";
 
 // ─── Helpers ───
 

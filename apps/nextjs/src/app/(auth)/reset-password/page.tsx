@@ -3,10 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { resetPassword } from "@dubai/auth/hooks";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
-
-import { resetPassword } from "@dubai/auth/hooks";
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");

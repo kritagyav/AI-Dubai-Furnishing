@@ -1,12 +1,13 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+
 import type { Prisma } from "@dubai/db";
 import {
-  createTicketInput,
   addTicketMessageInput,
-  updateTicketStatusInput,
   assignTicketInput,
+  createTicketInput,
   listTicketsInput,
+  updateTicketStatusInput,
 } from "@dubai/validators";
 
 import { authedProcedure, supportProcedure } from "../trpc";
@@ -428,7 +429,7 @@ export const supportRouter = {
       else if (group.status === "WAITING_ON_CUSTOMER")
         stats.waitingOnCustomer = group._count;
       else if (group.status === "RESOLVED") stats.resolved = group._count;
-      else if (group.status === "CLOSED") stats.closed = group._count;
+      else stats.closed = group._count;
     }
 
     const priorities = { low: 0, medium: 0, high: 0, urgent: 0 };
@@ -436,7 +437,7 @@ export const supportRouter = {
       if (group.priority === "LOW") priorities.low = group._count;
       else if (group.priority === "MEDIUM") priorities.medium = group._count;
       else if (group.priority === "HIGH") priorities.high = group._count;
-      else if (group.priority === "URGENT") priorities.urgent = group._count;
+      else priorities.urgent = group._count;
     }
 
     return { statuses: stats, activePriorities: priorities };

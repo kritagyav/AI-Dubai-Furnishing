@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -21,11 +31,6 @@ vi.mock("@upstash/redis", () => ({
 vi.mock("../audit", () => ({
   writeAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
-
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -196,7 +201,9 @@ describe("corporate.removeEmployee", () => {
     db.corporateEmployee.findUnique.mockResolvedValue({ id: EMPLOYEE_ID });
     db.corporateEmployee.delete.mockResolvedValue({});
 
-    const result = await caller.corporate.removeEmployee({ employeeId: EMPLOYEE_ID });
+    const result = await caller.corporate.removeEmployee({
+      employeeId: EMPLOYEE_ID,
+    });
 
     expect(result.success).toBe(true);
     expect(db.corporateEmployee.delete).toHaveBeenCalledWith({
@@ -236,7 +243,9 @@ describe("corporate.toggleAccount", () => {
       updatedAt: new Date(),
     });
 
-    const result = await caller.corporate.toggleAccount({ accountId: ACCOUNT_ID });
+    const result = await caller.corporate.toggleAccount({
+      accountId: ACCOUNT_ID,
+    });
 
     expect(result.isActive).toBe(false);
     expect(db.corporateAccount.update).toHaveBeenCalledWith({
@@ -262,7 +271,9 @@ describe("corporate.toggleAccount", () => {
       updatedAt: new Date(),
     });
 
-    const result = await caller.corporate.toggleAccount({ accountId: ACCOUNT_ID });
+    const result = await caller.corporate.toggleAccount({
+      accountId: ACCOUNT_ID,
+    });
 
     expect(result.isActive).toBe(true);
     expect(db.corporateAccount.update).toHaveBeenCalledWith({

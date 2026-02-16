@@ -1,7 +1,14 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { paginationInput, retailerDecisionInput, listOrdersInput, listSettlementsInput, listCatalogIssuesInput } from "@dubai/validators";
 import { z } from "zod/v4";
+
+import {
+  listCatalogIssuesInput,
+  listOrdersInput,
+  listSettlementsInput,
+  paginationInput,
+  retailerDecisionInput,
+} from "@dubai/validators";
 
 import { adminProcedure, auditedProcedure } from "../trpc";
 import { payoutService } from "./payout-service";
@@ -68,7 +75,10 @@ export const adminRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       return retailer;
@@ -87,7 +97,10 @@ export const adminRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       if (retailer.status !== "PENDING") {
@@ -101,7 +114,8 @@ export const adminRouter = {
         where: { id: input.retailerId },
         data: {
           status: input.decision,
-          rejectionReason: input.decision === "REJECTED" ? (input.reason ?? null) : null,
+          rejectionReason:
+            input.decision === "REJECTED" ? (input.reason ?? null) : null,
         },
         select: {
           id: true,
@@ -189,23 +203,19 @@ export const adminRouter = {
   // ─── Platform-wide aggregate stats ───
 
   platformStats: adminProcedure.query(async ({ ctx }) => {
-    const [
-      orderCount,
-      revenueAgg,
-      retailerCounts,
-      ticketCounts,
-    ] = await Promise.all([
-      ctx.db.order.count(),
-      ctx.db.order.aggregate({ _sum: { totalFils: true } }),
-      ctx.db.retailer.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
-      ctx.db.supportTicket.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
-    ]);
+    const [orderCount, revenueAgg, retailerCounts, ticketCounts] =
+      await Promise.all([
+        ctx.db.order.count(),
+        ctx.db.order.aggregate({ _sum: { totalFils: true } }),
+        ctx.db.retailer.groupBy({
+          by: ["status"],
+          _count: { _all: true },
+        }),
+        ctx.db.supportTicket.groupBy({
+          by: ["status"],
+          _count: { _all: true },
+        }),
+      ]);
 
     const retailerMap = Object.fromEntries(
       retailerCounts.map((r) => [r.status, r._count._all]),
@@ -220,19 +230,19 @@ export const adminRouter = {
         revenueFils: revenueAgg._sum.totalFils ?? 0,
       },
       retailers: {
-        approved: retailerMap["APPROVED"] ?? 0,
-        pending: retailerMap["PENDING"] ?? 0,
+        approved: retailerMap.APPROVED ?? 0,
+        pending: retailerMap.PENDING ?? 0,
         total:
-          (retailerMap["APPROVED"] ?? 0) +
-          (retailerMap["PENDING"] ?? 0) +
-          (retailerMap["REJECTED"] ?? 0) +
-          (retailerMap["SUSPENDED"] ?? 0),
+          (retailerMap.APPROVED ?? 0) +
+          (retailerMap.PENDING ?? 0) +
+          (retailerMap.REJECTED ?? 0) +
+          (retailerMap.SUSPENDED ?? 0),
       },
       tickets: {
-        open: ticketMap["OPEN"] ?? 0,
-        inProgress: ticketMap["IN_PROGRESS"] ?? 0,
-        waitingOnCustomer: ticketMap["WAITING_ON_CUSTOMER"] ?? 0,
-        resolved: ticketMap["RESOLVED"] ?? 0,
+        open: ticketMap.OPEN ?? 0,
+        inProgress: ticketMap.IN_PROGRESS ?? 0,
+        waitingOnCustomer: ticketMap.WAITING_ON_CUSTOMER ?? 0,
+        resolved: ticketMap.RESOLVED ?? 0,
       },
     };
   }),
@@ -313,7 +323,10 @@ export const adminRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       // Gather all CLEARED commissions for this retailer
@@ -486,12 +499,8 @@ export const adminRouter = {
         where: { id: input.settlementId },
         data: {
           status: input.status,
-          ...(transactionRef
-            ? { transactionRef }
-            : {}),
-          ...(input.status === "COMPLETED"
-            ? { payoutDate: new Date() }
-            : {}),
+          ...(transactionRef ? { transactionRef } : {}),
+          ...(input.status === "COMPLETED" ? { payoutDate: new Date() } : {}),
         },
         select: {
           id: true,
@@ -566,7 +575,10 @@ export const adminRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       // Get all products for health analysis
@@ -588,13 +600,13 @@ export const adminRouter = {
       let staleProducts = 0;
       let missingFields = 0;
       let pricingIssues = 0;
-      const newIssues: Array<{
+      const newIssues: {
         productId: string;
         issueType: string;
         severity: string;
         description: string;
         recommendation: string;
-      }> = [];
+      }[] = [];
 
       const now = new Date();
       const staleThresholdMs = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -615,7 +627,7 @@ export const adminRouter = {
 
         // Missing fields: no photos
         const photos = product.photos as unknown[];
-        if (!photos || (Array.isArray(photos) && photos.length === 0)) {
+        if (Array.isArray(photos) && photos.length === 0) {
           missingFields++;
           newIssues.push({
             productId: product.id,
@@ -628,7 +640,7 @@ export const adminRouter = {
 
         // Missing fields: no materials
         const materials = product.materials as unknown[];
-        if (!materials || (Array.isArray(materials) && materials.length === 0)) {
+        if (Array.isArray(materials) && materials.length === 0) {
           missingFields++;
           newIssues.push({
             productId: product.id,
@@ -666,10 +678,7 @@ export const adminRouter = {
       const overallScore =
         totalProducts === 0
           ? 100
-          : Math.max(
-              0,
-              Math.round(100 - (issuesFound / maxDeductions) * 100),
-            );
+          : Math.max(0, Math.round(100 - (issuesFound / maxDeductions) * 100));
 
       // Save health check record
       const healthCheck = await ctx.db.catalogHealthCheck.create({
@@ -747,9 +756,7 @@ export const adminRouter = {
         data: {
           resolved: true,
           resolvedAt: new Date(),
-          ...(input.resolution
-            ? { recommendation: input.resolution }
-            : {}),
+          ...(input.resolution ? { recommendation: input.resolution } : {}),
         },
         select: {
           id: true,
@@ -838,7 +845,9 @@ export const adminRouter = {
   platformHealth: adminProcedure.query(async ({ ctx }) => {
     const [orderCount, workerQueueSize, recentSyncJob, activeSequences] =
       await Promise.all([
-        ctx.db.order.count({ where: { createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) } } }),
+        ctx.db.order.count({
+          where: { createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) } },
+        }),
         ctx.db.notification.count({ where: { read: false } }),
         ctx.db.inventorySyncJob.findFirst({
           orderBy: { startedAt: "desc" },
@@ -966,9 +975,7 @@ export const adminRouter = {
 
       const dailyMap = new Map<string, number>();
       for (let d = 0; d < periodDays; d++) {
-        const date = new Date(
-          periodStart.getTime() + d * 24 * 60 * 60 * 1000,
-        );
+        const date = new Date(periodStart.getTime() + d * 24 * 60 * 60 * 1000);
         const key = date.toISOString().slice(0, 10);
         dailyMap.set(key, 0);
       }
@@ -1029,7 +1036,9 @@ export const adminRouter = {
       ctx.db.supportTicket.groupBy({
         by: ["category"],
         where: {
-          category: { in: ["DISPUTE", "ORDER_ISSUE", "PRODUCT_QUALITY", "PAYMENT_ISSUE"] },
+          category: {
+            in: ["DISPUTE", "ORDER_ISSUE", "PRODUCT_QUALITY", "PAYMENT_ISSUE"],
+          },
           status: { in: ["OPEN", "IN_PROGRESS", "WAITING_ON_CUSTOMER"] },
         },
         _count: { _all: true },
@@ -1045,12 +1054,12 @@ export const adminRouter = {
       0,
     );
     const resolvedTickets =
-      (disputeTicketStatusMap["RESOLVED"] ?? 0) +
-      (disputeTicketStatusMap["CLOSED"] ?? 0);
+      (disputeTicketStatusMap.RESOLVED ?? 0) +
+      (disputeTicketStatusMap.CLOSED ?? 0);
     const pendingTickets =
-      (disputeTicketStatusMap["OPEN"] ?? 0) +
-      (disputeTicketStatusMap["IN_PROGRESS"] ?? 0) +
-      (disputeTicketStatusMap["WAITING_ON_CUSTOMER"] ?? 0);
+      (disputeTicketStatusMap.OPEN ?? 0) +
+      (disputeTicketStatusMap.IN_PROGRESS ?? 0) +
+      (disputeTicketStatusMap.WAITING_ON_CUSTOMER ?? 0);
 
     // Average resolution time for resolved dispute tickets
     const resolvedDisputeTickets = await ctx.db.supportTicket.findMany({

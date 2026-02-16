@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
 import { StatusBadge } from "~/components/StatusBadge";
@@ -29,7 +29,9 @@ export default function SavedPage() {
   const addToCartMutation = useMutation(
     trpc.package.addPackageToCart.mutationOptions({
       onSuccess: () => {
-        void queryClient.invalidateQueries({ queryKey: trpc.commerce.getCart.queryKey() });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.commerce.getCart.queryKey(),
+        });
         router.push("/cart");
       },
     }),
@@ -93,9 +95,7 @@ export default function SavedPage() {
                 size="sm"
                 className="mt-3"
                 disabled={addToCartMutation.isPending}
-                onClick={() =>
-                  addToCartMutation.mutate({ packageId: pkg.id })
-                }
+                onClick={() => addToCartMutation.mutate({ packageId: pkg.id })}
               >
                 {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
               </Button>

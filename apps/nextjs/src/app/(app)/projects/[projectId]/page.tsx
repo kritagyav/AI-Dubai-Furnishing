@@ -5,12 +5,11 @@
  * Shows project overview with room list, floor plan, room management,
  * photo thumbnails, "Generate Package" per room, and budget summary.
  */
-
-import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
 import { EmptyState, ErrorState, Spinner } from "@dubai/ui";
+import { Button } from "@dubai/ui/button";
 
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
@@ -41,7 +40,7 @@ interface ProjectData {
   floorPlanThumbUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
-  rooms: Array<{
+  rooms: {
     id: string;
     name: string;
     type: string;
@@ -51,7 +50,7 @@ interface ProjectData {
     displayUnit: string;
     orderIndex: number;
     _count: { photos: number };
-  }>;
+  }[];
 }
 
 interface PackageListItem {
@@ -79,7 +78,9 @@ export default function ProjectDetailPage() {
 
   const loadProject = useCallback(async () => {
     try {
-      const data = await client.room.getProject.query({ projectId: params.projectId });
+      const data = await client.room.getProject.query({
+        projectId: params.projectId,
+      });
       setProject(data);
       setEditName(data.name);
       setEditAddress(data.address ?? "");
@@ -99,7 +100,9 @@ export default function ProjectDetailPage() {
       for (const room of data.rooms) {
         if (room._count.photos > 0) {
           try {
-            const roomData = await client.room.getRoom.query({ roomId: room.id });
+            const roomData = await client.room.getRoom.query({
+              roomId: room.id,
+            });
             photoMap[room.id] = roomData.photos.slice(0, 3) as RoomPhoto[];
           } catch {
             // Skip
@@ -187,7 +190,9 @@ export default function ProjectDetailPage() {
       <div className="py-20">
         <ErrorState
           title="Project not found"
-          message={error ?? "This project doesn't exist or you don't have access."}
+          message={
+            error ?? "This project doesn't exist or you don't have access."
+          }
           retryLabel="Back to projects"
           onRetry={() => router.push("/projects")}
         />
@@ -220,8 +225,16 @@ export default function ProjectDetailPage() {
               className="border-input bg-background w-full max-w-md rounded-md border px-3 py-2 text-sm"
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleUpdateProject}>Save</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button size="sm" onClick={handleUpdateProject}>
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditing(false)}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         ) : (
@@ -234,7 +247,11 @@ export default function ProjectDetailPage() {
         )}
         {!editing && (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(true)}
+            >
               Edit
             </Button>
             <Button variant="outline" size="sm" onClick={handleDeleteProject}>
@@ -276,7 +293,7 @@ export default function ProjectDetailPage() {
             </div>
             <div>
               <p className="text-muted-foreground text-sm">Status</p>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="mt-1 flex flex-wrap gap-1">
                 {packages.some((p) => p.status === "ACCEPTED") && (
                   <StatusBadge status="ACCEPTED" />
                 )}
@@ -300,9 +317,7 @@ export default function ProjectDetailPage() {
           </h2>
           <Button
             size="sm"
-            onClick={() =>
-              router.push(`/projects/${project.id}/rooms/new`)
-            }
+            onClick={() => router.push(`/projects/${project.id}/rooms/new`)}
           >
             Add Room
           </Button>
@@ -313,17 +328,12 @@ export default function ProjectDetailPage() {
             title="No rooms yet"
             description="Add rooms with dimensions to get AI-generated furnishing packages."
             actionLabel="Add first room"
-            onAction={() =>
-              router.push(`/projects/${project.id}/rooms/new`)
-            }
+            onAction={() => router.push(`/projects/${project.id}/rooms/new`)}
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {project.rooms.map((room) => (
-              <div
-                key={room.id}
-                className="bg-card rounded-lg p-4 shadow-xs"
-              >
+              <div key={room.id} className="bg-card rounded-lg p-4 shadow-xs">
                 <div className="flex items-start justify-between">
                   <button
                     onClick={() =>
@@ -350,7 +360,8 @@ export default function ProjectDetailPage() {
                       </p>
                     )}
                     <p className="text-muted-foreground mt-1 text-xs">
-                      {room._count.photos} photo{room._count.photos !== 1 ? "s" : ""}
+                      {room._count.photos} photo
+                      {room._count.photos !== 1 ? "s" : ""}
                     </p>
                   </button>
                   <Button

@@ -72,20 +72,20 @@ export function ContinueBanner({
         className,
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <span className="text-lg shrink-0" aria-hidden="true">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="shrink-0 text-lg" aria-hidden="true">
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-foreground text-sm font-medium truncate">
+          <p className="text-foreground truncate text-sm font-medium">
             Continue where you left off
           </p>
-          <p className="text-muted-foreground text-xs truncate">
+          <p className="text-muted-foreground truncate text-xs">
             Active on {device} {timeAgo}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onDismiss}>
           Dismiss
         </Button>

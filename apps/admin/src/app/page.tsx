@@ -10,7 +10,8 @@ const sections = [
   {
     title: "Retailer Management",
     href: "/retailer",
-    description: "Approve applications, manage retailers, monitor catalog health",
+    description:
+      "Approve applications, manage retailers, monitor catalog health",
     stat: "Retailers",
   },
   {
@@ -43,9 +44,7 @@ export default function AdminHomePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Admin Portal
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-900">Admin Portal</h1>
         <p className="mt-2 text-gray-600">
           Manage the Dubai AI Furnishing Platform
         </p>
@@ -64,9 +63,7 @@ export default function AdminHomePage() {
               </h2>
               <span className="text-sm text-gray-400">&rarr;</span>
             </div>
-            <p className="mt-2 text-sm text-gray-500">
-              {section.description}
-            </p>
+            <p className="mt-2 text-sm text-gray-500">{section.description}</p>
           </Link>
         ))}
       </div>

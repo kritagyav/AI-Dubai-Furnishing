@@ -21,9 +21,7 @@ export default function SupportTicketDetailScreen() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
 
-  const ticketQuery = useQuery(
-    trpc.support.get.queryOptions({ ticketId: id }),
-  );
+  const ticketQuery = useQuery(trpc.support.get.queryOptions({ ticketId: id }));
 
   const addMessageMutation = useMutation(
     trpc.support.addMessage.mutationOptions({
@@ -33,8 +31,11 @@ export default function SupportTicketDetailScreen() {
         });
         setMessage("");
       },
-      onError: (error) => {
-        Alert.alert("Error", error.message);
+      onError: (error: unknown) => {
+        Alert.alert(
+          "Error",
+          error instanceof Error ? error.message : String(error),
+        );
       },
     }),
   );
@@ -92,7 +93,7 @@ export default function SupportTicketDetailScreen() {
     }
   };
 
-  const statusStyle = getStatusStyle(ticket.status);
+  const statusStyle = getStatusStyle(String(ticket.status));
 
   return (
     <SafeAreaView className="bg-background flex-1" edges={["bottom"]}>
@@ -110,7 +111,7 @@ export default function SupportTicketDetailScreen() {
             </Text>
             <View className={`ml-2 rounded-full px-3 py-1 ${statusStyle.bg}`}>
               <Text className={`text-xs font-medium ${statusStyle.text}`}>
-                {ticket.status.replace(/_/g, " ")}
+                {String(ticket.status).replace(/_/g, " ")}
               </Text>
             </View>
           </View>
@@ -138,9 +139,7 @@ export default function SupportTicketDetailScreen() {
             return (
               <View
                 className={`mb-3 max-w-[85%] rounded-lg p-3 ${
-                  isCustomer
-                    ? "self-end bg-blue-600"
-                    : "self-start bg-gray-200"
+                  isCustomer ? "self-end bg-blue-600" : "self-start bg-gray-200"
                 }`}
               >
                 <Text

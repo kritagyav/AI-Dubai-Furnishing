@@ -10,12 +10,28 @@ export default function Index() {
   const sessionQuery = useQuery(trpc.user.getSession.queryOptions());
 
   const navItems = [
-    { label: "My Projects", route: "/(app)/projects", desc: "Manage rooms and floor plans" },
-    { label: "Browse Products", route: "/(app)/gallery", desc: "Explore furniture catalog" },
+    {
+      label: "My Projects",
+      route: "/(app)/projects",
+      desc: "Manage rooms and floor plans",
+    },
+    {
+      label: "Browse Products",
+      route: "/(app)/gallery",
+      desc: "Explore furniture catalog",
+    },
     { label: "Cart", route: "/(app)/cart", desc: "Review items and checkout" },
     { label: "My Orders", route: "/(app)/orders", desc: "Track your orders" },
-    { label: "Support", route: "/(app)/support", desc: "Get help with your account" },
-    { label: "Settings", route: "/(app)/settings", desc: "Profile and preferences" },
+    {
+      label: "Support",
+      route: "/(app)/support",
+      desc: "Get help with your account",
+    },
+    {
+      label: "Settings",
+      route: "/(app)/settings",
+      desc: "Profile and preferences",
+    },
   ] as const;
 
   return (

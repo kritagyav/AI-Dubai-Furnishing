@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addRoomPhotoInput,
+  catalogIngestInput,
   createProjectInput,
   createRoomInput,
   dimensionCm,
+  paginationInput,
+  productInput,
+  registerRetailerInput,
+  retailerDecisionInput,
+  setRoomTypeInput,
   updateProjectInput,
   updateRoomInput,
-  productInput,
-  catalogIngestInput,
-  registerRetailerInput,
-  paginationInput,
-  setRoomTypeInput,
-  addRoomPhotoInput,
   uploadFloorPlanInput,
-  retailerDecisionInput,
 } from "./index";
 
 // ═══════════════════════════════════════════
@@ -284,7 +284,8 @@ describe("productInput", () => {
       (_, i) => `https://cdn.example.com/photo${i}.jpg`,
     );
     expect(
-      productInput.safeParse({ ...validProduct, photos: tooManyPhotos }).success,
+      productInput.safeParse({ ...validProduct, photos: tooManyPhotos })
+        .success,
     ).toBe(false);
   });
 

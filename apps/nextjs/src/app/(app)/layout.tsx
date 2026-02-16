@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@dubai/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@dubai/ui/sidebar";
 
 import { getSession } from "~/auth/server";
 import { AppSidebar } from "~/components/AppSidebar";

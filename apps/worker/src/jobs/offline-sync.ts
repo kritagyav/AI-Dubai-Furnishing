@@ -1,6 +1,6 @@
 import type { Prisma } from "@dubai/db";
-import { prisma } from "@dubai/db";
 import type { OfflineSyncPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 
@@ -59,10 +59,7 @@ export async function handleOfflineSync(
 
       default:
         log.warn({ actionType: action.action }, "Unknown action type");
-        await markFailed(
-          action.id,
-          `Unknown action type: ${action.action}`,
-        );
+        await markFailed(action.id, `Unknown action type: ${action.action}`);
         return;
     }
 
@@ -103,7 +100,7 @@ async function processAddToCart(
   payload: Record<string, unknown>,
 ) {
   const productId = payload.productId as string;
-  const quantity = (payload.quantity as number) ?? 1;
+  const quantity = payload.quantity as number;
   const priceFils = payload.priceFils as number;
 
   if (!productId || !priceFils) {
@@ -154,7 +151,10 @@ async function processUpdatePreferences(
     throw new Error("update_preferences requires projectId");
   }
 
-  const updateData: Record<string, Prisma.InputJsonValue | boolean | number | string | null> = {};
+  const updateData: Record<
+    string,
+    Prisma.InputJsonValue | number | string | null
+  > = {};
 
   if (payload.stylePreferences !== undefined) {
     updateData.stylePreferences =
@@ -216,13 +216,21 @@ async function processCreateRoom(
     select: { orderIndex: true },
   });
 
-  const roomType = (payload.type as string) ?? "OTHER";
+  const roomType = payload.type as string;
 
   await prisma.room.create({
     data: {
       projectId,
       name,
-      type: roomType as "LIVING_ROOM" | "BEDROOM" | "DINING_ROOM" | "KITCHEN" | "BATHROOM" | "STUDY_OFFICE" | "BALCONY" | "OTHER",
+      type: roomType as
+        | "LIVING_ROOM"
+        | "BEDROOM"
+        | "DINING_ROOM"
+        | "KITCHEN"
+        | "BATHROOM"
+        | "STUDY_OFFICE"
+        | "BALCONY"
+        | "OTHER",
       orderIndex: (lastRoom?.orderIndex ?? -1) + 1,
     },
   });

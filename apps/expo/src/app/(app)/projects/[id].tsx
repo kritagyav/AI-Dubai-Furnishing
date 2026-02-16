@@ -1,4 +1,10 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -92,7 +98,9 @@ export default function ProjectDetailScreen() {
             {project.name}
           </Text>
           {project.address ? (
-            <Text className="text-muted-foreground mt-1">{project.address}</Text>
+            <Text className="text-muted-foreground mt-1">
+              {project.address}
+            </Text>
           ) : null}
           <Text className="text-muted-foreground mt-2 text-sm">
             Created {formatDate(project.createdAt)}
@@ -124,7 +132,7 @@ export default function ProjectDetailScreen() {
                   {room.type ? (
                     <View className="rounded-full bg-gray-100 px-3 py-1">
                       <Text className="text-xs text-gray-600">
-                        {room.type.replace(/_/g, " ")}
+                        {String(room.type).replace(/_/g, " ")}
                       </Text>
                     </View>
                   ) : null}
@@ -185,7 +193,7 @@ export default function ProjectDetailScreen() {
             </View>
           ) : (
             packages.map((pkg) => {
-              const style = getStatusStyle(pkg.status);
+              const style = getStatusStyle(String(pkg.status));
               return (
                 <View
                   key={pkg.id}

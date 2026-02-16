@@ -60,17 +60,28 @@ export default function GalleryScreen() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "SOFA": return "Sofa";
-      case "BED": return "Bed";
-      case "TABLE": return "Table";
-      case "CHAIR": return "Chair";
-      case "WARDROBE": return "Wardrobe";
-      case "DESK": return "Desk";
-      case "SHELF": return "Shelf";
-      case "LIGHTING": return "Light";
-      case "RUG": return "Rug";
-      case "DECOR": return "Decor";
-      default: return "Item";
+      case "SOFA":
+        return "Sofa";
+      case "BED":
+        return "Bed";
+      case "TABLE":
+        return "Table";
+      case "CHAIR":
+        return "Chair";
+      case "WARDROBE":
+        return "Wardrobe";
+      case "DESK":
+        return "Desk";
+      case "SHELF":
+        return "Shelf";
+      case "LIGHTING":
+        return "Light";
+      case "RUG":
+        return "Rug";
+      case "DECOR":
+        return "Decor";
+      default:
+        return "Item";
     }
   };
 
@@ -155,7 +166,7 @@ export default function GalleryScreen() {
                 {/* Product Image Placeholder */}
                 <View className="items-center justify-center bg-gray-100 p-6">
                   <Text className="text-foreground text-sm font-medium">
-                    {getCategoryIcon(item.category)}
+                    {getCategoryIcon(String(item.category))}
                   </Text>
                 </View>
 
@@ -174,8 +185,8 @@ export default function GalleryScreen() {
                   </Text>
                   <View className="mt-1 self-start rounded-full bg-gray-100 px-2 py-0.5">
                     <Text className="text-xs text-gray-600">
-                      {item.category.charAt(0) +
-                        item.category.slice(1).toLowerCase()}
+                      {String(item.category).charAt(0) +
+                        String(item.category).slice(1).toLowerCase()}
                     </Text>
                   </View>
                 </View>

@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 
-import { Button } from "@dubai/ui/button";
-
 import { getSupabaseBrowserClient } from "@dubai/auth/client";
+import { Button } from "@dubai/ui/button";
 
 export function AvatarUpload({
   userId,
@@ -37,9 +36,7 @@ export function AvatarUpload({
         return;
       }
 
-      const { data } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(fileName);
+      const { data } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
       setAvatarUrl(data.publicUrl);
 

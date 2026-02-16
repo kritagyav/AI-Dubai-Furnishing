@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -27,7 +28,7 @@ function StatusBadge({ status }: { status: string }) {
 type DriverStatus = "EN_ROUTE" | "ARRIVED" | "COMPLETED";
 
 export default function DriversPage() {
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
   const [dateFilter, setDateFilter] = useState<string>(today);
   const [assignId, setAssignId] = useState<string | null>(null);
   const [driverName, setDriverName] = useState("");
@@ -47,18 +48,18 @@ export default function DriversPage() {
     }),
   );
 
-  const unassigned = deliveries.data?.items.filter(
-    (d) => d.status === "SCHEDULED" || d.status === "RESCHEDULED",
-  ).length ?? 0;
-  const assigned = deliveries.data?.items.filter(
-    (d) => d.status === "ASSIGNED",
-  ).length ?? 0;
-  const enRoute = deliveries.data?.items.filter(
-    (d) => d.status === "EN_ROUTE" || d.status === "IN_TRANSIT",
-  ).length ?? 0;
-  const completed = deliveries.data?.items.filter(
-    (d) => d.status === "DELIVERED",
-  ).length ?? 0;
+  const unassigned =
+    deliveries.data?.items.filter(
+      (d) => d.status === "SCHEDULED" || d.status === "RESCHEDULED",
+    ).length ?? 0;
+  const assigned =
+    deliveries.data?.items.filter((d) => d.status === "ASSIGNED").length ?? 0;
+  const enRoute =
+    deliveries.data?.items.filter(
+      (d) => d.status === "EN_ROUTE" || d.status === "IN_TRANSIT",
+    ).length ?? 0;
+  const completed =
+    deliveries.data?.items.filter((d) => d.status === "DELIVERED").length ?? 0;
 
   async function handleAssign(deliveryId: string) {
     if (!driverName || !driverPhone) return;
@@ -161,22 +162,22 @@ export default function DriversPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Order
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Time Slot
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Driver
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Vehicle
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
@@ -204,18 +205,18 @@ export default function DriversPage() {
             )}
             {deliveries.data?.items.map((delivery) => (
               <tr key={delivery.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {delivery.order?.orderRef
                     ? delivery.order.orderRef.slice(0, 8)
                     : delivery.orderId.slice(0, 8)}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {delivery.scheduledSlot ?? "N/A"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={delivery.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={delivery.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {delivery.driverName ? (
                     <div>
                       <p className="font-medium">{delivery.driverName}</p>
@@ -227,10 +228,10 @@ export default function DriversPage() {
                     <span className="text-gray-400">Unassigned</span>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {delivery.vehiclePlate ?? "--"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
                   <div className="flex gap-1">
                     {/* Assign button for unassigned deliveries */}
                     {(delivery.status === "SCHEDULED" ||

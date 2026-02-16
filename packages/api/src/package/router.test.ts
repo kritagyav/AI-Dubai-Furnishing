@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -30,11 +40,6 @@ vi.mock("@dubai/queue", () => ({
   trackEvent: (...args: unknown[]) => mockTrackEvent(...args),
 }));
 
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
-
 const createCaller = createCallerFactory(appRouter);
 
 // ─── Helpers ───
@@ -44,7 +49,12 @@ function createMockDb() {
     project: { findFirst: vi.fn() },
     room: { findFirst: vi.fn() },
     userPreference: { findFirst: vi.fn() },
-    package: { create: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    package: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+    },
     packageReview: { upsert: vi.fn() },
     cart: { upsert: vi.fn() },
     cartItem: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
@@ -84,7 +94,10 @@ describe("package.generate", () => {
     const ctx = authedCtx(db);
     const caller = createCaller(ctx);
 
-    db.project.findFirst.mockResolvedValue({ id: "proj-1", name: "My Apartment" });
+    db.project.findFirst.mockResolvedValue({
+      id: "proj-1",
+      name: "My Apartment",
+    });
     db.userPreference.findFirst.mockResolvedValue({
       budgetMinFils: 10000,
       budgetMaxFils: 200000,
@@ -111,11 +124,14 @@ describe("package.generate", () => {
       }),
       select: expect.any(Object),
     });
-    expect(mockEnqueue).toHaveBeenCalledWith("package.generate", expect.objectContaining({
-      packageId: "pkg-1",
-      projectId: "4bad894b-b73a-49f6-8e57-43a6940d19cb",
-      userId: "user-1",
-    }));
+    expect(mockEnqueue).toHaveBeenCalledWith(
+      "package.generate",
+      expect.objectContaining({
+        packageId: "pkg-1",
+        projectId: "4bad894b-b73a-49f6-8e57-43a6940d19cb",
+        userId: "user-1",
+      }),
+    );
   });
 
   it("throws NOT_FOUND when project does not exist", async () => {
@@ -126,7 +142,9 @@ describe("package.generate", () => {
     db.project.findFirst.mockResolvedValue(null);
 
     await expect(
-      caller.package.generate({ projectId: "4bad894b-b73a-49f6-8e57-43a6940d19cb" }),
+      caller.package.generate({
+        projectId: "4bad894b-b73a-49f6-8e57-43a6940d19cb",
+      }),
     ).rejects.toThrow(TRPCError);
   });
 
@@ -135,7 +153,10 @@ describe("package.generate", () => {
     const ctx = authedCtx(db);
     const caller = createCaller(ctx);
 
-    db.project.findFirst.mockResolvedValue({ id: "proj-1", name: "My Apartment" });
+    db.project.findFirst.mockResolvedValue({
+      id: "proj-1",
+      name: "My Apartment",
+    });
     db.room.findFirst.mockResolvedValue(null);
 
     await expect(
@@ -166,7 +187,13 @@ describe("package.get", () => {
       expiresAt: null,
       createdAt: new Date(),
       items: [
-        { id: "item-1", productId: "prod-1", quantity: 1, unitPriceFils: 50000, roomPlacement: null },
+        {
+          id: "item-1",
+          productId: "prod-1",
+          quantity: 1,
+          unitPriceFils: 50000,
+          roomPlacement: null,
+        },
       ],
       previews: [],
       reviews: [],
@@ -204,8 +231,24 @@ describe("package.list", () => {
     const caller = createCaller(ctx);
 
     const items = [
-      { id: "pkg-1", name: "P1", status: "READY", totalPriceFils: 100000, styleTag: "modern", createdAt: new Date(), _count: { items: 3 } },
-      { id: "pkg-2", name: "P2", status: "GENERATING", totalPriceFils: null, styleTag: null, createdAt: new Date(), _count: { items: 0 } },
+      {
+        id: "pkg-1",
+        name: "P1",
+        status: "READY",
+        totalPriceFils: 100000,
+        styleTag: "modern",
+        createdAt: new Date(),
+        _count: { items: 3 },
+      },
+      {
+        id: "pkg-2",
+        name: "P2",
+        status: "GENERATING",
+        totalPriceFils: null,
+        styleTag: null,
+        createdAt: new Date(),
+        _count: { items: 0 },
+      },
     ];
     db.package.findMany.mockResolvedValue(items);
 
@@ -222,9 +265,33 @@ describe("package.list", () => {
 
     // Return limit + 1 items (3 items for limit=2)
     const items = [
-      { id: "pkg-1", name: "P1", status: "READY", totalPriceFils: 100000, styleTag: null, createdAt: new Date(), _count: { items: 1 } },
-      { id: "pkg-2", name: "P2", status: "READY", totalPriceFils: 200000, styleTag: null, createdAt: new Date(), _count: { items: 2 } },
-      { id: "pkg-3", name: "P3", status: "READY", totalPriceFils: 300000, styleTag: null, createdAt: new Date(), _count: { items: 3 } },
+      {
+        id: "pkg-1",
+        name: "P1",
+        status: "READY",
+        totalPriceFils: 100000,
+        styleTag: null,
+        createdAt: new Date(),
+        _count: { items: 1 },
+      },
+      {
+        id: "pkg-2",
+        name: "P2",
+        status: "READY",
+        totalPriceFils: 200000,
+        styleTag: null,
+        createdAt: new Date(),
+        _count: { items: 2 },
+      },
+      {
+        id: "pkg-3",
+        name: "P3",
+        status: "READY",
+        totalPriceFils: 300000,
+        styleTag: null,
+        createdAt: new Date(),
+        _count: { items: 3 },
+      },
     ];
     db.package.findMany.mockResolvedValue(items);
 
@@ -280,7 +347,10 @@ describe("package.updateStatus", () => {
     const ctx = authedCtx(db);
     const caller = createCaller(ctx);
 
-    db.package.findFirst.mockResolvedValue({ id: "pkg-1", status: "GENERATING" });
+    db.package.findFirst.mockResolvedValue({
+      id: "pkg-1",
+      status: "GENERATING",
+    });
 
     await expect(
       caller.package.updateStatus({

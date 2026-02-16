@@ -1,15 +1,16 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import { Prisma } from "@dubai/db";
+import { z } from "zod/v4";
+
 import type { Prisma as PrismaTypes } from "@dubai/db";
+import { Prisma } from "@dubai/db";
+import { trackEvent } from "@dubai/queue";
 import {
   catalogIngestInput,
   listCatalogIssuesInput,
   paginationInput,
   updateProductInput,
 } from "@dubai/validators";
-import { trackEvent } from "@dubai/queue";
-import { z } from "zod/v4";
 
 import { adminProcedure, publicProcedure, retailerProcedure } from "../trpc";
 
@@ -35,18 +36,18 @@ export const catalogRouter = {
         select: { id: true, tenantId: true, status: true },
       });
 
-      if (!retailer || retailer.status !== "APPROVED") {
+      if (retailer?.status !== "APPROVED") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only approved retailers can ingest products",
         });
       }
 
-      const results: Array<{
+      const results: {
         sku: string;
         status: "created" | "updated" | "error";
         error?: string;
-      }> = [];
+      }[] = [];
 
       for (const product of input.products) {
         try {
@@ -91,7 +92,8 @@ export const catalogRouter = {
 
           results.push({ sku: product.sku, status: "updated" });
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Unknown error";
+          const message =
+            error instanceof Error ? error.message : "Unknown error";
           results.push({ sku: product.sku, status: "error", error: message });
         }
       }
@@ -105,7 +107,12 @@ export const catalogRouter = {
         failed: errors,
       });
 
-      return { total: input.products.length, succeeded: created, failed: errors, results };
+      return {
+        total: input.products.length,
+        succeeded: created,
+        failed: errors,
+        results,
+      };
     }),
 
   /**
@@ -125,7 +132,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const products = await ctx.db.retailerProduct.findMany({
@@ -171,7 +181,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const product = await ctx.db.retailerProduct.findFirst({
@@ -179,7 +192,10 @@ export const catalogRouter = {
       });
 
       if (!product) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
       }
 
       return product;
@@ -197,7 +213,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const product = await ctx.db.retailerProduct.findFirst({
@@ -206,16 +225,25 @@ export const catalogRouter = {
       });
 
       if (!product) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
       }
 
       return ctx.db.retailerProduct.update({
         where: { id: input.productId },
         data: {
           ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.priceFils !== undefined ? { priceFils: input.priceFils } : {}),
-          ...(input.stockQuantity !== undefined ? { stockQuantity: input.stockQuantity } : {}),
-          ...(input.photos !== undefined ? { photos: input.photos as JsonValue } : {}),
+          ...(input.priceFils !== undefined
+            ? { priceFils: input.priceFils }
+            : {}),
+          ...(input.stockQuantity !== undefined
+            ? { stockQuantity: input.stockQuantity }
+            : {}),
+          ...(input.photos !== undefined
+            ? { photos: input.photos as JsonValue }
+            : {}),
         },
         select: {
           id: true,
@@ -240,7 +268,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const product = await ctx.db.retailerProduct.findFirst({
@@ -249,7 +280,10 @@ export const catalogRouter = {
       });
 
       if (!product) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Product not found",
+        });
       }
 
       await ctx.db.retailerProduct.delete({ where: { id: input.productId } });
@@ -331,7 +365,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       const issuesList = await ctx.db.catalogIssue.findMany({
@@ -378,7 +415,10 @@ export const catalogRouter = {
       });
 
       if (!retailer) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Retailer not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Retailer not found",
+        });
       }
 
       // Get all products for health analysis
@@ -400,15 +440,15 @@ export const catalogRouter = {
       const totalProducts = products.length;
       let staleProducts = 0;
       let missingFields = 0;
-      let brokenImages = 0;
+      const brokenImages = 0;
       let pricingIssues = 0;
-      const newIssues: Array<{
+      const newIssues: {
         productId: string;
         issueType: string;
         severity: string;
         description: string;
         recommendation: string;
-      }> = [];
+      }[] = [];
 
       const now = new Date();
       const staleThresholdMs = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -428,7 +468,7 @@ export const catalogRouter = {
         }
 
         // Missing fields check
-        const photos = product.photos as unknown[];
+        const photos = product.photos as unknown[] | null;
         if (!photos || (Array.isArray(photos) && photos.length === 0)) {
           missingFields++;
           newIssues.push({
@@ -436,12 +476,16 @@ export const catalogRouter = {
             issueType: "MISSING_FIELDS",
             severity: "HIGH",
             description: `Product "${product.name}" has no photos`,
-            recommendation: "Add at least one product photo for package inclusion",
+            recommendation:
+              "Add at least one product photo for package inclusion",
           });
         }
 
-        const materials = product.materials as unknown[];
-        if (!materials || (Array.isArray(materials) && materials.length === 0)) {
+        const materials = product.materials as unknown[] | null;
+        if (
+          !materials ||
+          (Array.isArray(materials) && materials.length === 0)
+        ) {
           missingFields++;
           newIssues.push({
             productId: product.id,
@@ -482,10 +526,7 @@ export const catalogRouter = {
       const overallScore =
         totalProducts === 0
           ? 100
-          : Math.max(
-              0,
-              Math.round(100 - (issuesFound / maxDeductions) * 100),
-            );
+          : Math.max(0, Math.round(100 - (issuesFound / maxDeductions) * 100));
 
       // Save health check record
       const healthCheck = await ctx.db.catalogHealthCheck.create({
@@ -525,7 +566,12 @@ export const catalogRouter = {
         overallScore,
         totalProducts,
         issuesFound,
-        breakdown: { staleProducts, missingFields, brokenImages, pricingIssues },
+        breakdown: {
+          staleProducts,
+          missingFields,
+          brokenImages,
+          pricingIssues,
+        },
       };
     }),
 
@@ -554,11 +600,15 @@ export const catalogRouter = {
         ...(input.search
           ? { name: { contains: input.search, mode: "insensitive" as const } }
           : {}),
-        ...((input.minPriceFils !== undefined || input.maxPriceFils !== undefined)
+        ...(input.minPriceFils !== undefined || input.maxPriceFils !== undefined
           ? {
               priceFils: {
-                ...(input.minPriceFils !== undefined ? { gte: input.minPriceFils } : {}),
-                ...(input.maxPriceFils !== undefined ? { lte: input.maxPriceFils } : {}),
+                ...(input.minPriceFils !== undefined
+                  ? { gte: input.minPriceFils }
+                  : {}),
+                ...(input.maxPriceFils !== undefined
+                  ? { lte: input.maxPriceFils }
+                  : {}),
               },
             }
           : {}),

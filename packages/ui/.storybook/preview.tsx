@@ -1,9 +1,9 @@
 import type { Preview } from "@storybook/react";
 import * as React from "react";
 
+import type { ZoneName } from "../src/zones";
 import { ThemeProvider } from "../src/theme";
 import { ZoneProvider } from "../src/zones";
-import type { ZoneName } from "../src/zones";
 
 const preview: Preview = {
   parameters: {

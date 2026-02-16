@@ -24,23 +24,28 @@ export class StorageClient {
   private devMode: boolean;
 
   constructor() {
+    // eslint-disable-next-line no-restricted-properties -- bootstrap env read
     const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+    // eslint-disable-next-line no-restricted-properties -- bootstrap env read
     const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+    // eslint-disable-next-line no-restricted-properties -- bootstrap env read
     const region = process.env.S3_REGION ?? "me-south-1";
 
     this.devMode = !accessKeyId || !secretAccessKey;
 
-    if (!this.devMode) {
+    if (accessKeyId && secretAccessKey) {
       this.s3 = new S3Client({
         region,
         credentials: {
-          accessKeyId: accessKeyId!,
-          secretAccessKey: secretAccessKey!,
+          accessKeyId,
+          secretAccessKey,
         },
       });
     } else {
       this.s3 = null;
-      console.warn("[StorageClient] No S3 credentials set — running in dev mode (mock URLs)");
+      console.warn(
+        "[StorageClient] No S3 credentials set — running in dev mode (mock URLs)",
+      );
     }
   }
 
@@ -62,13 +67,18 @@ export class StorageClient {
       };
     }
 
+    const s3 = this.s3;
+    if (!s3) {
+      throw new Error("S3 client not initialized");
+    }
+
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
     });
 
-    const url = await getSignedUrl(this.s3!, command, {
+    const url = await getSignedUrl(s3, command, {
       expiresIn: expiresIn ?? DEFAULT_EXPIRY,
     });
 
@@ -89,12 +99,17 @@ export class StorageClient {
       return `/dev/placeholder-${devId}.${ext}`;
     }
 
+    const s3 = this.s3;
+    if (!s3) {
+      throw new Error("S3 client not initialized");
+    }
+
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
     });
 
-    return getSignedUrl(this.s3!, command, {
+    return getSignedUrl(s3, command, {
       expiresIn: expiresIn ?? DEFAULT_EXPIRY,
     });
   }
@@ -108,19 +123,28 @@ export class StorageClient {
       return;
     }
 
+    const s3 = this.s3;
+    if (!s3) {
+      throw new Error("S3 client not initialized");
+    }
+
     const command = new DeleteObjectCommand({
       Bucket: bucket,
       Key: key,
     });
 
-    await this.s3!.send(command);
+    await s3.send(command);
   }
 
   /**
    * Generate a standardized S3 key for product photos.
    * Format: retailers/{retailerId}/products/{productId}/{filename}
    */
-  getProductPhotoKey(retailerId: string, productId: string, filename: string): string {
+  getProductPhotoKey(
+    retailerId: string,
+    productId: string,
+    filename: string,
+  ): string {
     return `retailers/${retailerId}/products/${productId}/${filename}`;
   }
 

@@ -217,17 +217,95 @@ Respond with valid JSON matching this schema:
  */
 const STYLE_CATEGORY_AFFINITY: Record<string, FurnitureCategory[]> = {
   modern: ["SOFA", "COFFEE_TABLE", "TV_UNIT", "LIGHTING", "RUG", "MIRROR"],
-  traditional: ["SOFA", "DINING_TABLE", "DINING_CHAIR", "WARDROBE", "DRESSER", "CURTAIN", "RUG"],
+  traditional: [
+    "SOFA",
+    "DINING_TABLE",
+    "DINING_CHAIR",
+    "WARDROBE",
+    "DRESSER",
+    "CURTAIN",
+    "RUG",
+  ],
   minimalist: ["SOFA", "BED", "DESK", "BOOKSHELF", "LIGHTING", "STORAGE"],
-  eclectic: ["SOFA", "COFFEE_TABLE", "BOOKSHELF", "RUG", "DECOR", "LIGHTING", "MIRROR"],
-  scandinavian: ["SOFA", "COFFEE_TABLE", "BOOKSHELF", "DESK", "RUG", "LIGHTING"],
-  industrial: ["DESK", "OFFICE_CHAIR", "BOOKSHELF", "COFFEE_TABLE", "LIGHTING", "STORAGE"],
-  bohemian: ["SOFA", "RUG", "CURTAIN", "DECOR", "LIGHTING", "SIDE_TABLE", "MIRROR"],
-  coastal: ["SOFA", "COFFEE_TABLE", "SIDE_TABLE", "RUG", "DECOR", "LIGHTING", "MIRROR"],
-  mid_century: ["SOFA", "COFFEE_TABLE", "SIDE_TABLE", "DESK", "BOOKSHELF", "LIGHTING"],
-  contemporary: ["SOFA", "DINING_TABLE", "DINING_CHAIR", "TV_UNIT", "LIGHTING", "RUG"],
-  rustic: ["DINING_TABLE", "DINING_CHAIR", "BOOKSHELF", "STORAGE", "RUG", "DECOR"],
-  luxury: ["SOFA", "BED", "DINING_TABLE", "DINING_CHAIR", "WARDROBE", "DRESSER", "CURTAIN", "RUG", "LIGHTING", "MIRROR"],
+  eclectic: [
+    "SOFA",
+    "COFFEE_TABLE",
+    "BOOKSHELF",
+    "RUG",
+    "DECOR",
+    "LIGHTING",
+    "MIRROR",
+  ],
+  scandinavian: [
+    "SOFA",
+    "COFFEE_TABLE",
+    "BOOKSHELF",
+    "DESK",
+    "RUG",
+    "LIGHTING",
+  ],
+  industrial: [
+    "DESK",
+    "OFFICE_CHAIR",
+    "BOOKSHELF",
+    "COFFEE_TABLE",
+    "LIGHTING",
+    "STORAGE",
+  ],
+  bohemian: [
+    "SOFA",
+    "RUG",
+    "CURTAIN",
+    "DECOR",
+    "LIGHTING",
+    "SIDE_TABLE",
+    "MIRROR",
+  ],
+  coastal: [
+    "SOFA",
+    "COFFEE_TABLE",
+    "SIDE_TABLE",
+    "RUG",
+    "DECOR",
+    "LIGHTING",
+    "MIRROR",
+  ],
+  mid_century: [
+    "SOFA",
+    "COFFEE_TABLE",
+    "SIDE_TABLE",
+    "DESK",
+    "BOOKSHELF",
+    "LIGHTING",
+  ],
+  contemporary: [
+    "SOFA",
+    "DINING_TABLE",
+    "DINING_CHAIR",
+    "TV_UNIT",
+    "LIGHTING",
+    "RUG",
+  ],
+  rustic: [
+    "DINING_TABLE",
+    "DINING_CHAIR",
+    "BOOKSHELF",
+    "STORAGE",
+    "RUG",
+    "DECOR",
+  ],
+  luxury: [
+    "SOFA",
+    "BED",
+    "DINING_TABLE",
+    "DINING_CHAIR",
+    "WARDROBE",
+    "DRESSER",
+    "CURTAIN",
+    "RUG",
+    "LIGHTING",
+    "MIRROR",
+  ],
 };
 
 /**
@@ -254,9 +332,34 @@ const STYLE_MATERIAL_AFFINITY: Record<string, string[]> = {
  * Used to ensure appropriate category diversity.
  */
 const ROOM_CATEGORY_MAP: Record<string, FurnitureCategory[]> = {
-  living_room: ["SOFA", "COFFEE_TABLE", "TV_UNIT", "RUG", "CURTAIN", "LIGHTING", "SIDE_TABLE", "DECOR"],
-  bedroom: ["BED", "WARDROBE", "DRESSER", "SIDE_TABLE", "CURTAIN", "RUG", "LIGHTING", "MIRROR"],
-  dining_room: ["DINING_TABLE", "DINING_CHAIR", "STORAGE", "LIGHTING", "RUG", "DECOR"],
+  living_room: [
+    "SOFA",
+    "COFFEE_TABLE",
+    "TV_UNIT",
+    "RUG",
+    "CURTAIN",
+    "LIGHTING",
+    "SIDE_TABLE",
+    "DECOR",
+  ],
+  bedroom: [
+    "BED",
+    "WARDROBE",
+    "DRESSER",
+    "SIDE_TABLE",
+    "CURTAIN",
+    "RUG",
+    "LIGHTING",
+    "MIRROR",
+  ],
+  dining_room: [
+    "DINING_TABLE",
+    "DINING_CHAIR",
+    "STORAGE",
+    "LIGHTING",
+    "RUG",
+    "DECOR",
+  ],
   office: ["DESK", "OFFICE_CHAIR", "BOOKSHELF", "STORAGE", "LIGHTING"],
   kitchen: ["STORAGE", "LIGHTING", "DECOR"],
   outdoor: ["OUTDOOR", "LIGHTING", "DECOR", "RUG"],
@@ -283,20 +386,28 @@ function computeFallbackStyleScore(
   const affinityCategories = STYLE_CATEGORY_AFFINITY[styleTag];
   if (affinityCategories?.includes(product.category)) {
     score += 0.35;
-    reasons.push(`${product.category} is a common category for ${styleTag} style`);
+    reasons.push(
+      `${product.category} is a common category for ${styleTag} style`,
+    );
   }
 
   // Material affinity check
   const affinityMaterials = STYLE_MATERIAL_AFFINITY[styleTag];
   if (affinityMaterials && product.materials) {
-    const normalizedProductMaterials = product.materials.map((m) => m.toLowerCase());
+    const normalizedProductMaterials = product.materials.map((m) =>
+      m.toLowerCase(),
+    );
     const matchingMaterials = affinityMaterials.filter((am) =>
-      normalizedProductMaterials.some((pm) => pm.includes(am) || am.includes(pm)),
+      normalizedProductMaterials.some(
+        (pm) => pm.includes(am) || am.includes(pm),
+      ),
     );
     if (matchingMaterials.length > 0) {
       const materialBonus = Math.min(0.35, matchingMaterials.length * 0.12);
       score += materialBonus;
-      reasons.push(`Materials (${matchingMaterials.join(", ")}) complement ${styleTag} style`);
+      reasons.push(
+        `Materials (${matchingMaterials.join(", ")}) complement ${styleTag} style`,
+      );
     }
   }
 
@@ -304,7 +415,10 @@ function computeFallbackStyleScore(
 
   return {
     score: Math.round(score * 100) / 100,
-    reasoning: reasons.length > 0 ? reasons.join(". ") + "." : `Basic relevance for ${styleTag} style.`,
+    reasoning:
+      reasons.length > 0
+        ? reasons.join(". ") + "."
+        : `Basic relevance for ${styleTag} style.`,
   };
 }
 
@@ -327,7 +441,9 @@ function fallbackPackageRecommendation(
 
   // Step 1: Filter by budget and availability
   const withinBudget = input.availableProducts.filter(
-    (p) => p.priceFils <= budgetMax && (p.stockQuantity === undefined || p.stockQuantity > 0),
+    (p) =>
+      p.priceFils <= budgetMax &&
+      (p.stockQuantity === undefined || p.stockQuantity > 0),
   );
 
   if (withinBudget.length === 0) {
@@ -361,7 +477,9 @@ function fallbackPackageRecommendation(
   // Deduplicate; if no specific target categories, use all available
   targetCategories = [...new Set(targetCategories)];
   if (targetCategories.length === 0) {
-    const availableCategories = [...new Set(withinBudget.map((p) => p.category))];
+    const availableCategories = [
+      ...new Set(withinBudget.map((p) => p.category)),
+    ];
     targetCategories = availableCategories;
   }
 
@@ -401,7 +519,10 @@ function fallbackPackageRecommendation(
     );
 
     if (candidate) {
-      const { score, reasoning } = computeFallbackStyleScore(candidate.product, primaryStyle || "modern");
+      const { reasoning } = computeFallbackStyleScore(
+        candidate.product,
+        primaryStyle || "modern",
+      );
       selected.push({
         productId: candidate.product.id,
         quantity: 1,
@@ -432,7 +553,10 @@ function fallbackPackageRecommendation(
       if (hasUncoveredCategory) continue;
     }
 
-    const { reasoning } = computeFallbackStyleScore(entry.product, primaryStyle || "modern");
+    const { reasoning } = computeFallbackStyleScore(
+      entry.product,
+      primaryStyle || "modern",
+    );
     selected.push({
       productId: entry.product.id,
       quantity: 1,
@@ -468,7 +592,9 @@ function fallbackPackageRecommendation(
     packageReasoning:
       `Rule-based selection: picked ${selected.length} items across ${usedCategories.size} categories (${categoriesList}). ` +
       `Total: ${totalPrice} fils. ` +
-      (primaryStyle ? `Optimized for "${primaryStyle}" style preference.` : "No specific style applied."),
+      (primaryStyle
+        ? `Optimized for "${primaryStyle}" style preference.`
+        : "No specific style applied."),
     source: "fallback",
   };
 }
@@ -520,14 +646,45 @@ function fallbackRoomClassification(
 export function classifyRoomTypeByName(name: string): RoomClassificationOutput {
   const lower = name.toLowerCase();
 
-  const patterns: Array<{ keywords: string[]; type: string; confidence: number }> = [
-    { keywords: ["living", "lounge", "family room", "sitting"], type: "LIVING_ROOM", confidence: 0.85 },
-    { keywords: ["master bed", "bedroom", "guest room", "kids room", "nursery"], type: "BEDROOM", confidence: 0.85 },
+  const patterns: { keywords: string[]; type: string; confidence: number }[] = [
+    {
+      keywords: ["living", "lounge", "family room", "sitting"],
+      type: "LIVING_ROOM",
+      confidence: 0.85,
+    },
+    {
+      keywords: ["master bed", "bedroom", "guest room", "kids room", "nursery"],
+      type: "BEDROOM",
+      confidence: 0.85,
+    },
     { keywords: ["dining", "eat-in"], type: "DINING_ROOM", confidence: 0.85 },
-    { keywords: ["kitchen", "pantry", "kitchenette"], type: "KITCHEN", confidence: 0.85 },
-    { keywords: ["bath", "shower", "toilet", "powder room", "washroom", "restroom"], type: "BATHROOM", confidence: 0.85 },
-    { keywords: ["study", "office", "workspace", "den", "library"], type: "STUDY_OFFICE", confidence: 0.85 },
-    { keywords: ["balcony", "terrace", "patio", "veranda", "deck"], type: "BALCONY", confidence: 0.85 },
+    {
+      keywords: ["kitchen", "pantry", "kitchenette"],
+      type: "KITCHEN",
+      confidence: 0.85,
+    },
+    {
+      keywords: [
+        "bath",
+        "shower",
+        "toilet",
+        "powder room",
+        "washroom",
+        "restroom",
+      ],
+      type: "BATHROOM",
+      confidence: 0.85,
+    },
+    {
+      keywords: ["study", "office", "workspace", "den", "library"],
+      type: "STUDY_OFFICE",
+      confidence: 0.85,
+    },
+    {
+      keywords: ["balcony", "terrace", "patio", "veranda", "deck"],
+      type: "BALCONY",
+      confidence: 0.85,
+    },
   ];
 
   for (const pattern of patterns) {
@@ -629,21 +786,32 @@ export class AIClient {
       });
 
       // Validate the AI response
-      if (!Array.isArray(response.selectedProducts) || response.selectedProducts.length === 0) {
-        throw new AIServiceError("AI returned empty or invalid product selection");
+      if (
+        !Array.isArray(response.selectedProducts) ||
+        response.selectedProducts.length === 0
+      ) {
+        throw new AIServiceError(
+          "AI returned empty or invalid product selection",
+        );
       }
 
       // Verify all selected product IDs exist in the input
       const availableIds = new Set(input.availableProducts.map((p) => p.id));
-      const validSelections = response.selectedProducts.filter((s) => availableIds.has(s.productId));
+      const validSelections = response.selectedProducts.filter((s) =>
+        availableIds.has(s.productId),
+      );
 
       if (validSelections.length === 0) {
-        throw new AIServiceError("AI returned product IDs not present in available products");
+        throw new AIServiceError(
+          "AI returned product IDs not present in available products",
+        );
       }
 
       // Calculate total price from validated selections
       const totalPriceFils = validSelections.reduce((sum, sel) => {
-        const product = input.availableProducts.find((p) => p.id === sel.productId);
+        const product = input.availableProducts.find(
+          (p) => p.id === sel.productId,
+        );
         return sum + (product ? product.priceFils * sel.quantity : 0);
       }, 0);
 
@@ -651,10 +819,10 @@ export class AIClient {
         selectedProducts: validSelections.map((s) => ({
           productId: s.productId,
           quantity: s.quantity,
-          reasoning: s.reasoning ?? "Selected by AI.",
+          reasoning: s.reasoning,
         })),
         totalPriceFils,
-        packageReasoning: response.packageReasoning ?? "AI-curated package.",
+        packageReasoning: response.packageReasoning,
         source: "ai",
       };
     } catch (err) {
@@ -672,7 +840,10 @@ export class AIClient {
    *
    * Falls back to rule-based scoring when the AI service is unavailable.
    */
-  async getStyleMatch(productId: string, styleTag: string): Promise<StyleMatchOutput>;
+  async getStyleMatch(
+    productId: string,
+    styleTag: string,
+  ): Promise<StyleMatchOutput>;
   async getStyleMatch(input: StyleMatchInput): Promise<StyleMatchOutput>;
   async getStyleMatch(
     productIdOrInput: string | StyleMatchInput,
@@ -685,7 +856,7 @@ export class AIClient {
             productId: productIdOrInput,
             productName: "",
             productCategory: "OTHER",
-            styleTag: styleTag!,
+            styleTag: styleTag ?? "",
           }
         : productIdOrInput;
 
@@ -712,13 +883,13 @@ export class AIClient {
       });
 
       // Validate score range
-      const score = Math.max(0, Math.min(1, response.score ?? 0));
+      const score = Math.max(0, Math.min(1, response.score));
 
       return {
         productId: input.productId,
         styleTag: input.styleTag,
         score: Math.round(score * 100) / 100,
-        reasoning: response.reasoning ?? "Scored by AI.",
+        reasoning: response.reasoning,
         source: "ai",
       };
     } catch {
@@ -733,7 +904,9 @@ export class AIClient {
    * Calls the AI service to analyze room photos and determine the room type.
    * Falls back to a default classification when the AI service is unavailable.
    */
-  async classifyRoomType(photoUrls: string[]): Promise<RoomClassificationOutput> {
+  async classifyRoomType(
+    photoUrls: string[],
+  ): Promise<RoomClassificationOutput> {
     if (!this.serviceUrl) {
       return fallbackRoomClassification(photoUrls);
     }
@@ -750,12 +923,18 @@ export class AIClient {
       });
 
       const validTypes = [
-        "LIVING_ROOM", "BEDROOM", "DINING_ROOM", "KITCHEN",
-        "BATHROOM", "STUDY_OFFICE", "BALCONY", "OTHER",
+        "LIVING_ROOM",
+        "BEDROOM",
+        "DINING_ROOM",
+        "KITCHEN",
+        "BATHROOM",
+        "STUDY_OFFICE",
+        "BALCONY",
+        "OTHER",
       ];
 
       const type = validTypes.includes(response.type) ? response.type : "OTHER";
-      const confidence = Math.max(0, Math.min(1, response.confidence ?? 0.5));
+      const confidence = Math.max(0, Math.min(1, response.confidence));
 
       return {
         type,
@@ -807,10 +986,16 @@ export class AIClient {
         }
 
         if (!response.ok) {
-          const responseBody = await response.text().catch(() => "<unreadable>");
+          const responseBody = await response
+            .text()
+            .catch(() => "<unreadable>");
 
           // Don't retry on client errors (4xx) except 429 (rate limit)
-          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+          if (
+            response.status >= 400 &&
+            response.status < 500 &&
+            response.status !== 429
+          ) {
             throw new AIServiceError(
               `AI service returned ${response.status}: ${response.statusText}`,
               response.status,
@@ -830,15 +1015,18 @@ export class AIClient {
         const data = (await response.json()) as T;
         return data;
       } catch (err) {
-        if (err instanceof AIServiceError && err.statusCode && err.statusCode >= 400 && err.statusCode < 500 && err.statusCode !== 429) {
+        if (
+          err instanceof AIServiceError &&
+          err.statusCode &&
+          err.statusCode >= 400 &&
+          err.statusCode < 500 &&
+          err.statusCode !== 429
+        ) {
           // Non-retryable client error
           throw err;
         }
 
-        lastError =
-          err instanceof Error
-            ? err
-            : new Error(String(err));
+        lastError = err instanceof Error ? err : new Error(String(err));
 
         // AbortError means timeout - retryable
         // Other network errors - retryable

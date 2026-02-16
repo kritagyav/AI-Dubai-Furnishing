@@ -9,7 +9,7 @@ import { prisma } from "./client";
  *   const db = scopedClient(ctx.tenantId);
  *   const products = await db.retailerProduct.findMany();
  */
-export function scopedClient(tenantId: string, scopeField: string = "retailerId") {
+export function scopedClient(tenantId: string, scopeField = "retailerId") {
   return prisma.$extends({
     query: {
       $allOperations({ args, query }) {

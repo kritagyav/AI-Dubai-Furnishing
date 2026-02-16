@@ -125,9 +125,7 @@ export function createRateLimit(opts?: RateLimitOptions): MiddlewareHandler {
 
   return async (c, next) => {
     const key =
-      c.req.header("x-forwarded-for") ??
-      c.req.header("x-real-ip") ??
-      "unknown";
+      c.req.header("x-forwarded-for") ?? c.req.header("x-real-ip") ?? "unknown";
 
     const { upstash, memory } = getLimiter();
 

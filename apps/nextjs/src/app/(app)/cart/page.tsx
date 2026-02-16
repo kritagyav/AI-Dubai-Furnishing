@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { SkeletonScreen, EmptyState } from "@dubai/ui";
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
 import { useTRPCClient } from "~/trpc/react";
@@ -107,14 +107,13 @@ export default function CartPage() {
         </button>
       </div>
 
-      <div className="divide-y bg-card rounded-lg shadow-xs">
+      <div className="bg-card divide-y rounded-lg shadow-xs">
         {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between p-4"
-          >
+          <div key={item.id} className="flex items-center justify-between p-4">
             <div className="flex-1">
-              <p className="font-medium">Product {item.productId.slice(0, 8)}</p>
+              <p className="font-medium">
+                Product {item.productId.slice(0, 8)}
+              </p>
               <p className="text-muted-foreground text-sm">
                 AED {(item.priceFils / 100).toFixed(2)} each
               </p>
@@ -127,7 +126,7 @@ export default function CartPage() {
                   onClick={() =>
                     updateQuantity(item.id, Math.max(0, item.quantity - 1))
                   }
-                  className="rounded border px-2 py-1 text-sm hover:bg-muted disabled:opacity-50"
+                  className="hover:bg-muted rounded border px-2 py-1 text-sm disabled:opacity-50"
                 >
                   -
                 </button>
@@ -135,7 +134,7 @@ export default function CartPage() {
                 <button
                   disabled={updating === item.id}
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="rounded border px-2 py-1 text-sm hover:bg-muted disabled:opacity-50"
+                  className="hover:bg-muted rounded border px-2 py-1 text-sm disabled:opacity-50"
                 >
                   +
                 </button>

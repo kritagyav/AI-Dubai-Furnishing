@@ -39,7 +39,8 @@ export const env = createEnv({
     NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
     NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
     NEXT_PUBLIC_MIXPANEL_TOKEN: process.env.NEXT_PUBLIC_MIXPANEL_TOKEN,
-    NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY: process.env.NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY,
+    NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY:
+      process.env.NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

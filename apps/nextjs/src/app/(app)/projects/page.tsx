@@ -4,12 +4,11 @@
  * Projects list — Story 2.1: Create & Manage Furnishing Projects.
  * Shows all furnishing projects with room counts and last-updated dates.
  */
-
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
 import { EmptyState, SkeletonScreen } from "@dubai/ui";
+import { Button } from "@dubai/ui/button";
 
 import { useTRPCClient } from "~/trpc/react";
 
@@ -83,7 +82,7 @@ export default function ProjectsPage() {
           <button
             key={project.id}
             onClick={() => router.push(`/projects/${project.id}`)}
-            className="bg-card hover:shadow-md flex flex-col rounded-lg p-6 shadow-xs text-left transition-all"
+            className="bg-card flex flex-col rounded-lg p-6 text-left shadow-xs transition-all hover:shadow-md"
           >
             <h2 className="text-lg font-semibold">{project.name}</h2>
             {project.address && (
@@ -97,8 +96,7 @@ export default function ProjectsPage() {
                 {project._count.rooms === 1 ? "room" : "rooms"}
               </span>
               <span>
-                Updated{" "}
-                {new Date(project.updatedAt).toLocaleDateString()}
+                Updated {new Date(project.updatedAt).toLocaleDateString()}
               </span>
             </div>
           </button>

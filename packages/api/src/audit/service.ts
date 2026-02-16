@@ -1,5 +1,5 @@
-import { Prisma } from "@dubai/db";
 import type { PrismaClient } from "@dubai/db";
+import { Prisma } from "@dubai/db";
 
 export interface AuditLogEntry {
   actorId: string;

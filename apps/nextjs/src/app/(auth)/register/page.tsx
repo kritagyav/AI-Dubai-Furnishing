@@ -5,10 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod/v4";
 
+import { signInWithOAuth, signUp } from "@dubai/auth/hooks";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
-
-import { signInWithOAuth, signUp } from "@dubai/auth/hooks";
 
 const registrationSchema = z.object({
   email: z.email("Invalid email address"),

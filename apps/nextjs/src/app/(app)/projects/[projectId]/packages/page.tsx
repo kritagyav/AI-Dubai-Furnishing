@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import { EmptyState, EngagingWait, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
-import { SkeletonScreen, EmptyState, EngagingWait } from "@dubai/ui";
 
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
@@ -98,7 +98,9 @@ export default function ProjectPackagesPage() {
 
   async function handleAddToCart(packageId: string) {
     try {
-      const result = await client.package.addPackageToCart.mutate({ packageId });
+      const result = await client.package.addPackageToCart.mutate({
+        packageId,
+      });
       alert(`Added ${result.added} items to cart!`);
       router.push("/cart");
     } catch (err) {
@@ -141,9 +143,7 @@ export default function ProjectPackagesPage() {
             Generated furniture packages for your project
           </p>
         </div>
-        <Button disabled={generating} onClick={handleGenerate}>
-          {generating ? "Generating..." : "Generate New Package"}
-        </Button>
+        <Button onClick={handleGenerate}>Generate New Package</Button>
       </div>
 
       {packages.length === 0 ? (

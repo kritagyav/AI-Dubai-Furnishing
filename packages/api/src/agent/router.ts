@@ -1,12 +1,13 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import {
-  registerAgentInput,
-  updateAgentStatusInput,
-  updateAgentCommissionInput,
-  paginationInput,
-} from "@dubai/validators";
 import { z } from "zod/v4";
+
+import {
+  paginationInput,
+  registerAgentInput,
+  updateAgentCommissionInput,
+  updateAgentStatusInput,
+} from "@dubai/validators";
 
 import { adminProcedure, authedProcedure } from "../trpc";
 
@@ -143,7 +144,7 @@ export const agentRouter = {
       }
     }
 
-    return referral!;
+    return referral;
   }),
 
   /**

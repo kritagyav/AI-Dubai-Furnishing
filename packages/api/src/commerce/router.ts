@@ -1,27 +1,28 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+
 import type { Prisma } from "@dubai/db";
+import { enqueue, trackEvent } from "@dubai/queue";
 import {
   addToCartInput,
-  updateCartItemInput,
-  removeCartItemInput,
-  createOrderInput,
-  processPaymentInput,
-  listOrdersInput,
   cancelOrderInput,
-  refundOrderInput,
   createDisputeInput,
-  resolveDisputeInput,
+  createOrderInput,
   listDisputesInput,
+  listOrdersInput,
+  processPaymentInput,
+  refundOrderInput,
+  removeCartItemInput,
+  resolveDisputeInput,
+  updateCartItemInput,
 } from "@dubai/validators";
-import { enqueue, trackEvent } from "@dubai/queue";
 
 import { adminProcedure, authedProcedure } from "../trpc";
 import {
-  createPaymentIntent,
   capturePayment,
-  refundPayment,
+  createPaymentIntent,
   PaymentError,
+  refundPayment,
 } from "./payment-service";
 
 type JsonValue = Prisma.InputJsonValue;
@@ -73,7 +74,7 @@ export const commerceRouter = {
         },
       });
 
-      if (!product || product.validationStatus !== "ACTIVE") {
+      if (product?.validationStatus !== "ACTIVE") {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Product not found or not available",
@@ -108,7 +109,12 @@ export const commerceRouter = {
             quantity: existing.quantity + input.quantity,
             priceFils: product.priceFils,
           },
-          select: { id: true, productId: true, quantity: true, priceFils: true },
+          select: {
+            id: true,
+            productId: true,
+            quantity: true,
+            priceFils: true,
+          },
         });
       }
 
@@ -293,7 +299,13 @@ export const commerceRouter = {
         // Create line items
         await tx.orderLineItem.createMany({
           data: cart.items.map((item) => {
-            const product = productMap.get(item.productId)!;
+            const product = productMap.get(item.productId);
+            if (!product) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: `Product ${item.productId} not found in product map`,
+              });
+            }
             return {
               orderId: o.id,
               productId: item.productId,
@@ -366,7 +378,7 @@ export const commerceRouter = {
           capture: true,
           method: input.method,
           customerEmail: ctx.user.email || undefined,
-          customerName: ctx.user.name || undefined,
+          customerName: ctx.user.name ?? undefined,
         });
       } catch (err) {
         // Record the failed payment attempt
@@ -418,7 +430,7 @@ export const commerceRouter = {
         data: {
           orderId: order.id,
           method: input.method,
-          status: paymentStatus as "PENDING" | "AUTHORIZED" | "CAPTURED",
+          status: paymentStatus,
           amountFils: order.totalFils,
           externalRef: paymentResult.externalId,
           authorizedAt: isAuthorized || isCaptured ? now : null,
@@ -834,7 +846,10 @@ export const commerceRouter = {
 
       const now = new Date();
 
-      if (input.resolution === "FULL_REFUND" || input.resolution === "PARTIAL_REFUND") {
+      if (
+        input.resolution === "FULL_REFUND" ||
+        input.resolution === "PARTIAL_REFUND"
+      ) {
         // Find the captured payment for this order
         const payment = await ctx.db.payment.findFirst({
           where: { orderId: order.id, status: "CAPTURED" },
@@ -848,9 +863,10 @@ export const commerceRouter = {
           });
         }
 
-        const refundAmount = input.resolution === "FULL_REFUND"
-          ? payment.amountFils
-          : input.refundAmountFils;
+        const refundAmount =
+          input.resolution === "FULL_REFUND"
+            ? payment.amountFils
+            : input.refundAmountFils;
 
         if (!refundAmount || refundAmount <= 0) {
           throw new TRPCError({
@@ -902,7 +918,12 @@ export const commerceRouter = {
           await tx.order.update({
             where: { id: order.id },
             data: {
-              status: input.resolution === "FULL_REFUND" ? "REFUNDED" : order.status === "DISPUTED" ? "PAID" : order.status,
+              status:
+                input.resolution === "FULL_REFUND"
+                  ? "REFUNDED"
+                  : order.status === "DISPUTED"
+                    ? "PAID"
+                    : order.status,
             },
           });
 
@@ -921,8 +942,12 @@ export const commerceRouter = {
           const refundRatio = refundAmount / order.totalFils;
 
           for (const commission of commissions) {
-            const commissionAdjustment = Math.round(commission.amountFils * refundRatio);
-            const netAdjustment = Math.round(commission.netAmountFils * refundRatio);
+            const commissionAdjustment = Math.round(
+              commission.amountFils * refundRatio,
+            );
+            const netAdjustment = Math.round(
+              commission.netAmountFils * refundRatio,
+            );
 
             // Adjust existing commission
             await tx.commission.update({
@@ -1076,18 +1101,19 @@ export const commerceRouter = {
         .map((t) => t.orderId)
         .filter((id): id is string => id !== null);
 
-      const orders = orderIds.length > 0
-        ? await ctx.db.order.findMany({
-            where: { id: { in: orderIds } },
-            select: {
-              id: true,
-              orderRef: true,
-              totalFils: true,
-              status: true,
-              userId: true,
-            },
-          })
-        : [];
+      const orders =
+        orderIds.length > 0
+          ? await ctx.db.order.findMany({
+              where: { id: { in: orderIds } },
+              select: {
+                id: true,
+                orderRef: true,
+                totalFils: true,
+                status: true,
+                userId: true,
+              },
+            })
+          : [];
 
       const orderMap = new Map(orders.map((o) => [o.id, o]));
 
@@ -1098,5 +1124,4 @@ export const commerceRouter = {
 
       return { items: enriched, nextCursor };
     }),
-
 } satisfies TRPCRouterRecord;

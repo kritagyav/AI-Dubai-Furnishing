@@ -11,7 +11,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
 
@@ -46,7 +50,8 @@ export default function ProjectsScreen() {
     }),
   );
 
-  const projects = projectsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const projects =
+    projectsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-AE", {

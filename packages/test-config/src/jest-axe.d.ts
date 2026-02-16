@@ -11,14 +11,13 @@ declare module "jest-axe" {
     options?: RunOptions,
   ): Promise<AxeResults>;
 
-  export function configureAxe(
-    options?: AxeConfigureOptions,
-  ): typeof axe;
+  export function configureAxe(options?: AxeConfigureOptions): typeof axe;
 
   export interface JestAxeMatchers {
-    toHaveNoViolations(
-      results: AxeResults,
-    ): { pass: boolean; message(): string };
+    toHaveNoViolations(results: AxeResults): {
+      pass: boolean;
+      message(): string;
+    };
     [key: string]: unknown;
   }
 

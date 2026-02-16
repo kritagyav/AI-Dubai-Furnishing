@@ -4,9 +4,8 @@
  * New Room — Stories 2.2 (dimensions), 2.5 (multi-room), 2.6 (room type).
  * Room input form with type selection, dimension entry, and "add another" flow.
  */
-
-import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 import { Button } from "@dubai/ui/button";
 
@@ -238,10 +237,7 @@ export default function NewRoomPage() {
           >
             Save & Add Another
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-          >
+          <Button variant="ghost" onClick={() => router.back()}>
             Cancel
           </Button>
         </div>

@@ -9,7 +9,8 @@ import { cn } from "@dubai/ui";
 const STATUS_VARIANT_MAP: Record<string, string> = {
   // Order statuses
   DRAFT: "bg-muted text-muted-foreground",
-  PENDING_PAYMENT: "bg-[var(--color-warning-light)] text-[var(--color-warning-dark)]",
+  PENDING_PAYMENT:
+    "bg-[var(--color-warning-light)] text-[var(--color-warning-dark)]",
   PAID: "bg-[var(--color-info-light)] text-[var(--color-info-dark)]",
   PROCESSING: "bg-accent text-accent-foreground",
   SHIPPED: "bg-accent text-accent-foreground",
@@ -18,7 +19,8 @@ const STATUS_VARIANT_MAP: Record<string, string> = {
   REFUNDED: "bg-muted text-muted-foreground",
 
   // Package statuses
-  GENERATING: "bg-[var(--color-warning-light)] text-[var(--color-warning-dark)]",
+  GENERATING:
+    "bg-[var(--color-warning-light)] text-[var(--color-warning-dark)]",
   READY: "bg-[var(--color-info-light)] text-[var(--color-info-dark)]",
   ACCEPTED: "bg-[var(--color-success-light)] text-[var(--color-success-dark)]",
   REJECTED: "bg-[var(--color-error-light)] text-[var(--color-error-dark)]",

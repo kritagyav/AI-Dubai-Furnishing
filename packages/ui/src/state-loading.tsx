@@ -15,7 +15,11 @@ export interface SpinnerProps {
   className?: string;
 }
 
-export function Spinner({ size = "md", label = "Loading", className }: SpinnerProps) {
+export function Spinner({
+  size = "md",
+  label = "Loading",
+  className,
+}: SpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4 border-2",
     md: "h-6 w-6 border-2",
@@ -23,7 +27,11 @@ export function Spinner({ size = "md", label = "Loading", className }: SpinnerPr
   };
 
   return (
-    <div role="status" aria-label={label} className={cn("inline-flex", className)}>
+    <div
+      role="status"
+      aria-label={label}
+      className={cn("inline-flex", className)}
+    >
       <div
         className={cn(
           "border-muted-foreground/25 border-t-primary animate-spin rounded-full",
@@ -48,10 +56,7 @@ export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       aria-hidden="true"
-      className={cn(
-        "bg-muted animate-pulse rounded-md",
-        className,
-      )}
+      className={cn("bg-muted animate-pulse rounded-md", className)}
     />
   );
 }
@@ -78,10 +83,12 @@ export function SkeletonScreen({
   className,
 }: SkeletonScreenProps) {
   return (
-    <div role="status" aria-label={message ?? "Loading content"} className={cn("space-y-4", className)}>
-      {message && (
-        <p className="text-muted-foreground text-sm">{message}</p>
-      )}
+    <div
+      role="status"
+      aria-label={message ?? "Loading content"}
+      className={cn("space-y-4", className)}
+    >
+      {message && <p className="text-muted-foreground text-sm">{message}</p>}
       {header && (
         <div className="space-y-2">
           <Skeleton className="h-8 w-2/3" />
@@ -135,13 +142,17 @@ export function EngagingWait({
   currentTip = 0,
   className,
 }: EngagingWaitProps) {
-  const progress = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
+  const progress =
+    totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
 
   return (
     <div
       role="status"
       aria-label={`Processing: ${steps[currentStep] ?? "working"}`}
-      className={cn("flex flex-col items-center py-12 px-4 text-center", className)}
+      className={cn(
+        "flex flex-col items-center px-4 py-12 text-center",
+        className,
+      )}
     >
       {/* Progress bar */}
       <div className="mb-6 w-full max-w-sm">
@@ -193,7 +204,7 @@ export function EngagingWait({
       {/* Rotating tips */}
       {tips && tips.length > 0 && (
         <div className="bg-accent/50 max-w-sm rounded-lg p-4">
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Did you know?
           </p>
           <p className="text-foreground mt-1 text-sm">
@@ -234,7 +245,7 @@ export function QueuedWait({
     <div
       role="status"
       className={cn(
-        "flex flex-col items-center py-12 px-4 text-center",
+        "flex flex-col items-center px-4 py-12 text-center",
         className,
       )}
     >
@@ -253,7 +264,8 @@ export function QueuedWait({
         </p>
       )}
       <p className="text-primary mt-4 text-sm font-medium">
-        We&apos;ll notify you when it&apos;s ready. You can safely leave this page.
+        We&apos;ll notify you when it&apos;s ready. You can safely leave this
+        page.
       </p>
     </div>
   );

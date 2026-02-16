@@ -9,9 +9,7 @@ import { logger } from "../logger";
  * (e.g., Segment, Mixpanel, BigQuery). Currently logs events for
  * observability and future aggregation.
  */
-export async function handleAnalyticsTrack(
-  payload: AnalyticsTrackPayload,
-): Promise<void> {
+export function handleAnalyticsTrack(payload: AnalyticsTrackPayload): void {
   const log = logger.child({ job: "analytics.track", event: payload.event });
 
   log.info(

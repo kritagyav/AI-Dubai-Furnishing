@@ -29,21 +29,36 @@ export class EmailClient {
       this.resend = new Resend(apiKey);
     } else {
       this.resend = null;
-      console.warn("[EmailClient] No RESEND_API_KEY set — running in dev mode (console-only)");
+      console.warn(
+        "[EmailClient] No RESEND_API_KEY set — running in dev mode (console-only)",
+      );
     }
   }
 
   /**
    * Send a single transactional email.
    */
-  async sendTransactional(to: string, subject: string, html: string): Promise<SendResult> {
+  async sendTransactional(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<SendResult> {
     if (this.devMode) {
-      console.log("[EmailClient DEV] sendTransactional:", { to, subject, html: html.slice(0, 200) });
+      console.log("[EmailClient DEV] sendTransactional:", {
+        to,
+        subject,
+        html: html.slice(0, 200),
+      });
       return { success: true, id: `dev-${crypto.randomUUID()}` };
     }
 
+    const resend = this.resend;
+    if (!resend) {
+      return { success: false, error: "Resend client not initialized" };
+    }
+
     try {
-      const result = await this.resend!.emails.send({
+      const result = await resend.emails.send({
         from: this.from,
         to,
         subject,
@@ -54,7 +69,7 @@ export class EmailClient {
         return { success: false, error: result.error.message };
       }
 
-      return { success: true, id: result.data?.id };
+      return { success: true, id: result.data.id };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       return { success: false, error: message };
@@ -67,7 +82,7 @@ export class EmailClient {
   async sendOrderConfirmation(
     to: string,
     orderRef: string,
-    items: Array<{ name: string; quantity: number; priceFils: number }>,
+    items: { name: string; quantity: number; priceFils: number }[],
     totalAed: number,
   ): Promise<SendResult> {
     const itemsHtml = items
@@ -134,7 +149,10 @@ export class EmailClient {
   /**
    * Send an email verification email.
    */
-  async sendEmailVerification(to: string, verifyUrl: string): Promise<SendResult> {
+  async sendEmailVerification(
+    to: string,
+    verifyUrl: string,
+  ): Promise<SendResult> {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <h1 style="color:#1a1a1a;">Verify Your Email</h1>
@@ -161,7 +179,7 @@ export class EmailClient {
     to: string,
     userName: string,
     step: number,
-    cartItems?: Array<{ name: string; priceFils: number }>,
+    cartItems?: { name: string; priceFils: number }[],
   ): Promise<SendResult> {
     const greeting = userName ? `Hi ${userName}` : "Hi there";
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -41,7 +42,14 @@ function OrderStatusBadge({ status }: { status: string }) {
   );
 }
 
-const TICKET_STATUSES = ["", "OPEN", "IN_PROGRESS", "WAITING_ON_CUSTOMER", "RESOLVED", "CLOSED"] as const;
+const TICKET_STATUSES = [
+  "",
+  "OPEN",
+  "IN_PROGRESS",
+  "WAITING_ON_CUSTOMER",
+  "RESOLVED",
+  "CLOSED",
+] as const;
 
 const RESOLUTION_TYPES = [
   { value: "FULL_REFUND", label: "Full Refund" },
@@ -50,8 +58,17 @@ const RESOLUTION_TYPES = [
   { value: "REJECTED", label: "Rejected" },
 ] as const;
 
-type ResolutionType = "FULL_REFUND" | "PARTIAL_REFUND" | "REPLACEMENT" | "REJECTED";
-type TicketStatus = "OPEN" | "IN_PROGRESS" | "WAITING_ON_CUSTOMER" | "RESOLVED" | "CLOSED";
+type ResolutionType =
+  | "FULL_REFUND"
+  | "PARTIAL_REFUND"
+  | "REPLACEMENT"
+  | "REJECTED";
+type TicketStatus =
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "WAITING_ON_CUSTOMER"
+  | "RESOLVED"
+  | "CLOSED";
 
 export default function DisputesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -72,15 +89,12 @@ export default function DisputesPage() {
     }),
   );
 
-  const openCount = disputes.data?.items.filter(
-    (d) => d.status === "OPEN",
-  ).length ?? 0;
-  const inProgressCount = disputes.data?.items.filter(
-    (d) => d.status === "IN_PROGRESS",
-  ).length ?? 0;
-  const resolvedCount = disputes.data?.items.filter(
-    (d) => d.status === "RESOLVED",
-  ).length ?? 0;
+  const openCount =
+    disputes.data?.items.filter((d) => d.status === "OPEN").length ?? 0;
+  const inProgressCount =
+    disputes.data?.items.filter((d) => d.status === "IN_PROGRESS").length ?? 0;
+  const resolvedCount =
+    disputes.data?.items.filter((d) => d.status === "RESOLVED").length ?? 0;
 
   async function handleResolve(ticketId: string) {
     setResolving(true);
@@ -126,11 +140,15 @@ export default function DisputesPage() {
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">In Progress</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">{inProgressCount}</p>
+          <p className="mt-1 text-2xl font-bold text-yellow-600">
+            {inProgressCount}
+          </p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">Resolved</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{resolvedCount}</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">
+            {resolvedCount}
+          </p>
         </div>
       </div>
 
@@ -149,7 +167,9 @@ export default function DisputesPage() {
           ))}
         </select>
         <span className="text-sm text-gray-500">
-          {disputes.data ? `${disputes.data.items.length} disputes` : "Loading..."}
+          {disputes.data
+            ? `${disputes.data.items.length} disputes`
+            : "Loading..."}
         </span>
       </div>
 
@@ -158,28 +178,28 @@ export default function DisputesPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Ticket Ref
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Order
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Reason
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Order Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Amount (AED)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
                 Actions
               </th>
             </tr>
@@ -207,10 +227,10 @@ export default function DisputesPage() {
             )}
             {disputes.data?.items.map((dispute) => (
               <tr key={dispute.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                   {dispute.ticketRef.slice(0, 8)}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {dispute.order?.orderRef
                     ? dispute.order.orderRef.slice(0, 8)
                     : "N/A"}
@@ -218,27 +238,27 @@ export default function DisputesPage() {
                 <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-500">
                   {dispute.subject}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <StatusBadge status={dispute.status} />
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
+                  <StatusBadge status={dispute.status as string} />
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
                   {dispute.order ? (
-                    <OrderStatusBadge status={dispute.order.status} />
+                    <OrderStatusBadge status={dispute.order.status as string} />
                   ) : (
                     "N/A"
                   )}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                   {dispute.order
                     ? (dispute.order.totalFils / 100).toLocaleString("en-AE", {
                         minimumFractionDigits: 2,
                       })
                     : "--"}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                   {new Date(dispute.createdAt).toLocaleDateString()}
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                <td className="px-6 py-4 text-sm whitespace-nowrap">
                   {dispute.status !== "RESOLVED" &&
                   dispute.status !== "CLOSED" ? (
                     <button
@@ -272,7 +292,9 @@ export default function DisputesPage() {
                 </label>
                 <select
                   value={resolution}
-                  onChange={(e) => setResolution(e.target.value as ResolutionType)}
+                  onChange={(e) =>
+                    setResolution(e.target.value as ResolutionType)
+                  }
                   className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                 >
                   {RESOLUTION_TYPES.map((r) => (

@@ -1,5 +1,5 @@
-import { prisma } from "@dubai/db";
 import type { CartAbandonCheckPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 

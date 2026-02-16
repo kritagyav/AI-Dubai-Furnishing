@@ -37,14 +37,13 @@ export default function LoginScreen() {
 
   const handleOAuth = async (provider: "google" | "apple") => {
     try {
-      const { data, error: oauthError } =
-        await supabase.auth.signInWithOAuth({
-          provider,
-          options: {
-            redirectTo: "dubaifurnishing://auth/callback",
-            skipBrowserRedirect: true,
-          },
-        });
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: "dubaifurnishing://auth/callback",
+          skipBrowserRedirect: true,
+        },
+      });
 
       if (oauthError ?? !data.url) {
         setError("Social login failed");

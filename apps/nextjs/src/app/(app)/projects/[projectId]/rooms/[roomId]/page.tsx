@@ -5,12 +5,11 @@
  * View and edit room data, manage photos, change room type, detect room type
  * with AI, view package history, and add photos via URL input.
  */
-
-import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
 import { ErrorState, Spinner } from "@dubai/ui";
+import { Button } from "@dubai/ui/button";
 
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
@@ -40,13 +39,13 @@ interface RoomData {
   orderIndex: number;
   createdAt: Date;
   updatedAt: Date;
-  photos: Array<{
+  photos: {
     id: string;
     storageUrl: string;
     thumbnailUrl: string | null;
     orderIndex: number;
     uploadedAt: Date;
-  }>;
+  }[];
 }
 
 interface PackageItem {
@@ -137,15 +136,13 @@ export default function RoomDetailPage() {
       const result = await client.room.detectRoomType.mutate({
         roomId: room.id,
       });
-      const label = ROOM_TYPE_LABELS[result.type] ?? result.type;
+      const label =
+        ROOM_TYPE_LABELS[String(result.type)] ?? String(result.type);
       const confidence = Math.round((result.typeConfidence ?? 0) * 100);
-      setDetectMessage(
-        `Detected: ${label} (${confidence}% confidence)`,
-      );
+      setDetectMessage(`Detected: ${label} (${confidence}% confidence)`);
       void loadRoom();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Detection failed";
+      const message = err instanceof Error ? err.message : "Detection failed";
       setDetectMessage(message);
     } finally {
       setDetecting(false);
@@ -203,7 +200,8 @@ export default function RoomDetailPage() {
             </span>
             {room.typeSource === "AI_SUGGESTED" && (
               <span className="text-muted-foreground text-xs">
-                AI suggested ({Math.round((room.typeConfidence ?? 0) * 100)}% confidence)
+                AI suggested ({Math.round((room.typeConfidence ?? 0) * 100)}%
+                confidence)
               </span>
             )}
           </div>
@@ -308,7 +306,7 @@ export default function RoomDetailPage() {
                 />
                 <button
                   onClick={() => handleDeletePhoto(photo.id)}
-                  className="bg-background/80 absolute right-1 top-1 hidden rounded p-1 text-xs group-hover:block"
+                  className="bg-background/80 absolute top-1 right-1 hidden rounded p-1 text-xs group-hover:block"
                   aria-label="Delete photo"
                 >
                   &times;

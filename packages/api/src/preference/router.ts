@@ -1,5 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod/v4";
+
 import type { Prisma, PrismaClient } from "@dubai/db";
 import {
   saveChildSafetyInput,
@@ -7,7 +9,6 @@ import {
   saveLifestyleQuizInput,
   setProfileTypeInput,
 } from "@dubai/validators";
-import { z } from "zod/v4";
 
 import { authedProcedure } from "../trpc";
 
@@ -56,16 +57,21 @@ export const preferenceRouter = {
       await verifyProjectOwnership(ctx.db, input.projectId, ctx.user.id);
 
       const data: Record<string, unknown> = {};
-      if (input.budgetMinFils !== undefined) data.budgetMinFils = input.budgetMinFils;
-      if (input.budgetMaxFils !== undefined) data.budgetMaxFils = input.budgetMaxFils;
+      if (input.budgetMinFils !== undefined)
+        data.budgetMinFils = input.budgetMinFils;
+      if (input.budgetMaxFils !== undefined)
+        data.budgetMaxFils = input.budgetMaxFils;
       if (input.familySize !== undefined) data.familySize = input.familySize;
-      if (input.childrenAges !== undefined) data.childrenAges = input.childrenAges as JsonValue;
+      if (input.childrenAges !== undefined)
+        data.childrenAges = input.childrenAges as JsonValue;
       if (input.hasPets !== undefined) data.hasPets = input.hasPets;
-      if (input.petTypes !== undefined) data.petTypes = input.petTypes as JsonValue;
+      if (input.petTypes !== undefined)
+        data.petTypes = input.petTypes as JsonValue;
       if (input.stylePreferences !== undefined)
         data.stylePreferences = input.stylePreferences as JsonValue;
       if (input.quizStep !== undefined) data.quizStep = input.quizStep;
-      if (input.quizCompleted !== undefined) data.quizCompleted = input.quizCompleted;
+      if (input.quizCompleted !== undefined)
+        data.quizCompleted = input.quizCompleted;
 
       const preference = await ctx.db.userPreference.upsert({
         where: {
@@ -195,7 +201,8 @@ export const preferenceRouter = {
       if (pref.profileType !== "AIRBNB_INVESTOR") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Investor preferences are only available for Airbnb investor profiles",
+          message:
+            "Investor preferences are only available for Airbnb investor profiles",
         });
       }
 

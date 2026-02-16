@@ -36,7 +36,9 @@ const db = prisma as unknown as {
 
 // ─── Helpers ───
 
-function payload(overrides?: Partial<NotificationSendPayload>): NotificationSendPayload {
+function payload(
+  overrides?: Partial<NotificationSendPayload>,
+): NotificationSendPayload {
   return {
     userId: "user-1",
     type: "SYSTEM",
@@ -69,11 +71,18 @@ describe("handleNotificationSend", () => {
   });
 
   it("sends email for ORDER_UPDATE type", async () => {
-    db.user.findUnique.mockResolvedValue({ email: "user@test.com", name: "Test User" });
+    db.user.findUnique.mockResolvedValue({
+      email: "user@test.com",
+      name: "Test User",
+    });
     mockSendTransactional.mockResolvedValue({ success: true, id: "email-1" });
 
     await handleNotificationSend(
-      payload({ type: "ORDER_UPDATE", title: "Order Shipped", body: "Your order is on its way" }),
+      payload({
+        type: "ORDER_UPDATE",
+        title: "Order Shipped",
+        body: "Your order is on its way",
+      }),
     );
 
     expect(db.notification.create).toHaveBeenCalledWith({
@@ -91,7 +100,10 @@ describe("handleNotificationSend", () => {
   });
 
   it("sends email for DELIVERY_UPDATE type", async () => {
-    db.user.findUnique.mockResolvedValue({ email: "user@test.com", name: "Test User" });
+    db.user.findUnique.mockResolvedValue({
+      email: "user@test.com",
+      name: "Test User",
+    });
     mockSendTransactional.mockResolvedValue({ success: true, id: "email-2" });
 
     await handleNotificationSend(payload({ type: "DELIVERY_UPDATE" }));
@@ -100,7 +112,10 @@ describe("handleNotificationSend", () => {
   });
 
   it("sends re-engagement email for PROMOTION type", async () => {
-    db.user.findUnique.mockResolvedValue({ email: "user@test.com", name: "Test User" });
+    db.user.findUnique.mockResolvedValue({
+      email: "user@test.com",
+      name: "Test User",
+    });
     mockSendReEngagement.mockResolvedValue({ success: true, id: "email-3" });
 
     await handleNotificationSend(
@@ -133,7 +148,10 @@ describe("handleNotificationSend", () => {
   });
 
   it("does not fail job if email send fails", async () => {
-    db.user.findUnique.mockResolvedValue({ email: "user@test.com", name: "Test User" });
+    db.user.findUnique.mockResolvedValue({
+      email: "user@test.com",
+      name: "Test User",
+    });
     mockSendTransactional.mockRejectedValue(new Error("SMTP down"));
 
     // Should not throw
@@ -163,8 +181,14 @@ describe("handleNotificationSend", () => {
   });
 
   it("logs error when transactional email returns failure", async () => {
-    db.user.findUnique.mockResolvedValue({ email: "user@test.com", name: "Test User" });
-    mockSendTransactional.mockResolvedValue({ success: false, error: "Bounce" });
+    db.user.findUnique.mockResolvedValue({
+      email: "user@test.com",
+      name: "Test User",
+    });
+    mockSendTransactional.mockResolvedValue({
+      success: false,
+      error: "Bounce",
+    });
 
     await handleNotificationSend(payload({ type: "PACKAGE_READY" }));
 

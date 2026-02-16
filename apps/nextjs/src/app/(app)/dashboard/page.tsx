@@ -5,16 +5,15 @@
  * Redirects to onboarding if the user hasn't selected a path yet.
  * Shows recent orders, project count, quick stats, and navigation cards.
  */
-
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
 import { SkeletonScreen } from "@dubai/ui";
+import { Button } from "@dubai/ui/button";
 import { ZoneProvider } from "@dubai/ui/zones";
 
-import { StatusBadge } from "~/components/StatusBadge";
 import { StatCard } from "~/components/StatCard";
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
 interface RecentOrder {
@@ -51,7 +50,7 @@ export default function DashboardPage() {
           router.replace("/onboarding");
           return;
         }
-        setOnboardingPath(status.path);
+        setOnboardingPath(String(status.path));
 
         // Load dashboard data in parallel
         const ordersPromise = client.commerce.listOrders
@@ -66,7 +65,13 @@ export default function DashboardPage() {
             const allItems = allOrders.items as RecentOrder[];
             setTotalOrders(allItems.length);
             const spent = allItems
-              .filter((o) => o.status === "PAID" || o.status === "DELIVERED" || o.status === "SHIPPED" || o.status === "PROCESSING")
+              .filter(
+                (o) =>
+                  o.status === "PAID" ||
+                  o.status === "DELIVERED" ||
+                  o.status === "SHIPPED" ||
+                  o.status === "PROCESSING",
+              )
               .reduce((sum, o) => sum + o.totalFils, 0);
             setTotalSpentFils(spent);
           })

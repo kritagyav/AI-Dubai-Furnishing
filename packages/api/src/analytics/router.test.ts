@@ -1,5 +1,9 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { trackEvent } from "@dubai/queue";
+
+import { analyticsRouter } from "./router";
 
 // ─── Mock external dependencies ───
 
@@ -26,9 +30,6 @@ vi.mock("@dubai/queue", () => ({
   enqueue: vi.fn().mockResolvedValue(undefined),
   getQueue: vi.fn(),
 }));
-
-import { analyticsRouter } from "./router";
-import { trackEvent } from "@dubai/queue";
 
 // ─── Helpers ───
 
@@ -115,7 +116,10 @@ describe("analytics.getDashboardMetrics", () => {
   it("returns commission-based and event-based metrics for time range", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
     db.commission.findMany
       .mockResolvedValueOnce([
         // current period
@@ -156,10 +160,10 @@ describe("analytics.getDashboardMetrics", () => {
       .mockResolvedValueOnce(10) // conversions
       .mockResolvedValueOnce(8); // confirmedOrders
 
-    const result = await callProcedure(analyticsRouter.getDashboardMetrics, {
+    const result = (await callProcedure(analyticsRouter.getDashboardMetrics, {
       ctx,
       input: { timeRange: "30d" },
-    }) as any;
+    })) as any;
 
     expect(result.metrics.totalOrders).toBe(2);
     expect(result.metrics.prevTotalOrders).toBe(1);
@@ -181,7 +185,10 @@ describe("analytics.getDashboardMetrics", () => {
   it("rejects non-approved retailers", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "PENDING" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "PENDING",
+    });
 
     await expect(
       callProcedure(analyticsRouter.getDashboardMetrics, {
@@ -207,10 +214,11 @@ describe("analytics.getDashboardMetrics", () => {
   it("handles null sync config gracefully", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
-    db.commission.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
+    db.commission.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
     db.retailerProduct.groupBy.mockResolvedValue([]);
     db.inventorySyncConfig.findUnique.mockResolvedValue(null);
     db.catalogHealthCheck.findFirst.mockResolvedValue(null);
@@ -222,10 +230,10 @@ describe("analytics.getDashboardMetrics", () => {
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0);
 
-    const result = await callProcedure(analyticsRouter.getDashboardMetrics, {
+    const result = (await callProcedure(analyticsRouter.getDashboardMetrics, {
       ctx,
       input: { timeRange: "30d" },
-    }) as any;
+    })) as any;
 
     expect(result.sync.lastSyncAt).toBeNull();
     expect(result.sync.consecutiveFailures).toBe(0);
@@ -236,10 +244,11 @@ describe("analytics.getDashboardMetrics", () => {
   it("handles custom time range", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
-    db.commission.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
+    db.commission.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
     db.retailerProduct.groupBy.mockResolvedValue([]);
     db.inventorySyncConfig.findUnique.mockResolvedValue(null);
     db.catalogHealthCheck.findFirst.mockResolvedValue(null);
@@ -247,14 +256,14 @@ describe("analytics.getDashboardMetrics", () => {
 
     mockPrisma.analyticsEvent.count.mockResolvedValue(0);
 
-    const result = await callProcedure(analyticsRouter.getDashboardMetrics, {
+    const result = (await callProcedure(analyticsRouter.getDashboardMetrics, {
       ctx,
       input: {
         timeRange: "custom",
         fromDate: "2025-01-01T00:00:00Z",
         toDate: "2025-01-31T23:59:59Z",
       },
-    }) as any;
+    })) as any;
 
     expect(result.period.from).toContain("2025-01-01");
     expect(result.period.to).toContain("2025-01-31");
@@ -275,8 +284,22 @@ describe("analytics.getProductPerformance", () => {
     db.retailer.findUnique.mockResolvedValue({ id: "ret-1" });
 
     db.retailerProduct.findMany.mockResolvedValue([
-      { id: "p-1", sku: "SKU-1", name: "Sofa", category: "SOFA", priceFils: 50_000, stockQuantity: 10 },
-      { id: "p-2", sku: "SKU-2", name: "Table", category: "COFFEE_TABLE", priceFils: 20_000, stockQuantity: 5 },
+      {
+        id: "p-1",
+        sku: "SKU-1",
+        name: "Sofa",
+        category: "SOFA",
+        priceFils: 50_000,
+        stockQuantity: 10,
+      },
+      {
+        id: "p-2",
+        sku: "SKU-2",
+        name: "Table",
+        category: "COFFEE_TABLE",
+        priceFils: 20_000,
+        stockQuantity: 5,
+      },
     ]);
 
     // Mock view events
@@ -291,10 +314,10 @@ describe("analytics.getProductPerformance", () => {
       { productId: "p-1", _count: 2 },
     ]);
 
-    const result = await callProcedure(analyticsRouter.getProductPerformance, {
+    const result = (await callProcedure(analyticsRouter.getProductPerformance, {
       ctx,
       input: { limit: 20, sortBy: "revenue" },
-    }) as any;
+    })) as any;
 
     expect(result.products).toHaveLength(2);
 
@@ -329,16 +352,23 @@ describe("analytics.getProductPerformance", () => {
 
     db.retailer.findUnique.mockResolvedValue({ id: "ret-1" });
     db.retailerProduct.findMany.mockResolvedValue([
-      { id: "p-1", sku: "SKU-1", name: "Sofa", category: "SOFA", priceFils: 50_000, stockQuantity: 10 },
+      {
+        id: "p-1",
+        sku: "SKU-1",
+        name: "Sofa",
+        category: "SOFA",
+        priceFils: 50_000,
+        stockQuantity: 10,
+      },
     ]);
 
     mockPrisma.analyticsEvent.findMany.mockResolvedValue([]);
     mockPrisma.orderLineItem.groupBy.mockResolvedValue([]);
 
-    const result = await callProcedure(analyticsRouter.getProductPerformance, {
+    const result = (await callProcedure(analyticsRouter.getProductPerformance, {
       ctx,
       input: { limit: 20, sortBy: "name" },
-    }) as any;
+    })) as any;
 
     expect(result.products[0].conversionRate).toBe(0);
   });
@@ -349,10 +379,10 @@ describe("analytics.getProductPerformance", () => {
     db.retailer.findUnique.mockResolvedValue({ id: "ret-1" });
     db.retailerProduct.findMany.mockResolvedValue([]);
 
-    const result = await callProcedure(analyticsRouter.getProductPerformance, {
+    const result = (await callProcedure(analyticsRouter.getProductPerformance, {
       ctx,
       input: { limit: 20, sortBy: "revenue" },
-    }) as any;
+    })) as any;
 
     expect(result.products).toHaveLength(0);
   });
@@ -369,10 +399,10 @@ describe("analytics.trackImpression", () => {
   it("fires analytics event and returns success", async () => {
     const ctx = userCtx(db);
 
-    const result = await callProcedure(analyticsRouter.trackImpression, {
+    const result = (await callProcedure(analyticsRouter.trackImpression, {
       ctx,
       input: { productId: "p-1", source: "gallery" },
-    }) as any;
+    })) as any;
 
     expect(result.success).toBe(true);
     expect(trackEvent).toHaveBeenCalledWith("product.viewed", "user-1", {
@@ -384,10 +414,10 @@ describe("analytics.trackImpression", () => {
   it("accepts 'search' as source", async () => {
     const ctx = userCtx(db);
 
-    const result = await callProcedure(analyticsRouter.trackImpression, {
+    const result = (await callProcedure(analyticsRouter.trackImpression, {
       ctx,
       input: { productId: "p-2", source: "search" },
-    }) as any;
+    })) as any;
 
     expect(result.success).toBe(true);
     expect(trackEvent).toHaveBeenCalledWith("product.viewed", "user-1", {
@@ -399,10 +429,10 @@ describe("analytics.trackImpression", () => {
   it("accepts 'package' as source", async () => {
     const ctx = userCtx(db);
 
-    const result = await callProcedure(analyticsRouter.trackImpression, {
+    const result = (await callProcedure(analyticsRouter.trackImpression, {
       ctx,
       input: { productId: "p-3", source: "package" },
-    }) as any;
+    })) as any;
 
     expect(result.success).toBe(true);
   });
@@ -419,7 +449,10 @@ describe("analytics.getConversionFunnel", () => {
   it("returns funnel step counts and conversion rates", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
 
     mockPrisma.analyticsEvent.count
       .mockResolvedValueOnce(1000) // impressions
@@ -428,10 +461,10 @@ describe("analytics.getConversionFunnel", () => {
       .mockResolvedValueOnce(50) // orders
       .mockResolvedValueOnce(40); // paid_orders
 
-    const result = await callProcedure(analyticsRouter.getConversionFunnel, {
+    const result = (await callProcedure(analyticsRouter.getConversionFunnel, {
       ctx,
       input: { timeRange: "30d" },
-    }) as any;
+    })) as any;
 
     expect(result.funnel).toHaveLength(5);
 
@@ -463,14 +496,17 @@ describe("analytics.getConversionFunnel", () => {
   it("handles zero impressions without division error", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
 
     mockPrisma.analyticsEvent.count.mockResolvedValue(0);
 
-    const result = await callProcedure(analyticsRouter.getConversionFunnel, {
+    const result = (await callProcedure(analyticsRouter.getConversionFunnel, {
       ctx,
       input: { timeRange: "7d" },
-    }) as any;
+    })) as any;
 
     expect(result.funnel[1].conversionRate).toBe(0);
     expect(result.overall.overallConversionRate).toBe(0);
@@ -479,7 +515,10 @@ describe("analytics.getConversionFunnel", () => {
   it("rejects non-approved retailers", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "PENDING" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "PENDING",
+    });
 
     await expect(
       callProcedure(analyticsRouter.getConversionFunnel, {
@@ -492,14 +531,17 @@ describe("analytics.getConversionFunnel", () => {
   it("returns period range in response", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
 
     mockPrisma.analyticsEvent.count.mockResolvedValue(0);
 
-    const result = await callProcedure(analyticsRouter.getConversionFunnel, {
+    const result = (await callProcedure(analyticsRouter.getConversionFunnel, {
       ctx,
       input: { timeRange: "90d" },
-    }) as any;
+    })) as any;
 
     expect(result.period).toHaveProperty("from");
     expect(result.period).toHaveProperty("to");
@@ -508,18 +550,21 @@ describe("analytics.getConversionFunnel", () => {
   it("supports custom time range", async () => {
     const ctx = retailerCtx(db);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "ret-1", status: "APPROVED" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "ret-1",
+      status: "APPROVED",
+    });
 
     mockPrisma.analyticsEvent.count.mockResolvedValue(0);
 
-    const result = await callProcedure(analyticsRouter.getConversionFunnel, {
+    const result = (await callProcedure(analyticsRouter.getConversionFunnel, {
       ctx,
       input: {
         timeRange: "custom",
         fromDate: "2025-06-01T00:00:00Z",
         toDate: "2025-06-30T23:59:59Z",
       },
-    }) as any;
+    })) as any;
 
     expect(result.period.from).toContain("2025-06-01");
     expect(result.period.to).toContain("2025-06-30");

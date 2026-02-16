@@ -14,11 +14,8 @@
  * - Path preference stored for personalization
  * - All features accessible regardless of path chosen
  */
-
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-import { Button } from "@dubai/ui/button";
+import { useRouter } from "next/navigation";
 
 import { useTRPCClient } from "~/trpc/react";
 
@@ -86,7 +83,7 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
       <div className="w-full max-w-3xl space-y-8">
-        <div className="text-center space-y-3">
+        <div className="space-y-3 text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Welcome to Dubai Furnishing
           </h1>
@@ -103,17 +100,11 @@ export default function OnboardingPage() {
               onClick={() => handleSelect(option.id)}
               disabled={isSubmitting}
               aria-pressed={selected === option.id}
-              className={`
-                group relative flex flex-col rounded-xl border-2 p-6 text-left transition-all
-                min-h-[200px]
-                focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-                disabled:opacity-50 disabled:cursor-not-allowed
-                ${
-                  selected === option.id
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/50 hover:shadow-sm"
-                }
-              `}
+              className={`group focus-visible:ring-ring relative flex min-h-[200px] flex-col rounded-xl border-2 p-6 text-left transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                selected === option.id
+                  ? "border-primary bg-primary/5 shadow-md"
+                  : "border-border hover:border-primary/50 hover:shadow-sm"
+              } `}
               style={{ minWidth: "44px", minHeight: "44px" }}
             >
               <div className="flex-1 space-y-3">
@@ -121,7 +112,10 @@ export default function OnboardingPage() {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {option.description}
                 </p>
-                <ul className="space-y-1.5" aria-label={`${option.title} features`}>
+                <ul
+                  className="space-y-1.5"
+                  aria-label={`${option.title} features`}
+                >
                   {option.highlights.map((highlight) => (
                     <li
                       key={highlight}
@@ -139,12 +133,9 @@ export default function OnboardingPage() {
                 </ul>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="border-border/50 mt-4 border-t pt-4">
                 <span
-                  className={`
-                    inline-flex items-center text-sm font-medium
-                    ${selected === option.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}
-                  `}
+                  className={`inline-flex items-center text-sm font-medium ${selected === option.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} `}
                 >
                   {selected === option.id && isSubmitting
                     ? "Setting up..."
@@ -157,7 +148,7 @@ export default function OnboardingPage() {
 
               {selected === option.id && (
                 <div
-                  className="bg-primary absolute -top-px -right-px rounded-bl-lg rounded-tr-xl px-3 py-1 text-xs font-medium text-white"
+                  className="bg-primary absolute -top-px -right-px rounded-tr-xl rounded-bl-lg px-3 py-1 text-xs font-medium text-white"
                   aria-hidden="true"
                 >
                   Selected

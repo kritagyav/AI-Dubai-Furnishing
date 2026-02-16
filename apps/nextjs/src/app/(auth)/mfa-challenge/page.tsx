@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getSupabaseBrowserClient } from "@dubai/auth/client";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
-
-import { getSupabaseBrowserClient } from "@dubai/auth/client";
 
 export default function MFAChallengePage() {
   const [code, setCode] = useState("");
@@ -29,11 +28,12 @@ export default function MFAChallengePage() {
         return;
       }
 
-      const { error: verifyError } =
-        await supabase.auth.mfa.challengeAndVerify({
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify(
+        {
           factorId,
           code,
-        });
+        },
+      );
 
       if (verifyError) {
         setError("Invalid code. Please try again.");

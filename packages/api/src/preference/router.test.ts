@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -21,11 +31,6 @@ vi.mock("@upstash/redis", () => ({
 vi.mock("../audit", () => ({
   writeAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
-
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -87,7 +92,9 @@ describe("preference.getPreferences", () => {
       childSafetyPreference: null,
     });
 
-    const result = await caller.preference.getPreferences({ projectId: PROJECT_ID });
+    const result = await caller.preference.getPreferences({
+      projectId: PROJECT_ID,
+    });
 
     expect(result).toBeDefined();
     expect(result!.budgetMaxFils).toBe(500000);
@@ -102,7 +109,9 @@ describe("preference.getPreferences", () => {
     db.project.findFirst.mockResolvedValue({ id: PROJECT_ID });
     db.userPreference.findUnique.mockResolvedValue(null);
 
-    const result = await caller.preference.getPreferences({ projectId: PROJECT_ID });
+    const result = await caller.preference.getPreferences({
+      projectId: PROJECT_ID,
+    });
 
     expect(result).toBeNull();
   });
@@ -157,7 +166,9 @@ describe("preference.saveLifestyleQuiz", () => {
     expect(result.budgetMaxFils).toBe(200000);
     expect(db.userPreference.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId_projectId: { userId: "user-1", projectId: PROJECT_ID } },
+        where: {
+          userId_projectId: { userId: "user-1", projectId: PROJECT_ID },
+        },
       }),
     );
   });

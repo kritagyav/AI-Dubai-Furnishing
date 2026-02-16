@@ -121,7 +121,7 @@ const SANDBOX_API_BASE = "https://api.sandbox.checkout.com";
 // ─── Internal Helpers ───
 
 function getSecretKey(): string | undefined {
-  return process.env.CHECKOUT_COM_SECRET_KEY || undefined;
+  return process.env.CHECKOUT_COM_SECRET_KEY ?? undefined;
 }
 
 function isDevelopmentFallback(): boolean {
@@ -137,7 +137,9 @@ function getApiBase(): string {
   return CHECKOUT_API_BASE;
 }
 
-function mapTokenSourceType(method: CreatePaymentIntentParams["method"]): string {
+function mapTokenSourceType(
+  method: CreatePaymentIntentParams["method"],
+): string {
   switch (method) {
     case "APPLE_PAY":
       return "applepay";
@@ -291,10 +293,10 @@ export async function createPaymentIntent(
     };
   }
 
-  const response = await checkoutFetch<CheckoutPaymentResponse>(
-    "/payments",
-    { method: "POST", body },
-  );
+  const response = await checkoutFetch<CheckoutPaymentResponse>("/payments", {
+    method: "POST",
+    body,
+  });
 
   if (!response.approved && response.status === "Declined") {
     throw new PaymentError(

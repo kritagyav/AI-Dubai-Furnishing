@@ -41,7 +41,7 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center py-12 px-4 text-center",
+        "flex flex-col items-center px-4 py-12 text-center",
         className,
       )}
     >
@@ -57,9 +57,7 @@ export function ErrorState({
       </p>
 
       <div className="mt-6 flex items-center gap-3">
-        {onRetry && (
-          <Button onClick={onRetry}>{retryLabel}</Button>
-        )}
+        {onRetry && <Button onClick={onRetry}>{retryLabel}</Button>}
         {secondaryLabel && onSecondary && (
           <Button variant="outline" onClick={onSecondary}>
             {secondaryLabel}

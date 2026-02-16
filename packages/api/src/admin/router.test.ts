@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Import the router and create caller factory ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies before importing router ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -28,11 +38,6 @@ vi.mock("./payout-service", () => ({
     checkTransferStatus: vi.fn(),
   },
 }));
-
-// ─── Import the router and create caller factory ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -235,8 +240,24 @@ describe("admin.listPendingRetailers", () => {
     const caller = createCaller(ctx);
 
     const retailers = [
-      { id: "r-1", companyName: "Furnish Co", tradeLicenseNumber: "TL-1", contactEmail: "a@b.com", businessType: "FURNITURE", documentsUrl: null, createdAt: new Date() },
-      { id: "r-2", companyName: "Decor Inc", tradeLicenseNumber: "TL-2", contactEmail: "c@d.com", businessType: "DECOR", documentsUrl: null, createdAt: new Date() },
+      {
+        id: "r-1",
+        companyName: "Furnish Co",
+        tradeLicenseNumber: "TL-1",
+        contactEmail: "a@b.com",
+        businessType: "FURNITURE",
+        documentsUrl: null,
+        createdAt: new Date(),
+      },
+      {
+        id: "r-2",
+        companyName: "Decor Inc",
+        tradeLicenseNumber: "TL-2",
+        contactEmail: "c@d.com",
+        businessType: "DECOR",
+        documentsUrl: null,
+        createdAt: new Date(),
+      },
     ];
     db.retailer.findMany.mockResolvedValue(retailers);
 
@@ -274,7 +295,9 @@ describe("admin.listPendingRetailers", () => {
     const ctx = nonAdminCtx(db);
     const caller = createCaller(ctx);
 
-    await expect(caller.admin.listPendingRetailers({ limit: 20 })).rejects.toThrow(TRPCError);
+    await expect(
+      caller.admin.listPendingRetailers({ limit: 20 }),
+    ).rejects.toThrow(TRPCError);
   });
 });
 
@@ -486,7 +509,11 @@ describe("admin.revenueMetrics", () => {
     db.order.aggregate.mockResolvedValue({ _sum: { totalFils: 200_000 } });
     db.commission.aggregate.mockResolvedValue({ _sum: { amountFils: 20_000 } });
     db.orderLineItem.groupBy.mockResolvedValue([
-      { retailerId: "ret-1", _sum: { totalFils: 150_000 }, _count: { orderId: 3 } },
+      {
+        retailerId: "ret-1",
+        _sum: { totalFils: 150_000 },
+        _count: { orderId: 3 },
+      },
     ]);
     db.retailer.findMany.mockResolvedValue([
       { id: "ret-1", companyName: "Furnish Co" },
@@ -539,9 +566,7 @@ describe("admin.disputeMetrics", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.commission.count
-      .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(0);
+    db.commission.count.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
 
     db.supportTicket.groupBy
       .mockResolvedValueOnce([])
@@ -550,9 +575,7 @@ describe("admin.disputeMetrics", () => {
     const createdAt = new Date("2025-01-01T00:00:00Z");
     const resolvedAt = new Date("2025-01-01T24:00:00Z"); // 24 hours later
 
-    db.supportTicket.findMany.mockResolvedValue([
-      { createdAt, resolvedAt },
-    ]);
+    db.supportTicket.findMany.mockResolvedValue([{ createdAt, resolvedAt }]);
 
     const result = await caller.admin.disputeMetrics();
 
@@ -566,7 +589,10 @@ describe("admin.initiateSettlement", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "r-1", companyName: "Test Co" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "r-1",
+      companyName: "Test Co",
+    });
     db.commission.findMany.mockResolvedValue([
       { id: "c-1", netAmountFils: 10_000 },
       { id: "c-2", netAmountFils: 15_000 },
@@ -582,14 +608,16 @@ describe("admin.initiateSettlement", () => {
     };
 
     // $transaction receives a callback; we simulate it
-    db.$transaction.mockImplementation(async (cb: (tx: any) => Promise<any>) => {
-      const tx = {
-        settlement: { create: vi.fn().mockResolvedValue(mockSettlement) },
-        commission: { updateMany: vi.fn().mockResolvedValue({ count: 2 }) },
-        ledgerEntry: { create: vi.fn().mockResolvedValue({}) },
-      };
-      return cb(tx);
-    });
+    db.$transaction.mockImplementation(
+      async (cb: (tx: any) => Promise<any>) => {
+        const tx = {
+          settlement: { create: vi.fn().mockResolvedValue(mockSettlement) },
+          commission: { updateMany: vi.fn().mockResolvedValue({ count: 2 }) },
+          ledgerEntry: { create: vi.fn().mockResolvedValue({}) },
+        };
+        return cb(tx);
+      },
+    );
 
     const result = await caller.admin.initiateSettlement({
       retailerId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -620,7 +648,10 @@ describe("admin.initiateSettlement", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "r-1", companyName: "Test Co" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "r-1",
+      companyName: "Test Co",
+    });
     db.commission.findMany.mockResolvedValue([]);
     db.auditLog.create.mockResolvedValue({});
 
@@ -650,7 +681,10 @@ describe("admin.triggerCatalogHealthCheck", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "r-1", companyName: "Test Co" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "r-1",
+      companyName: "Test Co",
+    });
 
     const now = new Date();
     const staleDate = new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000); // 40 days ago
@@ -700,7 +734,10 @@ describe("admin.triggerCatalogHealthCheck", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "r-1", companyName: "Test Co" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "r-1",
+      companyName: "Test Co",
+    });
     db.retailerProduct.findMany.mockResolvedValue([]);
     db.catalogHealthCheck.create.mockResolvedValue({ id: "hc-1" });
     db.catalogIssue.updateMany.mockResolvedValue({ count: 0 });
@@ -733,7 +770,10 @@ describe("admin.triggerCatalogHealthCheck", () => {
     const ctx = adminCtx(db);
     const caller = createCaller(ctx);
 
-    db.retailer.findUnique.mockResolvedValue({ id: "r-1", companyName: "Test Co" });
+    db.retailer.findUnique.mockResolvedValue({
+      id: "r-1",
+      companyName: "Test Co",
+    });
 
     db.retailerProduct.findMany.mockResolvedValue([
       {

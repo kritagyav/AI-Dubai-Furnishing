@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { getSupabaseBrowserClient } from "@dubai/auth/client";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
-
-import { getSupabaseBrowserClient } from "@dubai/auth/client";
 
 type MfaStatus = "loading" | "disabled" | "enrolling" | "enabled";
 
@@ -24,7 +23,7 @@ export default function SecurityPage() {
       const { data: factors } = await supabase.auth.mfa.listFactors();
 
       const verifiedFactor = factors?.totp.find(
-        (f) => f.status === "verified",
+        (f) => f.status === ("verified" as string),
       );
 
       if (verifiedFactor) {
@@ -81,11 +80,12 @@ export default function SecurityPage() {
         return;
       }
 
-      const { error: verifyError } =
-        await supabase.auth.mfa.challengeAndVerify({
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify(
+        {
           factorId: pendingFactorId,
           code: verifyCode,
-        });
+        },
+      );
 
       if (verifyError) {
         setError("Invalid verification code.");
@@ -136,9 +136,7 @@ export default function SecurityPage() {
 
       <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            Two-Factor Authentication
-          </h2>
+          <h2 className="text-xl font-semibold">Two-Factor Authentication</h2>
           {mfaStatus !== "loading" && (
             <span
               className={`rounded-full px-3 py-1 text-xs font-medium ${

@@ -1,16 +1,17 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+
 import type { Prisma } from "@dubai/db";
 import {
-  scheduleDeliveryInput,
-  rescheduleDeliveryInput,
-  listDeliverySlotsInput,
-  reportDeliveryIssueInput,
-  updateDeliveryStatusInput,
-  listDeliveriesInput,
   assignDriverInput,
-  unassignDriverInput,
+  listDeliveriesInput,
+  listDeliverySlotsInput,
   listDriverAssignmentsInput,
+  reportDeliveryIssueInput,
+  rescheduleDeliveryInput,
+  scheduleDeliveryInput,
+  unassignDriverInput,
+  updateDeliveryStatusInput,
   updateDriverStatusInput as updateDriverStatusValidation,
 } from "@dubai/validators";
 
@@ -340,9 +341,7 @@ export const deliveryRouter = {
           ...(input.driverName ? { driverName: input.driverName } : {}),
           ...(input.driverPhone ? { driverPhone: input.driverPhone } : {}),
           ...(input.trackingUrl ? { trackingUrl: input.trackingUrl } : {}),
-          ...(input.status === "DELIVERED"
-            ? { deliveredAt: new Date() }
-            : {}),
+          ...(input.status === "DELIVERED" ? { deliveredAt: new Date() } : {}),
         },
         select: {
           id: true,
@@ -563,17 +562,18 @@ export const deliveryRouter = {
 
       // Enrich with order info
       const orderIds = [...new Set(items.map((d) => d.orderId))];
-      const orders = orderIds.length > 0
-        ? await ctx.db.order.findMany({
-            where: { id: { in: orderIds } },
-            select: {
-              id: true,
-              orderRef: true,
-              totalFils: true,
-              shippingAddress: true,
-            },
-          })
-        : [];
+      const orders =
+        orderIds.length > 0
+          ? await ctx.db.order.findMany({
+              where: { id: { in: orderIds } },
+              select: {
+                id: true,
+                orderRef: true,
+                totalFils: true,
+                shippingAddress: true,
+              },
+            })
+          : [];
 
       const orderMap = new Map(orders.map((o) => [o.id, o]));
 
@@ -604,11 +604,12 @@ export const deliveryRouter = {
       }
 
       // Map input status to delivery status
-      const statusMap: Record<string, "EN_ROUTE" | "IN_TRANSIT" | "DELIVERED"> = {
-        EN_ROUTE: "EN_ROUTE",
-        ARRIVED: "IN_TRANSIT",
-        COMPLETED: "DELIVERED",
-      };
+      const statusMap: Record<string, "EN_ROUTE" | "IN_TRANSIT" | "DELIVERED"> =
+        {
+          EN_ROUTE: "EN_ROUTE",
+          ARRIVED: "IN_TRANSIT",
+          COMPLETED: "DELIVERED",
+        };
 
       const newStatus = statusMap[input.status];
       if (!newStatus) {
@@ -630,9 +631,7 @@ export const deliveryRouter = {
         data: {
           status: newStatus,
           notes: updatedNotes,
-          ...(input.status === "COMPLETED"
-            ? { deliveredAt: new Date() }
-            : {}),
+          ...(input.status === "COMPLETED" ? { deliveredAt: new Date() } : {}),
         },
         select: {
           id: true,

@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
-import { prisma } from "@dubai/db";
 import type { InventorySyncPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 
@@ -28,13 +28,14 @@ async function fetchFromWebhook(
   retailerId: string,
 ): Promise<Record<string, unknown>[] | null> {
   const log = logger.child({ job: "inventory.sync.webhook", retailerId });
+  // eslint-disable-next-line no-restricted-properties -- Worker reads signing secret before env validation
   const signingSecret = process.env.WEBHOOK_SIGNING_SECRET;
 
   try {
     log.info({ webhookUrl }, "Attempting to fetch inventory from webhook");
 
     const headers: Record<string, string> = {
-      "Accept": "application/json",
+      Accept: "application/json",
     };
 
     // Add HMAC signature headers when signing secret is configured
@@ -106,7 +107,10 @@ async function fetchFromWebhook(
 export async function handleInventorySync(
   payload: InventorySyncPayload,
 ): Promise<void> {
-  const log = logger.child({ job: "inventory.sync", retailerId: payload.retailerId });
+  const log = logger.child({
+    job: "inventory.sync",
+    retailerId: payload.retailerId,
+  });
   log.info("Starting inventory sync");
 
   const config = await prisma.inventorySyncConfig.findUnique({
@@ -120,7 +124,7 @@ export async function handleInventorySync(
     },
   });
 
-  if (!config || !config.isActive) {
+  if (!config?.isActive) {
     log.warn("Sync config not found or inactive, skipping");
     return;
   }
@@ -143,7 +147,10 @@ export async function handleInventorySync(
       let webhookData: Record<string, unknown>[] | null = null;
 
       if (config.webhookUrl) {
-        webhookData = await fetchFromWebhook(config.webhookUrl, config.retailerId);
+        webhookData = await fetchFromWebhook(
+          config.webhookUrl,
+          config.retailerId,
+        );
       } else {
         log.info(
           "No webhook URL configured for BASIC tier retailer, using local product query",
@@ -153,10 +160,7 @@ export async function handleInventorySync(
       if (webhookData) {
         // Webhook returned data — count items as updated
         productsUpdated = webhookData.length;
-        log.info(
-          { productsUpdated },
-          "Inventory data received from webhook",
-        );
+        log.info({ productsUpdated }, "Inventory data received from webhook");
       } else {
         // Fall back to querying local products
         const products = await prisma.retailerProduct.findMany({
@@ -244,7 +248,7 @@ export async function handleInventorySync(
     });
 
     // Disable sync after 5 consecutive failures
-    if ((config.consecutiveFailures ?? 0) >= 4) {
+    if (config.consecutiveFailures >= 4) {
       await prisma.inventorySyncConfig.update({
         where: { id: payload.configId },
         data: { isActive: false },

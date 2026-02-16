@@ -1,6 +1,6 @@
 import type { Prisma } from "@dubai/db";
-import { prisma } from "@dubai/db";
 import type { ReEngagementProcessPayload } from "@dubai/queue";
+import { prisma } from "@dubai/db";
 
 import { logger } from "../logger";
 

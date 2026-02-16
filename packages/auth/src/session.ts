@@ -19,7 +19,10 @@ export function detectDeviceType(): "mobile" | "tablet" | "desktop" {
   if (/ipad|tablet|playbook|silk/i.test(ua) || (width >= 600 && width < 1024)) {
     return "tablet";
   }
-  if (/mobile|iphone|ipod|android.*mobile|windows phone/i.test(ua) || width < 600) {
+  if (
+    /mobile|iphone|ipod|android.*mobile|windows phone/i.test(ua) ||
+    width < 600
+  ) {
     return "mobile";
   }
   return "desktop";

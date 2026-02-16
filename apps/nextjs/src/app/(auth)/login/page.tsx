@@ -4,11 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@dubai/ui/button";
-import { Input } from "@dubai/ui/input";
-
 import { getSupabaseBrowserClient } from "@dubai/auth/client";
 import { signIn, signInWithOAuth } from "@dubai/auth/hooks";
+import { Button } from "@dubai/ui/button";
+import { Input } from "@dubai/ui/input";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

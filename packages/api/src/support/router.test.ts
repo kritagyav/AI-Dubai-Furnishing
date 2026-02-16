@@ -1,5 +1,10 @@
-import { vi } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { vi } from "vitest";
+
+// ─── Imports ───
+
+import { appRouter } from "../root";
+import { createCallerFactory } from "../trpc";
 
 // ─── Mock external dependencies ───
 
@@ -10,7 +15,12 @@ vi.mock("@dubai/db", () => ({
 
 vi.mock("@upstash/ratelimit", () => ({
   Ratelimit: vi.fn().mockImplementation(() => ({
-    limit: vi.fn().mockResolvedValue({ success: true, limit: 60, remaining: 59, reset: Date.now() + 60000 }),
+    limit: vi.fn().mockResolvedValue({
+      success: true,
+      limit: 60,
+      remaining: 59,
+      reset: Date.now() + 60000,
+    }),
   })),
 }));
 
@@ -21,11 +31,6 @@ vi.mock("@upstash/redis", () => ({
 vi.mock("../audit", () => ({
   writeAuditLog: vi.fn().mockResolvedValue(undefined),
 }));
-
-// ─── Imports ───
-
-import { appRouter } from "../root";
-import { createCallerFactory } from "../trpc";
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -372,7 +377,10 @@ describe("support.addMessage", () => {
     const ctx = authedUserCtx(db);
     const caller = createCaller(ctx);
 
-    db.supportTicket.findFirst.mockResolvedValue({ id: "t-1", status: "WAITING_ON_CUSTOMER" });
+    db.supportTicket.findFirst.mockResolvedValue({
+      id: "t-1",
+      status: "WAITING_ON_CUSTOMER",
+    });
     db.ticketMessage.create.mockResolvedValue({
       id: "m-2",
       senderRole: "customer",
@@ -398,7 +406,10 @@ describe("support.addMessage", () => {
     const ctx = authedUserCtx(db);
     const caller = createCaller(ctx);
 
-    db.supportTicket.findFirst.mockResolvedValue({ id: "t-1", status: "CLOSED" });
+    db.supportTicket.findFirst.mockResolvedValue({
+      id: "t-1",
+      status: "CLOSED",
+    });
 
     await expect(
       caller.support.addMessage({
@@ -430,7 +441,10 @@ describe("support.reply (support agent)", () => {
     const ctx = platformAdminCtx(db);
     const caller = createCaller(ctx);
 
-    db.supportTicket.findUnique.mockResolvedValue({ id: "t-1", status: "IN_PROGRESS" });
+    db.supportTicket.findUnique.mockResolvedValue({
+      id: "t-1",
+      status: "IN_PROGRESS",
+    });
     db.ticketMessage.create.mockResolvedValue({
       id: "m-3",
       senderRole: "support",
@@ -452,7 +466,10 @@ describe("support.reply (support agent)", () => {
     const ctx = supportAgentCtx(db);
     const caller = createCaller(ctx);
 
-    db.supportTicket.findUnique.mockResolvedValue({ id: "t-1", status: "IN_PROGRESS" });
+    db.supportTicket.findUnique.mockResolvedValue({
+      id: "t-1",
+      status: "IN_PROGRESS",
+    });
     db.ticketMessage.create.mockResolvedValue({
       id: "m-4",
       senderRole: "support",
@@ -478,7 +495,10 @@ describe("support.reply (support agent)", () => {
     const ctx = supportAgentCtx(db);
     const caller = createCaller(ctx);
 
-    db.supportTicket.findUnique.mockResolvedValue({ id: "t-1", status: "OPEN" });
+    db.supportTicket.findUnique.mockResolvedValue({
+      id: "t-1",
+      status: "OPEN",
+    });
     db.ticketMessage.create.mockResolvedValue({
       id: "m-5",
       senderRole: "support",

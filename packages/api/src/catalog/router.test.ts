@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { catalogRouter } from "./router";
 
 // Mock external dependencies
 vi.mock("@dubai/queue", () => ({
@@ -13,8 +15,6 @@ vi.mock("@dubai/db", () => ({
     DbNull: Symbol("DbNull"),
   },
 }));
-
-import { catalogRouter } from "./router";
 
 // ─── Helpers ───
 
@@ -810,9 +810,9 @@ describe("catalog router", () => {
         (result as { latestCheck: { overallScore: number } }).latestCheck
           .overallScore,
       ).toBe(85);
-      expect(
-        (result as { openIssues: { HIGH: number } }).openIssues.HIGH,
-      ).toBe(2);
+      expect((result as { openIssues: { HIGH: number } }).openIssues.HIGH).toBe(
+        2,
+      );
     });
   });
 

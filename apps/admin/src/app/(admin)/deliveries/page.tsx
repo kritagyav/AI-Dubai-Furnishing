@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useTRPC, useTRPCClient } from "~/trpc/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -34,18 +35,14 @@ export default function DeliveriesPage() {
     trpc.delivery.listAll.queryOptions({ limit: 50 }),
   );
 
-  const scheduled = deliveries.data?.items.filter(
-    (d) => d.status === "SCHEDULED",
-  ).length ?? 0;
-  const inTransit = deliveries.data?.items.filter(
-    (d) => d.status === "IN_TRANSIT",
-  ).length ?? 0;
-  const delivered = deliveries.data?.items.filter(
-    (d) => d.status === "DELIVERED",
-  ).length ?? 0;
-  const failed = deliveries.data?.items.filter(
-    (d) => d.status === "FAILED",
-  ).length ?? 0;
+  const scheduled =
+    deliveries.data?.items.filter((d) => d.status === "SCHEDULED").length ?? 0;
+  const inTransit =
+    deliveries.data?.items.filter((d) => d.status === "IN_TRANSIT").length ?? 0;
+  const delivered =
+    deliveries.data?.items.filter((d) => d.status === "DELIVERED").length ?? 0;
+  const failed =
+    deliveries.data?.items.filter((d) => d.status === "FAILED").length ?? 0;
 
   async function handleCreateSlots() {
     if (!slotDate || !slotArea) return;
@@ -153,9 +150,7 @@ export default function DeliveriesPage() {
             Active Deliveries
           </h2>
           {deliveries.isLoading && (
-            <p className="py-8 text-center text-sm text-gray-400">
-              Loading...
-            </p>
+            <p className="py-8 text-center text-sm text-gray-400">Loading...</p>
           )}
           {deliveries.data?.items.length === 0 && (
             <p className="py-8 text-center text-sm text-gray-400">
@@ -170,16 +165,14 @@ export default function DeliveriesPage() {
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {d.scheduledDate
-                      ? new Date(d.scheduledDate).toLocaleDateString()
-                      : "No date"}{" "}
-                    &middot; {d.scheduledSlot ?? "N/A"}
+                    {new Date(d.scheduledDate).toLocaleDateString()} &middot;{" "}
+                    {d.scheduledSlot ?? "N/A"}
                   </p>
                   <p className="text-xs text-gray-500">
                     {d.driverName ?? "Unassigned"}
                   </p>
                 </div>
-                <StatusBadge status={d.status} />
+                <StatusBadge status={d.status as string} />
               </div>
             ))}
           </div>

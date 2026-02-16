@@ -16,7 +16,9 @@ export function getSupabaseBrowserClient(): SupabaseClient {
   /* eslint-enable no-restricted-properties */
 
   if (!url || !key) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    );
   }
 
   client = createBrowserClient(url, key) as SupabaseClient;

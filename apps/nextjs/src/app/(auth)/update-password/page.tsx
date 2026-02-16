@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getSupabaseBrowserClient } from "@dubai/auth/client";
 import { Button } from "@dubai/ui/button";
 import { Input } from "@dubai/ui/input";
-
-import { getSupabaseBrowserClient } from "@dubai/auth/client";
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");

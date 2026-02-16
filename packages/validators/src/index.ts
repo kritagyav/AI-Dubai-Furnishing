@@ -116,7 +116,10 @@ export const setRoomTypeInput = z.object({
 
 export const registerRetailerInput = z.object({
   companyName: z.string().min(1, "Company name is required").max(200),
-  tradeLicenseNumber: z.string().min(1, "Trade license number is required").max(100),
+  tradeLicenseNumber: z
+    .string()
+    .min(1, "Trade license number is required")
+    .max(100),
   contactEmail: z.email("Invalid email address"),
   contactPhone: z.string().max(20).optional(),
   businessType: z.string().max(100).optional(),

@@ -11,7 +11,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { trpc } from "~/utils/api";
 
@@ -53,8 +57,11 @@ export default function SupportScreen() {
         setDescription("");
         setCategory("GENERAL_INQUIRY");
       },
-      onError: (error) => {
-        Alert.alert("Error", error.message);
+      onError: (error: unknown) => {
+        Alert.alert(
+          "Error",
+          error instanceof Error ? error.message : String(error),
+        );
       },
     }),
   );
@@ -139,13 +146,11 @@ export default function SupportScreen() {
             }}
             onEndReachedThreshold={0.5}
             renderItem={({ item }) => {
-              const style = getStatusStyle(item.status);
+              const style = getStatusStyle(String(item.status));
               return (
                 <Pressable
                   onPress={() =>
-                    router.push(
-                      `/(app)/support/${item.id}` as never,
-                    )
+                    router.push(`/(app)/support/${item.id}` as never)
                   }
                   className="mb-3 rounded-lg border border-gray-200 bg-white p-4"
                 >
@@ -160,7 +165,7 @@ export default function SupportScreen() {
                     </View>
                     <View className={`rounded-full px-3 py-1 ${style.bg}`}>
                       <Text className={`text-xs font-medium ${style.text}`}>
-                        {item.status.replace(/_/g, " ")}
+                        {String(item.status).replace(/_/g, " ")}
                       </Text>
                     </View>
                   </View>
@@ -173,7 +178,7 @@ export default function SupportScreen() {
                         </Text>
                       </View>
                       <Text
-                        className={`text-xs font-medium ${getPriorityStyle(item.priority)}`}
+                        className={`text-xs font-medium ${getPriorityStyle(String(item.priority))}`}
                       >
                         {item.priority}
                       </Text>

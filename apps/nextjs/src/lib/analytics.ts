@@ -8,9 +8,11 @@
 
 import mixpanel from "mixpanel-browser";
 
-const MIXPANEL_TOKEN = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN ?? "";
+import { env } from "~/env";
+
+const MIXPANEL_TOKEN = env.NEXT_PUBLIC_MIXPANEL_TOKEN ?? "";
 const IS_BROWSER = typeof window !== "undefined";
-const IS_DEV = process.env.NODE_ENV === "development";
+const IS_DEV = env.NODE_ENV === "development";
 
 let initialized = false;
 

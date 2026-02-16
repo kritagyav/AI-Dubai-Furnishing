@@ -8,9 +8,26 @@ import { Button } from "@dubai/ui/button";
 import { useTRPCClient } from "~/trpc/react";
 
 const CATEGORIES = [
-  "SOFA", "BED", "DINING_TABLE", "DINING_CHAIR", "DESK", "OFFICE_CHAIR",
-  "WARDROBE", "DRESSER", "BOOKSHELF", "TV_UNIT", "COFFEE_TABLE", "SIDE_TABLE",
-  "RUG", "CURTAIN", "LIGHTING", "MIRROR", "STORAGE", "OUTDOOR", "DECOR", "OTHER",
+  "SOFA",
+  "BED",
+  "DINING_TABLE",
+  "DINING_CHAIR",
+  "DESK",
+  "OFFICE_CHAIR",
+  "WARDROBE",
+  "DRESSER",
+  "BOOKSHELF",
+  "TV_UNIT",
+  "COFFEE_TABLE",
+  "SIDE_TABLE",
+  "RUG",
+  "CURTAIN",
+  "LIGHTING",
+  "MIRROR",
+  "STORAGE",
+  "OUTDOOR",
+  "DECOR",
+  "OTHER",
 ] as const;
 
 type FurnitureCategory = (typeof CATEGORIES)[number];
@@ -79,30 +96,32 @@ export default function CatalogUploadPage() {
     const lines = text.trim().split("\n");
     if (lines.length < 2) return [];
 
-    const headers = lines[0]!.split(",").map((h) => h.trim().toLowerCase());
+    const headers = (lines[0] ?? "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase());
     const entries: ProductEntry[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i]!.split(",").map((c) => c.trim());
+      const cols = (lines[i] ?? "").split(",").map((c) => c.trim());
       const row: Record<string, string> = {};
       headers.forEach((h, idx) => {
         row[h] = cols[idx] ?? "";
       });
 
       entries.push({
-        name: row["name"] ?? "",
-        sku: row["sku"] ?? "",
-        category: (row["category"] ?? "OTHER").toUpperCase() as FurnitureCategory,
+        name: row.name ?? "",
+        sku: row.sku ?? "",
+        category: (row.category ?? "OTHER").toUpperCase() as FurnitureCategory,
         dimensions: {
-          widthCm: parseInt(row["width_cm"] ?? "0") || 0,
-          depthCm: parseInt(row["depth_cm"] ?? "0") || 0,
-          heightCm: parseInt(row["height_cm"] ?? "0") || 0,
+          widthCm: parseInt(row.width_cm ?? "0") || 0,
+          depthCm: parseInt(row.depth_cm ?? "0") || 0,
+          heightCm: parseInt(row.height_cm ?? "0") || 0,
         },
-        materials: (row["materials"] ?? "").split(";").filter(Boolean),
-        colors: (row["colors"] ?? "").split(";").filter(Boolean),
-        priceFils: parseInt(row["price_fils"] ?? "0") || 0,
-        photos: (row["photos"] ?? "").split(";").filter(Boolean),
-        stockQuantity: parseInt(row["stock"] ?? "0") || 0,
+        materials: (row.materials ?? "").split(";").filter(Boolean),
+        colors: (row.colors ?? "").split(";").filter(Boolean),
+        priceFils: parseInt(row.price_fils ?? "0") || 0,
+        photos: (row.photos ?? "").split(";").filter(Boolean),
+        stockQuantity: parseInt(row.stock ?? "0") || 0,
       });
     }
 
@@ -124,7 +143,8 @@ export default function CatalogUploadPage() {
 
     // Basic validation
     for (let i = 0; i < items.length; i++) {
-      const p = items[i]!;
+      const p = items[i];
+      if (!p) continue;
       if (!p.name || !p.sku) {
         setError(`Product ${i + 1}: name and SKU are required`);
         return;
@@ -152,7 +172,11 @@ export default function CatalogUploadPage() {
       const res = await client.catalog.ingestProducts.mutate({
         products: items,
       });
-      setResult({ total: res.total, succeeded: res.succeeded, failed: res.failed });
+      setResult({
+        total: res.total,
+        succeeded: res.succeeded,
+        failed: res.failed,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -164,13 +188,18 @@ export default function CatalogUploadPage() {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success-light)]">
-          <span className="text-2xl text-[var(--color-success-default)]">&#10003;</span>
+          <span className="text-2xl text-[var(--color-success-default)]">
+            &#10003;
+          </span>
         </div>
         <h1 className="text-3xl font-bold">Upload Complete</h1>
         <p className="text-muted-foreground">
           {result.succeeded} of {result.total} products uploaded successfully.
           {result.failed > 0 && (
-            <span className="text-[var(--color-error-default)]"> {result.failed} failed.</span>
+            <span className="text-[var(--color-error-default)]">
+              {" "}
+              {result.failed} failed.
+            </span>
           )}
         </p>
         <div className="flex justify-center gap-3">
@@ -232,7 +261,7 @@ export default function CatalogUploadPage() {
       )}
 
       {mode === "csv" ? (
-        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
+        <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">CSV Format</h2>
           <p className="text-muted-foreground text-sm">
             Columns: name, sku, category, width_cm, depth_cm, height_cm,
@@ -256,11 +285,12 @@ export default function CatalogUploadPage() {
       ) : (
         <div className="space-y-6">
           {products.map((product, index) => (
-            <div key={index} className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
+            <div
+              key={index}
+              className="bg-card space-y-4 rounded-lg p-6 shadow-xs"
+            >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  Product {index + 1}
-                </h2>
+                <h2 className="text-lg font-semibold">Product {index + 1}</h2>
                 {products.length > 1 && (
                   <Button
                     variant="ghost"
@@ -305,7 +335,9 @@ export default function CatalogUploadPage() {
                   <select
                     value={product.category}
                     onChange={(e) =>
-                      updateProduct(index, { category: e.target.value as FurnitureCategory })
+                      updateProduct(index, {
+                        category: e.target.value as FurnitureCategory,
+                      })
                     }
                     className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
                   >
