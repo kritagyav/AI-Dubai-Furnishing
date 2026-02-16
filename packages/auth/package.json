@@ -36,6 +36,7 @@
     "@dubai/prettier-config": "workspace:*",
     "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "eslint": "catalog:",
     "next": "~16.1.6",

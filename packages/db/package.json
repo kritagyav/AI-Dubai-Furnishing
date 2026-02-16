@@ -39,6 +39,7 @@
     "@dubai/prettier-config": "workspace:*",
     "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/pg": "^8.16.0",
     "dotenv": "catalog:",
     "eslint": "catalog:",

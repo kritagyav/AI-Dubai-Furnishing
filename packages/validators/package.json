@@ -27,6 +27,7 @@
     "@dubai/test-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
     "@fast-check/vitest": "catalog:",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "fast-check": "catalog:",
     "prettier": "catalog:",

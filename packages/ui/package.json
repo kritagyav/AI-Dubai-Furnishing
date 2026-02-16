@@ -48,6 +48,7 @@
     "@storybook/react-vite": "catalog:",
     "@storybook/test": "catalog:",
     "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
     "chromatic": "catalog:",
