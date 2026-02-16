@@ -266,7 +266,79 @@ model ChildSafetyPreference {
 // ═══════════════════════════════════════════
 // AI PACKAGES
 // ═══════════════════════════════════════════
-// Package, PackageItem, PackageReview, PackagePreview — Future stories
+
+enum PackageStatus {
+  GENERATING
+  READY
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model Package {
+  id            String        @id @default(uuid())
+  userId        String
+  projectId     String
+  roomId        String?
+  name          String
+  description   String?
+  status        PackageStatus @default(GENERATING)
+  totalPriceFils Int          @default(0)
+  styleTag      String?
+  aiModelVersion String?
+  generatedAt   DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items     PackageItem[]
+  reviews   PackageReview[]
+  previews  PackagePreview[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+}
+
+model PackageItem {
+  id          String @id @default(uuid())
+  packageId   String
+  productId   String
+  quantity    Int    @default(1)
+  unitPriceFils Int
+  roomPlacement Json?  // { x, y, rotation } for room visualization
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+  @@index([productId])
+}
+
+model PackageReview {
+  id        String  @id @default(uuid())
+  packageId String
+  userId    String
+  rating    Int     // 1–5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, userId])
+}
+
+model PackagePreview {
+  id          String @id @default(uuid())
+  packageId   String
+  imageUrl    String
+  thumbnailUrl String?
+  viewAngle   String?  // "top", "perspective", "front"
+  createdAt   DateTime @default(now())
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+}
 
 // ═══════════════════════════════════════════
 // CATALOG & INVENTORY
@@ -421,7 +493,116 @@ model InventorySyncJob {
 // ═══════════════════════════════════════════
 // COMMERCE & ORDERS
 // ═══════════════════════════════════════════
-// Cart, CartItem, Order, OrderLineItem, Payment — Future stories
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  BANK_TRANSFER
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  updatedAt DateTime   @updatedAt
+  createdAt DateTime   @default(now())
+
+  items CartItem[]
+
+  @@index([userId])
+}
+
+model CartItem {
+  id          String @id @default(uuid())
+  cartId      String
+  productId   String
+  quantity    Int    @default(1)
+  priceFils   Int    // snapshot price at time of add
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  orderRef        String      @unique @default(uuid())
+  status          OrderStatus @default(DRAFT)
+  subtotalFils    Int         @default(0)
+  deliveryFeeFils Int         @default(0)
+  totalFils       Int         @default(0)
+  shippingAddress Json?
+  notes           String?
+  paidAt          DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  lineItems OrderLineItem[]
+  payments  Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderRef])
+}
+
+model OrderLineItem {
+  id          String @id @default(uuid())
+  orderId     String
+  productId   String
+  retailerId  String
+  productName String
+  sku         String
+  quantity    Int
+  unitPriceFils Int
+  totalFils   Int
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([retailerId])
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  amountFils      Int
+  currency        String        @default("AED")
+  externalRef     String?       // Checkout.com payment ID
+  failureReason   String?
+  authorizedAt    DateTime?
+  capturedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([externalRef])
+}
 
 // ═══════════════════════════════════════════
 // FINANCIAL LEDGER — Story 5.5
@@ -510,12 +691,163 @@ model LedgerEntry {
 // ═══════════════════════════════════════════
 // DELIVERY & FULFILLMENT
 // ═══════════════════════════════════════════
-// DeliverySchedule, DeliverySlot, DeliveryIssue — Future stories
+
+enum DeliveryStatus {
+  SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  RESCHEDULED
+}
+
+enum DeliveryIssueType {
+  DAMAGED
+  WRONG_ITEM
+  MISSING_ITEM
+  ACCESS_ISSUE
+  CUSTOMER_ABSENT
+  OTHER
+}
+
+model DeliverySchedule {
+  id            String         @id @default(uuid())
+  orderId       String
+  slotId        String?
+  status        DeliveryStatus @default(SCHEDULED)
+  scheduledDate DateTime
+  scheduledSlot String?        // e.g., "09:00-12:00"
+  driverName    String?
+  driverPhone   String?
+  trackingUrl   String?
+  deliveredAt   DateTime?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  issues DeliveryIssue[]
+
+  @@index([orderId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+model DeliverySlot {
+  id          String   @id @default(uuid())
+  date        DateTime
+  startTime   String   // "09:00"
+  endTime     String   // "12:00"
+  capacity    Int      @default(10)
+  booked      Int      @default(0)
+  area        String?  // Dubai area/district
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, startTime, area])
+  @@index([date, isActive])
+}
+
+model DeliveryIssue {
+  id          String            @id @default(uuid())
+  deliveryId  String
+  type        DeliveryIssueType
+  description String
+  photoUrls   Json?             // string[]
+  resolved    Boolean           @default(false)
+  resolvedAt  DateTime?
+  resolution  String?
+  createdAt   DateTime          @default(now())
+
+  delivery DeliverySchedule @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId])
+}
 
 // ═══════════════════════════════════════════
 // ENGAGEMENT & LIFECYCLE
 // ═══════════════════════════════════════════
-// Notification, SatisfactionSurvey, AbandonedCart, ReEngagementSequence — Future stories
+
+enum NotificationType {
+  ORDER_UPDATE
+  DELIVERY_UPDATE
+  PACKAGE_READY
+  PROMOTION
+  SYSTEM
+  SURVEY
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String
+  data      Json?               // action URL, orderId, etc.
+  read      Boolean             @default(false)
+  readAt    DateTime?
+  sentAt    DateTime            @default(now())
+  createdAt DateTime            @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model SatisfactionSurvey {
+  id          String   @id @default(uuid())
+  userId      String
+  orderId     String?
+  overallScore Int     // 1–5
+  deliveryScore Int?   // 1–5
+  qualityScore Int?    // 1–5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+model AbandonedCart {
+  id              String   @id @default(uuid())
+  userId          String
+  cartSnapshot    Json     // cart items at time of abandonment
+  totalFils       Int
+  remindersSent   Int      @default(0)
+  lastReminderAt  DateTime?
+  recoveredAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum SequenceStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model ReEngagementSequence {
+  id          String         @id @default(uuid())
+  userId      String
+  trigger     String         // "cart_abandoned", "inactive_30d", etc.
+  status      SequenceStatus @default(ACTIVE)
+  currentStep Int            @default(0)
+  totalSteps  Int            @default(3)
+  nextActionAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status, nextActionAt])
+}
 
 // ═══════════════════════════════════════════
 // CATALOG HEALTH — Story 5.6
@@ -577,7 +909,72 @@ model CatalogIssue {
 // ═══════════════════════════════════════════
 // PLATFORM OPERATIONS
 // ═══════════════════════════════════════════
-// SupportTicket, FeatureFlag, AIQualityFlag — Future stories
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  ORDER_ISSUE
+  DELIVERY_ISSUE
+  PRODUCT_QUALITY
+  PAYMENT_ISSUE
+  ACCOUNT_ISSUE
+  GENERAL_INQUIRY
+  RETURN_REQUEST
+  OTHER
+}
+
+model SupportTicket {
+  id          String         @id @default(uuid())
+  ticketRef   String         @unique @default(uuid())
+  userId      String
+  assigneeId  String?
+  category    TicketCategory
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  subject     String
+  description String
+  orderId     String?
+  attachments Json?          // string[] of URLs
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages TicketMessage[]
+
+  @@index([userId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority, status])
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  senderId  String
+  senderRole String  // "customer", "support", "system"
+  body      String
+  attachments Json?  // string[]
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([ticketId, createdAt])
+}
 
 model AuditLog {
   id            String   @id @default(uuid())
@@ -600,4 +997,71 @@ model AuditLog {
 // ═══════════════════════════════════════════
 // B2B2C DISTRIBUTION
 // ═══════════════════════════════════════════
-// AgentPartner, Referral, CorporateAccount, CorporateEmployee — Future stories
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model AgentPartner {
+  id              String      @id @default(uuid())
+  userId          String      @unique
+  companyName     String?
+  licenseNumber   String?
+  commissionRate  Int         @default(500) // basis points (5.00%)
+  status          AgentStatus @default(ACTIVE)
+  totalReferrals  Int         @default(0)
+  totalEarningsFils Int       @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  referrals Referral[]
+
+  @@index([status])
+}
+
+model Referral {
+  id            String   @id @default(uuid())
+  agentId       String
+  referredUserId String?
+  referralCode  String   @unique
+  orderId       String?
+  commissionFils Int     @default(0)
+  convertedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  agent AgentPartner @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([referralCode])
+}
+
+model CorporateAccount {
+  id            String   @id @default(uuid())
+  tenantId      String   @unique @default(uuid())
+  companyName   String
+  contactEmail  String
+  contactPhone  String?
+  maxEmployees  Int      @default(50)
+  discountBps   Int      @default(0) // discount in basis points
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employees CorporateEmployee[]
+
+  @@index([tenantId])
+}
+
+model CorporateEmployee {
+  id            String   @id @default(uuid())
+  corporateId   String
+  userId        String   @unique
+  employeeRef   String?  // internal employee ID
+  createdAt     DateTime @default(now())
+
+  corporate CorporateAccount @relation(fields: [corporateId], references: [id], onDelete: Cascade)
+
+  @@index([corporateId])
+}

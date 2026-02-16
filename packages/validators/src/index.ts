@@ -353,3 +353,243 @@ export const getDashboardMetricsInput = z.object({
   fromDate: z.iso.datetime().optional(),
   toDate: z.iso.datetime().optional(),
 });
+
+// ═══════════════════════════════════════════
+// AI Packages — Epic 4
+// ═══════════════════════════════════════════
+
+export const packageStatusEnum = z.enum([
+  "GENERATING",
+  "READY",
+  "ACCEPTED",
+  "REJECTED",
+  "EXPIRED",
+]);
+
+export const generatePackageInput = z.object({
+  projectId: z.uuid(),
+  roomId: z.uuid().optional(),
+  styleTag: z.string().max(50).optional(),
+});
+
+export const listPackagesInput = paginationInput.extend({
+  projectId: z.uuid().optional(),
+  status: packageStatusEnum.optional(),
+});
+
+export const reviewPackageInput = z.object({
+  packageId: z.uuid(),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(2000).optional(),
+});
+
+export const updatePackageStatusInput = z.object({
+  packageId: z.uuid(),
+  status: z.enum(["ACCEPTED", "REJECTED"]),
+});
+
+// ═══════════════════════════════════════════
+// Commerce — Epic 6
+// ═══════════════════════════════════════════
+
+export const addToCartInput = z.object({
+  productId: z.uuid(),
+  quantity: z.number().int().min(1).max(50).default(1),
+});
+
+export const updateCartItemInput = z.object({
+  itemId: z.uuid(),
+  quantity: z.number().int().min(0).max(50),
+});
+
+export const removeCartItemInput = z.object({
+  itemId: z.uuid(),
+});
+
+export const orderStatusEnum = z.enum([
+  "DRAFT",
+  "PENDING_PAYMENT",
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+]);
+
+export const paymentMethodEnum = z.enum([
+  "CARD",
+  "APPLE_PAY",
+  "GOOGLE_PAY",
+  "BANK_TRANSFER",
+]);
+
+export const createOrderInput = z.object({
+  shippingAddress: z.object({
+    line1: z.string().min(1).max(200),
+    line2: z.string().max(200).optional(),
+    city: z.string().min(1).max(100),
+    emirate: z.string().min(1).max(50),
+    postalCode: z.string().max(20).optional(),
+    country: z.string().default("AE"),
+  }),
+  notes: z.string().max(1000).optional(),
+});
+
+export const processPaymentInput = z.object({
+  orderId: z.uuid(),
+  method: paymentMethodEnum,
+  token: z.string().min(1).max(500), // payment token from Checkout.com
+});
+
+export const listOrdersInput = paginationInput.extend({
+  status: orderStatusEnum.optional(),
+});
+
+export const cancelOrderInput = z.object({
+  orderId: z.uuid(),
+  reason: z.string().max(1000).optional(),
+});
+
+// ═══════════════════════════════════════════
+// Delivery
+// ═══════════════════════════════════════════
+
+export const deliveryStatusEnum = z.enum([
+  "SCHEDULED",
+  "IN_TRANSIT",
+  "DELIVERED",
+  "FAILED",
+  "RESCHEDULED",
+]);
+
+export const scheduleDeliveryInput = z.object({
+  orderId: z.uuid(),
+  slotId: z.uuid(),
+  notes: z.string().max(1000).optional(),
+});
+
+export const rescheduleDeliveryInput = z.object({
+  deliveryId: z.uuid(),
+  slotId: z.uuid(),
+  reason: z.string().max(500).optional(),
+});
+
+export const listDeliverySlotsInput = z.object({
+  date: z.iso.date(),
+  area: z.string().max(100).optional(),
+});
+
+export const reportDeliveryIssueInput = z.object({
+  deliveryId: z.uuid(),
+  type: z.enum([
+    "DAMAGED",
+    "WRONG_ITEM",
+    "MISSING_ITEM",
+    "ACCESS_ISSUE",
+    "CUSTOMER_ABSENT",
+    "OTHER",
+  ]),
+  description: z.string().min(1).max(2000),
+  photoUrls: z.array(z.url()).max(5).optional(),
+});
+
+export const updateDeliveryStatusInput = z.object({
+  deliveryId: z.uuid(),
+  status: deliveryStatusEnum,
+  driverName: z.string().max(100).optional(),
+  driverPhone: z.string().max(20).optional(),
+  trackingUrl: z.url().optional(),
+});
+
+export const listDeliveriesInput = paginationInput.extend({
+  orderId: z.uuid().optional(),
+  status: deliveryStatusEnum.optional(),
+});
+
+// ═══════════════════════════════════════════
+// Engagement
+// ═══════════════════════════════════════════
+
+export const notificationTypeEnum = z.enum([
+  "ORDER_UPDATE",
+  "DELIVERY_UPDATE",
+  "PACKAGE_READY",
+  "PROMOTION",
+  "SYSTEM",
+  "SURVEY",
+]);
+
+export const listNotificationsInput = paginationInput.extend({
+  unreadOnly: z.boolean().default(false),
+  type: notificationTypeEnum.optional(),
+});
+
+export const markNotificationReadInput = z.object({
+  notificationId: z.uuid(),
+});
+
+export const submitSurveyInput = z.object({
+  orderId: z.uuid().optional(),
+  overallScore: z.number().int().min(1).max(5),
+  deliveryScore: z.number().int().min(1).max(5).optional(),
+  qualityScore: z.number().int().min(1).max(5).optional(),
+  comment: z.string().max(2000).optional(),
+});
+
+// ═══════════════════════════════════════════
+// Support
+// ═══════════════════════════════════════════
+
+export const ticketCategoryEnum = z.enum([
+  "ORDER_ISSUE",
+  "DELIVERY_ISSUE",
+  "PRODUCT_QUALITY",
+  "PAYMENT_ISSUE",
+  "ACCOUNT_ISSUE",
+  "GENERAL_INQUIRY",
+  "RETURN_REQUEST",
+  "OTHER",
+]);
+
+export const ticketPriorityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
+
+export const ticketStatusEnum = z.enum([
+  "OPEN",
+  "IN_PROGRESS",
+  "WAITING_ON_CUSTOMER",
+  "RESOLVED",
+  "CLOSED",
+]);
+
+export const createTicketInput = z.object({
+  category: ticketCategoryEnum,
+  subject: z.string().min(1).max(200),
+  description: z.string().min(1).max(5000),
+  priority: ticketPriorityEnum.default("MEDIUM"),
+  orderId: z.uuid().optional(),
+  attachments: z.array(z.url()).max(5).optional(),
+});
+
+export const addTicketMessageInput = z.object({
+  ticketId: z.uuid(),
+  body: z.string().min(1).max(5000),
+  attachments: z.array(z.url()).max(5).optional(),
+});
+
+export const updateTicketStatusInput = z.object({
+  ticketId: z.uuid(),
+  status: ticketStatusEnum,
+  resolution: z.string().max(2000).optional(),
+});
+
+export const assignTicketInput = z.object({
+  ticketId: z.uuid(),
+  assigneeId: z.uuid(),
+});
+
+export const listTicketsInput = paginationInput.extend({
+  status: ticketStatusEnum.optional(),
+  category: ticketCategoryEnum.optional(),
+  priority: ticketPriorityEnum.optional(),
+});
