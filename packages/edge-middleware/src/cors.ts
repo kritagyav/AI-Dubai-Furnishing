@@ -7,15 +7,14 @@ import { cors as honoCors } from "hono/cors";
  * ALLOWED_ORIGINS should be a comma-separated list of origins:
  *   ALLOWED_ORIGINS=http://localhost:3000,https://dubai-furnishing.vercel.app
  *
- * Falls back to localhost:3000 in development.
+ * Falls back to localhost:3000 + localhost:3001 in development.
  */
 function getAllowedOrigins(): string[] {
-  // TODO(Story 1.7): migrate to @dubai/shared/env per Enforcement Rule #12
   const envOrigins = process.env.ALLOWED_ORIGINS;
   if (envOrigins) {
     return envOrigins.split(",").map((o) => o.trim());
   }
-  return ["http://localhost:3000"];
+  return ["http://localhost:3000", "http://localhost:3001"];
 }
 
 export const cors = honoCors({

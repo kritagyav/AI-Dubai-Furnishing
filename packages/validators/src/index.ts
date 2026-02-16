@@ -451,6 +451,11 @@ export const cancelOrderInput = z.object({
   reason: z.string().max(1000).optional(),
 });
 
+export const refundOrderInput = z.object({
+  orderId: z.uuid(),
+  reason: z.string().max(1000).optional(),
+});
+
 // ═══════════════════════════════════════════
 // Delivery
 // ═══════════════════════════════════════════

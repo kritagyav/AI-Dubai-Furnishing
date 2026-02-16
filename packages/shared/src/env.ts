@@ -6,7 +6,9 @@ const serverEnvSchema = z.object({
   CHECKOUT_COM_SECRET_KEY: z.string(),
   BULLMQ_REDIS_URL: z.string().url(),
   UPSTASH_REDIS_URL: z.string().url(),
+  UPSTASH_REDIS_TOKEN: z.string().optional(),
   AI_SERVICE_URL: z.string().url(),
+  ALLOWED_ORIGINS: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({

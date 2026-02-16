@@ -9,10 +9,17 @@ import {
   processPaymentInput,
   listOrdersInput,
   cancelOrderInput,
+  refundOrderInput,
 } from "@dubai/validators";
 import { trackEvent } from "@dubai/queue";
 
 import { authedProcedure } from "../trpc";
+import {
+  createPaymentIntent,
+  capturePayment,
+  refundPayment,
+  PaymentError,
+} from "./payment-service";
 
 type JsonValue = Prisma.InputJsonValue;
 
@@ -344,79 +351,163 @@ export const commerceRouter = {
         });
       }
 
-      // Create payment record (Checkout.com integration stub)
+      // Call Checkout.com to create the payment (authorize + capture)
+      let paymentResult;
+      try {
+        paymentResult = await createPaymentIntent({
+          amountFils: order.totalFils,
+          currency: "AED",
+          token: input.token,
+          reference: order.id,
+          description: `Order ${order.id}`,
+          capture: true,
+          method: input.method,
+          customerEmail: ctx.user.email || undefined,
+          customerName: ctx.user.name || undefined,
+        });
+      } catch (err) {
+        // Record the failed payment attempt
+        const failureReason =
+          err instanceof PaymentError ? err.message : "Unknown payment error";
+
+        await ctx.db.payment.create({
+          data: {
+            orderId: order.id,
+            method: input.method,
+            status: "FAILED",
+            amountFils: order.totalFils,
+            failureReason,
+          },
+        });
+
+        if (err instanceof PaymentError) {
+          throw new TRPCError({
+            code:
+              err.code === "DECLINED" ||
+              err.code === "INSUFFICIENT_FUNDS" ||
+              err.code === "EXPIRED_CARD"
+                ? "BAD_REQUEST"
+                : "INTERNAL_SERVER_ERROR",
+            message: `Payment failed: ${err.message}`,
+            cause: err,
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Payment processing failed unexpectedly",
+        });
+      }
+
+      // Determine payment status from Checkout.com response
+      const isCaptured = paymentResult.status === "Captured";
+      const isAuthorized =
+        paymentResult.status === "Authorized" || paymentResult.approved;
+
+      const paymentStatus = isCaptured
+        ? "CAPTURED"
+        : isAuthorized
+          ? "AUTHORIZED"
+          : "PENDING";
+
+      const now = new Date();
+
       const payment = await ctx.db.payment.create({
         data: {
           orderId: order.id,
           method: input.method,
-          status: "CAPTURED",
+          status: paymentStatus as "PENDING" | "AUTHORIZED" | "CAPTURED",
           amountFils: order.totalFils,
-          externalRef: `ck_${crypto.randomUUID().slice(0, 16)}`,
-          authorizedAt: new Date(),
-          capturedAt: new Date(),
+          externalRef: paymentResult.externalId,
+          authorizedAt: isAuthorized || isCaptured ? now : null,
+          capturedAt: isCaptured ? now : null,
         },
         select: { id: true, externalRef: true, status: true },
       });
 
+      // If only authorized (not captured), attempt capture
+      if (isAuthorized && !isCaptured && payment.externalRef) {
+        try {
+          await capturePayment(payment.externalRef, order.totalFils);
+          await ctx.db.payment.update({
+            where: { id: payment.id },
+            data: { status: "CAPTURED", capturedAt: new Date() },
+          });
+          payment.status = "CAPTURED";
+        } catch (captureErr) {
+          // Payment is authorized but capture failed — leave as AUTHORIZED
+          // This can be retried later
+          console.error(
+            "[commerce] Capture failed for payment",
+            payment.id,
+            captureErr,
+          );
+        }
+      }
+
       // Update order status
       await ctx.db.order.update({
         where: { id: order.id },
-        data: { status: "PAID", paidAt: new Date() },
+        data: {
+          status: payment.status === "CAPTURED" ? "PAID" : "PENDING_PAYMENT",
+          paidAt: payment.status === "CAPTURED" ? now : null,
+        },
       });
 
-      // Create commissions for each retailer
-      const lineItems = await ctx.db.orderLineItem.findMany({
-        where: { orderId: order.id },
-        select: { retailerId: true, totalFils: true },
-      });
+      // Create commissions only after successful capture
+      if (payment.status === "CAPTURED") {
+        const lineItems = await ctx.db.orderLineItem.findMany({
+          where: { orderId: order.id },
+          select: { retailerId: true, totalFils: true },
+        });
 
-      // Group by retailer
-      const retailerTotals = new Map<string, number>();
-      for (const li of lineItems) {
-        retailerTotals.set(
-          li.retailerId,
-          (retailerTotals.get(li.retailerId) ?? 0) + li.totalFils,
-        );
+        // Group by retailer
+        const retailerTotals = new Map<string, number>();
+        for (const li of lineItems) {
+          retailerTotals.set(
+            li.retailerId,
+            (retailerTotals.get(li.retailerId) ?? 0) + li.totalFils,
+          );
+        }
+
+        for (const [retailerId, total] of retailerTotals) {
+          const retailer = await ctx.db.retailer.findUnique({
+            where: { id: retailerId },
+            select: { commissionRate: true },
+          });
+
+          const rateBps = retailer?.commissionRate ?? 1200;
+          const commissionAmount = Math.round((total * rateBps) / 10000);
+
+          await ctx.db.commission.create({
+            data: {
+              retailerId,
+              orderId: order.id,
+              orderRef: order.id.slice(0, 8),
+              amountFils: commissionAmount,
+              rateBps,
+              netAmountFils: total - commissionAmount,
+              status: "PENDING",
+            },
+          });
+
+          await ctx.db.ledgerEntry.create({
+            data: {
+              retailerId,
+              type: "COMMISSION",
+              amountFils: commissionAmount,
+              referenceId: order.id,
+              description: `Commission for order ${order.id.slice(0, 8)}`,
+            },
+          });
+        }
+
+        trackEvent("order.paid", ctx.user.id, {
+          orderId: order.id,
+          paymentId: payment.id,
+          amountFils: order.totalFils,
+          method: input.method,
+        });
       }
-
-      for (const [retailerId, total] of retailerTotals) {
-        const retailer = await ctx.db.retailer.findUnique({
-          where: { id: retailerId },
-          select: { commissionRate: true },
-        });
-
-        const rateBps = retailer?.commissionRate ?? 1200;
-        const commissionAmount = Math.round((total * rateBps) / 10000);
-
-        await ctx.db.commission.create({
-          data: {
-            retailerId,
-            orderId: order.id,
-            orderRef: order.id.slice(0, 8),
-            amountFils: commissionAmount,
-            rateBps,
-            netAmountFils: total - commissionAmount,
-            status: "PENDING",
-          },
-        });
-
-        await ctx.db.ledgerEntry.create({
-          data: {
-            retailerId,
-            type: "COMMISSION",
-            amountFils: commissionAmount,
-            referenceId: order.id,
-            description: `Commission for order ${order.id.slice(0, 8)}`,
-          },
-        });
-      }
-
-      trackEvent("order.paid", ctx.user.id, {
-        orderId: order.id,
-        paymentId: payment.id,
-        amountFils: order.totalFils,
-        method: input.method,
-      });
 
       return { paymentId: payment.id, status: payment.status };
     }),
@@ -543,6 +634,92 @@ export const commerceRouter = {
       });
 
       return { cancelled: true };
+    }),
+
+  refundOrder: authedProcedure
+    .input(refundOrderInput)
+    .mutation(async ({ ctx, input }) => {
+      // Find order — accessible by admin (PLATFORM_ADMIN) or the order owner
+      const isAdmin = ctx.user.role === "PLATFORM_ADMIN";
+
+      const order = await ctx.db.order.findFirst({
+        where: {
+          id: input.orderId,
+          ...(isAdmin ? {} : { userId: ctx.user.id }),
+        },
+        select: { id: true, status: true, userId: true, totalFils: true },
+      });
+
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+      }
+
+      // Only paid/processing/shipped/delivered orders can be refunded
+      const refundable = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
+      if (!refundable.includes(order.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Order cannot be refunded in its current status (${order.status})`,
+        });
+      }
+
+      // Find the captured payment for this order
+      const payment = await ctx.db.payment.findFirst({
+        where: { orderId: order.id, status: "CAPTURED" },
+        select: { id: true, externalRef: true, amountFils: true },
+      });
+
+      if (!payment) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No captured payment found for this order",
+        });
+      }
+
+      // Call Checkout.com to initiate refund
+      try {
+        if (!payment.externalRef) {
+          throw new PaymentError(
+            "No external payment reference available",
+            "NOT_REFUNDABLE",
+          );
+        }
+        await refundPayment(payment.externalRef, payment.amountFils);
+      } catch (err) {
+        if (err instanceof PaymentError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Refund failed: ${err.message}`,
+            cause: err,
+          });
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Refund processing failed unexpectedly",
+        });
+      }
+
+      // Update payment and order status within a transaction
+      await ctx.db.$transaction(async (tx) => {
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: { status: "REFUNDED" },
+        });
+
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: "REFUNDED" },
+        });
+      });
+
+      trackEvent("order.refunded", ctx.user.id, {
+        orderId: order.id,
+        paymentId: payment.id,
+        amountFils: payment.amountFils,
+        reason: input.reason,
+      });
+
+      return { refunded: true, orderId: order.id };
     }),
 
 } satisfies TRPCRouterRecord;

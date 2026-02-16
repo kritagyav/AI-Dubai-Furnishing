@@ -527,6 +527,9 @@ importers:
 
   apps/worker:
     dependencies:
+      '@dubai/ai-client':
+        specifier: workspace:*
+        version: link:../../packages/ai-client
       '@dubai/db':
         specifier: workspace:*
         version: link:../../packages/db

@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@dubai/ai-client": "workspace:*",
     "@dubai/db": "workspace:*",
     "@dubai/queue": "workspace:*",
     "@dubai/shared": "workspace:*",

@@ -57,6 +57,7 @@ export type AnalyticsEventName =
   | "order.created"
   | "order.paid"
   | "order.cancelled"
+  | "order.refunded"
   | "package.generated"
   | "package.accepted"
   | "cart.item_added"
