@@ -230,6 +230,18 @@ const scopedDbMiddleware = t.middleware(async ({ ctx, next }) => {
 });
 
 /**
+ * Corporate-scoped DB middleware — same as scopedDbMiddleware but scopes
+ * on "corporateAccountId" instead of "retailerId" for corporate models.
+ */
+const corporateScopedDbMiddleware = t.middleware(async ({ ctx, next }) => {
+  const tenantId = (ctx as Record<string, unknown>).tenantId as string;
+
+  return next({
+    ctx: { db: scopedClient(tenantId, "corporateAccountId") as unknown as PrismaClient },
+  });
+});
+
+/**
  * Role middleware factory — restricts access to specific roles.
  *
  * @param allowedRoles - Array of UserRole values that can access the procedure
@@ -284,7 +296,7 @@ export const retailerProcedure = authedProcedure
  */
 export const corporateProcedure = authedProcedure
   .use(tenantMiddleware("corporate"))
-  .use(scopedDbMiddleware);
+  .use(corporateScopedDbMiddleware);
 
 /**
  * Admin procedure — requires PLATFORM_ADMIN role.

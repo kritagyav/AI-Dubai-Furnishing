@@ -15,6 +15,20 @@ export const securityHeaders: MiddlewareHandler = async (c, next) => {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()",
   );
+  c.header(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https: wss:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; "),
+  );
 
   // Only apply HSTS in production
   const isProduction =

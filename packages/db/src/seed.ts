@@ -110,7 +110,12 @@ async function main() {
     },
   });
 
-  const sampleProducts = [
+  const sampleProducts: Array<{
+    name: string;
+    category: "SOFA" | "BED" | "DINING_TABLE" | "DESK" | "WARDROBE" | "BOOKSHELF" | "LIGHTING" | "RUG";
+    priceFils: number;
+    sku: string;
+  }> = [
     { name: "Modern Leather Sofa", category: "SOFA", priceFils: 450000, sku: "ARS-SOFA-001" },
     { name: "King Size Platform Bed", category: "BED", priceFils: 380000, sku: "ARS-BED-001" },
     { name: "Oak Dining Table (6 Seater)", category: "DINING_TABLE", priceFils: 280000, sku: "ARS-DIN-001" },
@@ -131,6 +136,9 @@ async function main() {
           name: p.name,
           category: p.category,
           priceFils: p.priceFils,
+          widthCm: 100,
+          depthCm: 60,
+          heightCm: 80,
           stockQuantity: 25,
           validationStatus: "ACTIVE",
           materials: ["Wood", "Metal"],

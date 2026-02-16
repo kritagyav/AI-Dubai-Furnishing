@@ -442,7 +442,7 @@ export const adminRouter = {
             select: {
               id: true,
               companyName: true,
-              // iban may not exist yet in schema — we'll handle gracefully
+              iban: true,
             },
           },
         },
@@ -459,9 +459,16 @@ export const adminRouter = {
 
       // When transitioning to PROCESSING, initiate bank transfer
       if (input.status === "PROCESSING" && settlement.status === "PENDING") {
+        if (!settlement.retailer.iban) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Retailer has no IBAN configured for payouts",
+          });
+        }
+
         try {
           const payoutResult = await payoutService.initiateBankTransfer({
-            recipientIban: "AE000000000000000000000", // Placeholder IBAN
+            recipientIban: settlement.retailer.iban,
             amount: settlement.totalAmountFils,
             currency: "AED",
             reference: `settlement-${settlement.id}`,

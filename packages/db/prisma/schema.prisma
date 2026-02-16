@@ -28,17 +28,17 @@ enum UserRole {
 }
 
 model User {
-  id              String          @id @default(uuid())
-  supabaseAuthId  String          @unique
-  email           String          @unique
-  name            String?
-  avatarUrl       String?
-  role            UserRole        @default(USER)
-  tenantId        String?
-  onboardingPath  OnboardingPath?
-  onboardedAt     DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             String          @id @default(uuid())
+  supabaseAuthId String          @unique
+  email          String          @unique
+  name           String?
+  avatarUrl      String?
+  role           UserRole        @default(USER)
+  tenantId       String?
+  onboardingPath OnboardingPath?
+  onboardedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   sessions      Session[]
   activityState UserActivityState?
@@ -87,13 +87,13 @@ model UserActivityState {
 }
 
 model OfflineAction {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   userId         String
-  idempotencyKey String   @unique
+  idempotencyKey String    @unique
   action         String
   payload        Json
-  status         String   @default("pending")
-  createdAt      DateTime @default(now())
+  status         String    @default("pending")
+  createdAt      DateTime  @default(now())
   processedAt    DateTime?
   errorMessage   String?
 
@@ -135,15 +135,15 @@ enum ProfileType {
 }
 
 model Project {
-  id           String       @id @default(uuid())
-  userId       String
-  name         String
-  address      String?
-  profileType  ProfileType?
+  id                String       @id @default(uuid())
+  userId            String
+  name              String
+  address           String?
+  profileType       ProfileType?
   floorPlanUrl      String?
   floorPlanThumbUrl String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   rooms       Room[]
@@ -191,25 +191,25 @@ model RoomPhoto {
 // ═══════════════════════════════════════════
 
 model UserPreference {
-  id          String   @id @default(uuid())
-  userId      String
-  projectId   String
+  id               String       @id @default(uuid())
+  userId           String
+  projectId        String
   // Lifestyle quiz (Story 3.1)
-  budgetMinFils   Int?    // AED in fils
-  budgetMaxFils   Int?
-  familySize      Int?
-  childrenAges    Json?   // int[]
-  hasPets         Boolean @default(false)
-  petTypes        Json?   // string[]
-  stylePreferences Json?  // string[] — "modern", "traditional", "minimalist", etc.
-  quizCompleted   Boolean @default(false)
-  quizStep        Int     @default(0)  // auto-save resume point
+  budgetMinFils    Int? // AED in fils
+  budgetMaxFils    Int?
+  familySize       Int?
+  childrenAges     Json? // int[]
+  hasPets          Boolean      @default(false)
+  petTypes         Json? // string[]
+  stylePreferences Json? // string[] — "modern", "traditional", "minimalist", etc.
+  quizCompleted    Boolean      @default(false)
+  quizStep         Int          @default(0) // auto-save resume point
   // Profile type (Story 3.2) — also on Project for quick access
-  profileType     ProfileType?
+  profileType      ProfileType?
   // Raw quiz responses for future re-processing
-  rawResponses    Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  rawResponses     Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -224,15 +224,15 @@ model UserPreference {
 
 // Story 3.3: Airbnb Investor Target & Revenue Goals
 model InvestorPreference {
-  id               String @id @default(uuid())
-  preferenceId     String @unique
-  targetDemographics Json  // string[] — "business_travelers", "families", etc.
-  nightlyRateMinFils Int?
-  nightlyRateMaxFils Int?
-  occupancyTargetPct Int?  // 0–100
+  id                   String   @id @default(uuid())
+  preferenceId         String   @unique
+  targetDemographics   Json // string[] — "business_travelers", "families", etc.
+  nightlyRateMinFils   Int?
+  nightlyRateMaxFils   Int?
+  occupancyTargetPct   Int? // 0–100
   investmentBudgetFils Int?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   preference UserPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
 }
@@ -250,15 +250,15 @@ enum SafetyFeature {
 }
 
 model ChildSafetyPreference {
-  id              String @id @default(uuid())
-  preferenceId    String @unique
-  hasChildren     Boolean @default(true)
+  id               String   @id @default(uuid())
+  preferenceId     String   @unique
+  hasChildren      Boolean  @default(true)
   youngestChildAge Int?
-  safetyFeatures  Json    // SafetyFeature[]
-  ageBasedProfile String? // "toddler", "school_age", "mixed"
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  safetyFeatures   Json // SafetyFeature[]
+  ageBasedProfile  String? // "toddler", "school_age", "mixed"
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   preference UserPreference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
 }
@@ -276,24 +276,24 @@ enum PackageStatus {
 }
 
 model Package {
-  id            String        @id @default(uuid())
-  userId        String
-  projectId     String
-  roomId        String?
-  name          String
-  description   String?
-  status        PackageStatus @default(GENERATING)
-  totalPriceFils Int          @default(0)
-  styleTag      String?
+  id             String        @id @default(uuid())
+  userId         String
+  projectId      String
+  roomId         String?
+  name           String
+  description    String?
+  status         PackageStatus @default(GENERATING)
+  totalPriceFils Int           @default(0)
+  styleTag       String?
   aiModelVersion String?
-  generatedAt   DateTime?
-  expiresAt     DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  generatedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  items     PackageItem[]
-  reviews   PackageReview[]
-  previews  PackagePreview[]
+  items    PackageItem[]
+  reviews  PackageReview[]
+  previews PackagePreview[]
 
   @@index([userId])
   @@index([projectId])
@@ -301,12 +301,12 @@ model Package {
 }
 
 model PackageItem {
-  id          String @id @default(uuid())
-  packageId   String
-  productId   String
-  quantity    Int    @default(1)
+  id            String @id @default(uuid())
+  packageId     String
+  productId     String
+  quantity      Int    @default(1)
   unitPriceFils Int
-  roomPlacement Json?  // { x, y, rotation } for room visualization
+  roomPlacement Json? // { x, y, rotation } for room visualization
 
   package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
 
@@ -315,10 +315,10 @@ model PackageItem {
 }
 
 model PackageReview {
-  id        String  @id @default(uuid())
+  id        String   @id @default(uuid())
   packageId String
   userId    String
-  rating    Int     // 1–5
+  rating    Int // 1–5
   comment   String?
   createdAt DateTime @default(now())
 
@@ -328,12 +328,12 @@ model PackageReview {
 }
 
 model PackagePreview {
-  id          String @id @default(uuid())
-  packageId   String
-  imageUrl    String
+  id           String   @id @default(uuid())
+  packageId    String
+  imageUrl     String
   thumbnailUrl String?
-  viewAngle   String?  // "top", "perspective", "front"
-  createdAt   DateTime @default(now())
+  viewAngle    String? // "top", "perspective", "front"
+  createdAt    DateTime @default(now())
 
   package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
 
@@ -381,31 +381,33 @@ enum FurnitureCategory {
 }
 
 model Retailer {
-  id                  String         @id @default(uuid())
-  tenantId            String         @unique @default(uuid())
-  companyName         String
-  tradeLicenseNumber  String
-  contactEmail        String
-  contactPhone        String?
-  businessType        String?
-  status              RetailerStatus @default(PENDING)
-  rejectionReason     String?
-  warehouseDetails    Json?
-  documentsUrl        String?
-  commissionRate      Int            @default(1200) // basis points (12.00%)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                 String         @id @default(uuid())
+  tenantId           String         @unique @default(uuid())
+  companyName        String
+  tradeLicenseNumber String
+  contactEmail       String
+  contactPhone       String?
+  businessType       String?
+  status             RetailerStatus @default(PENDING)
+  rejectionReason    String?
+  warehouseDetails   Json?
+  documentsUrl       String?
+  commissionRate     Int            @default(1200) // basis points (12.00%)
+  iban               String?
+  bankName           String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
-  userId   String @unique
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  products RetailerProduct[]
-  syncConfig     InventorySyncConfig?
-  syncJobs       InventorySyncJob[]
-  commissions    Commission[]
-  settlements    Settlement[]
-  ledgerEntries  LedgerEntry[]
-  healthChecks   CatalogHealthCheck[]
-  catalogIssues  CatalogIssue[]
+  userId        String               @unique
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products      RetailerProduct[]
+  syncConfig    InventorySyncConfig?
+  syncJobs      InventorySyncJob[]
+  commissions   Commission[]
+  settlements   Settlement[]
+  ledgerEntries LedgerEntry[]
+  healthChecks  CatalogHealthCheck[]
+  catalogIssues CatalogIssue[]
 
   @@index([tenantId])
   @@index([status])
@@ -421,13 +423,13 @@ model RetailerProduct {
   widthCm          Int
   depthCm          Int
   heightCm         Int
-  materials        Json                    // string[]
-  colors           Json                    // string[]
-  priceFils        Int                     // AED in fils (1/100)
-  photos           Json                    // string[] of URLs
+  materials        Json // string[]
+  colors           Json // string[]
+  priceFils        Int // AED in fils (1/100)
+  photos           Json // string[] of URLs
   stockQuantity    Int                     @default(0)
   validationStatus ProductValidationStatus @default(PENDING)
-  validationErrors Json?                   // field-level errors
+  validationErrors Json? // field-level errors
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
 
@@ -443,8 +445,8 @@ model RetailerProduct {
 // ═══════════════════════════════════════════
 
 enum SyncTier {
-  BASIC    // platform-initiated polling
-  PREMIUM  // retailer-push webhooks
+  BASIC // platform-initiated polling
+  PREMIUM // retailer-push webhooks
 }
 
 enum SyncJobStatus {
@@ -456,32 +458,32 @@ enum SyncJobStatus {
 }
 
 model InventorySyncConfig {
-  id              String   @id @default(uuid())
-  retailerId      String   @unique
-  tier            SyncTier @default(BASIC)
-  webhookUrl      String?          // retailer's endpoint (PREMIUM only)
-  webhookSecret   String?          // HMAC secret for verification
-  pollingInterval Int      @default(60) // minutes (BASIC only)
-  isActive        Boolean  @default(true)
-  lastSyncAt      DateTime?
-  consecutiveFailures Int  @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  retailerId          String    @unique
+  tier                SyncTier  @default(BASIC)
+  webhookUrl          String? // retailer's endpoint (PREMIUM only)
+  webhookSecret       String? // HMAC secret for verification
+  pollingInterval     Int       @default(60) // minutes (BASIC only)
+  isActive            Boolean   @default(true)
+  lastSyncAt          DateTime?
+  consecutiveFailures Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
 }
 
 model InventorySyncJob {
-  id           String        @id @default(uuid())
-  retailerId   String
-  status       SyncJobStatus @default(PENDING)
-  productsUpdated Int        @default(0)
-  productsErrored Int        @default(0)
-  errorMessage String?
-  retryCount   Int           @default(0)
-  startedAt    DateTime?
-  completedAt  DateTime?
-  createdAt    DateTime      @default(now())
+  id              String        @id @default(uuid())
+  retailerId      String
+  status          SyncJobStatus @default(PENDING)
+  productsUpdated Int           @default(0)
+  productsErrored Int           @default(0)
+  errorMessage    String?
+  retryCount      Int           @default(0)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
 
   retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
 
@@ -522,10 +524,10 @@ enum PaymentMethod {
 }
 
 model Cart {
-  id        String     @id @default(uuid())
-  userId    String     @unique
-  updatedAt DateTime   @updatedAt
-  createdAt DateTime   @default(now())
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   items CartItem[]
 
@@ -533,11 +535,11 @@ model Cart {
 }
 
 model CartItem {
-  id          String @id @default(uuid())
-  cartId      String
-  productId   String
-  quantity    Int    @default(1)
-  priceFils   Int    // snapshot price at time of add
+  id        String @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int    @default(1)
+  priceFils Int // snapshot price at time of add
 
   cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
@@ -569,15 +571,15 @@ model Order {
 }
 
 model OrderLineItem {
-  id          String @id @default(uuid())
-  orderId     String
-  productId   String
-  retailerId  String
-  productName String
-  sku         String
-  quantity    Int
+  id            String @id @default(uuid())
+  orderId       String
+  productId     String
+  retailerId    String
+  productName   String
+  sku           String
+  quantity      Int
   unitPriceFils Int
-  totalFils   Int
+  totalFils     Int
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -586,18 +588,18 @@ model OrderLineItem {
 }
 
 model Payment {
-  id              String        @id @default(uuid())
-  orderId         String
-  method          PaymentMethod
-  status          PaymentStatus @default(PENDING)
-  amountFils      Int
-  currency        String        @default("AED")
-  externalRef     String?       // Checkout.com payment ID
-  failureReason   String?
-  authorizedAt    DateTime?
-  capturedAt      DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id            String        @id @default(uuid())
+  orderId       String
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amountFils    Int
+  currency      String        @default("AED")
+  externalRef   String? // Checkout.com payment ID
+  failureReason String?
+  authorizedAt  DateTime?
+  capturedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -633,11 +635,11 @@ enum LedgerEntryType {
 model Commission {
   id            String           @id @default(uuid())
   retailerId    String
-  orderId       String?          // nullable until commerce stories link it
-  orderRef      String?          // human-readable order reference
-  amountFils    Int              // commission amount in fils
-  rateBps       Int              // rate in basis points at time of transaction
-  netAmountFils Int              // retailer net = product price - commission
+  orderId       String? // nullable until commerce stories link it
+  orderRef      String? // human-readable order reference
+  amountFils    Int // commission amount in fils
+  rateBps       Int // rate in basis points at time of transaction
+  netAmountFils Int // retailer net = product price - commission
   status        CommissionStatus @default(PENDING)
   disputeReason String?
   disputeNotes  String?
@@ -646,8 +648,8 @@ model Commission {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
-  retailer   Retailer    @relation(fields: [retailerId], references: [id], onDelete: Cascade)
-  settlement Settlement? @relation(fields: [settlementId], references: [id])
+  retailer     Retailer    @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  settlement   Settlement? @relation(fields: [settlementId], references: [id])
   settlementId String?
 
   @@index([retailerId])
@@ -658,12 +660,12 @@ model Commission {
 model Settlement {
   id              String           @id @default(uuid())
   retailerId      String
-  totalAmountFils Int              // total payout
-  commissionCount Int              // number of commissions included
+  totalAmountFils Int // total payout
+  commissionCount Int // number of commissions included
   status          SettlementStatus @default(PENDING)
   payoutDate      DateTime?
-  transactionRef  String?          // external payment reference
-  statementUrl    String?          // downloadable statement
+  transactionRef  String? // external payment reference
+  statementUrl    String? // downloadable statement
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -678,8 +680,8 @@ model LedgerEntry {
   id          String          @id @default(uuid())
   retailerId  String
   type        LedgerEntryType
-  amountFils  Int             // positive = credit, negative = debit
-  referenceId String?         // commission/settlement/adjustment ID
+  amountFils  Int // positive = credit, negative = debit
+  referenceId String? // commission/settlement/adjustment ID
   description String?
   createdAt   DateTime        @default(now())
 
@@ -718,7 +720,7 @@ model DeliverySchedule {
   slotId        String?
   status        DeliveryStatus @default(SCHEDULED)
   scheduledDate DateTime
-  scheduledSlot String?        // e.g., "09:00-12:00"
+  scheduledSlot String? // e.g., "09:00-12:00"
   driverName    String?
   driverPhone   String?
   vehiclePlate  String?
@@ -736,15 +738,15 @@ model DeliverySchedule {
 }
 
 model DeliverySlot {
-  id          String   @id @default(uuid())
-  date        DateTime
-  startTime   String   // "09:00"
-  endTime     String   // "12:00"
-  capacity    Int      @default(10)
-  booked      Int      @default(0)
-  area        String?  // Dubai area/district
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  date      DateTime
+  startTime String // "09:00"
+  endTime   String // "12:00"
+  capacity  Int      @default(10)
+  booked    Int      @default(0)
+  area      String? // Dubai area/district
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 
   @@unique([date, startTime, area])
   @@index([date, isActive])
@@ -755,7 +757,7 @@ model DeliveryIssue {
   deliveryId  String
   type        DeliveryIssueType
   description String
-  photoUrls   Json?             // string[]
+  photoUrls   Json? // string[]
   resolved    Boolean           @default(false)
   resolvedAt  DateTime?
   resolution  String?
@@ -792,7 +794,7 @@ model Notification {
   channel   NotificationChannel @default(IN_APP)
   title     String
   body      String
-  data      Json?               // action URL, orderId, etc.
+  data      Json? // action URL, orderId, etc.
   read      Boolean             @default(false)
   readAt    DateTime?
   sentAt    DateTime            @default(now())
@@ -803,28 +805,28 @@ model Notification {
 }
 
 model SatisfactionSurvey {
-  id          String   @id @default(uuid())
-  userId      String
-  orderId     String?
-  overallScore Int     // 1–5
-  deliveryScore Int?   // 1–5
-  qualityScore Int?    // 1–5
-  comment     String?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  orderId       String?
+  overallScore  Int // 1–5
+  deliveryScore Int? // 1–5
+  qualityScore  Int? // 1–5
+  comment       String?
+  createdAt     DateTime @default(now())
 
   @@index([userId])
   @@index([orderId])
 }
 
 model AbandonedCart {
-  id              String   @id @default(uuid())
-  userId          String
-  cartSnapshot    Json     // cart items at time of abandonment
-  totalFils       Int
-  remindersSent   Int      @default(0)
-  lastReminderAt  DateTime?
-  recoveredAt     DateTime?
-  createdAt       DateTime @default(now())
+  id             String    @id @default(uuid())
+  userId         String
+  cartSnapshot   Json // cart items at time of abandonment
+  totalFils      Int
+  remindersSent  Int       @default(0)
+  lastReminderAt DateTime?
+  recoveredAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -838,16 +840,16 @@ enum SequenceStatus {
 }
 
 model ReEngagementSequence {
-  id          String         @id @default(uuid())
-  userId      String
-  trigger     String         // "cart_abandoned", "inactive_30d", etc.
-  status      SequenceStatus @default(ACTIVE)
-  currentStep Int            @default(0)
-  totalSteps  Int            @default(3)
+  id           String         @id @default(uuid())
+  userId       String
+  trigger      String // "cart_abandoned", "inactive_30d", etc.
+  status       SequenceStatus @default(ACTIVE)
+  currentStep  Int            @default(0)
+  totalSteps   Int            @default(3)
   nextActionAt DateTime?
-  completedAt DateTime?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@index([userId])
   @@index([status, nextActionAt])
@@ -876,7 +878,7 @@ enum HealthIssueSeverity {
 model CatalogHealthCheck {
   id            String   @id @default(uuid())
   retailerId    String
-  overallScore  Int      // 0–100
+  overallScore  Int // 0–100
   totalProducts Int
   issuesFound   Int
   staleProducts Int      @default(0)
@@ -892,16 +894,16 @@ model CatalogHealthCheck {
 }
 
 model CatalogIssue {
-  id            String              @id @default(uuid())
-  retailerId    String
-  productId     String?             // null for retailer-wide issues
-  issueType     HealthIssueType
-  severity      HealthIssueSeverity
-  description   String
+  id             String              @id @default(uuid())
+  retailerId     String
+  productId      String? // null for retailer-wide issues
+  issueType      HealthIssueType
+  severity       HealthIssueSeverity
+  description    String
   recommendation String?
-  resolved      Boolean             @default(false)
-  resolvedAt    DateTime?
-  createdAt     DateTime            @default(now())
+  resolved       Boolean             @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime            @default(now())
 
   retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
 
@@ -916,9 +918,9 @@ model CatalogIssue {
 
 model AnalyticsEvent {
   id         String   @id @default(uuid())
-  event      String   // e.g. "product.viewed", "package.generated", "order.paid"
+  event      String // e.g. "product.viewed", "package.generated", "order.paid"
   userId     String
-  properties Json?    // event-specific metadata (productId, source, etc.)
+  properties Json? // event-specific metadata (productId, source, etc.)
   timestamp  DateTime @default(now())
   createdAt  DateTime @default(now())
 
@@ -970,7 +972,7 @@ model SupportTicket {
   subject     String
   description String
   orderId     String?
-  attachments Json?          // string[] of URLs
+  attachments Json? // string[] of URLs
   resolvedAt  DateTime?
   closedAt    DateTime?
   createdAt   DateTime       @default(now())
@@ -985,13 +987,13 @@ model SupportTicket {
 }
 
 model TicketMessage {
-  id        String   @id @default(uuid())
-  ticketId  String
-  senderId  String
-  senderRole String  // "customer", "support", "system"
-  body      String
-  attachments Json?  // string[]
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  ticketId    String
+  senderId    String
+  senderRole  String // "customer", "support", "system"
+  body        String
+  attachments Json? // string[]
+  createdAt   DateTime @default(now())
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
@@ -1028,16 +1030,16 @@ enum AgentStatus {
 }
 
 model AgentPartner {
-  id              String      @id @default(uuid())
-  userId          String      @unique
-  companyName     String?
-  licenseNumber   String?
-  commissionRate  Int         @default(500) // basis points (5.00%)
-  status          AgentStatus @default(ACTIVE)
-  totalReferrals  Int         @default(0)
-  totalEarningsFils Int       @default(0)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                String      @id @default(uuid())
+  userId            String      @unique
+  companyName       String?
+  licenseNumber     String?
+  commissionRate    Int         @default(500) // basis points (5.00%)
+  status            AgentStatus @default(ACTIVE)
+  totalReferrals    Int         @default(0)
+  totalEarningsFils Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   referrals Referral[]
 
@@ -1045,14 +1047,14 @@ model AgentPartner {
 }
 
 model Referral {
-  id            String   @id @default(uuid())
-  agentId       String
+  id             String    @id @default(uuid())
+  agentId        String
   referredUserId String?
-  referralCode  String   @unique
-  orderId       String?
-  commissionFils Int     @default(0)
-  convertedAt   DateTime?
-  createdAt     DateTime @default(now())
+  referralCode   String    @unique
+  orderId        String?
+  commissionFils Int       @default(0)
+  convertedAt    DateTime?
+  createdAt      DateTime  @default(now())
 
   agent AgentPartner @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
@@ -1061,16 +1063,16 @@ model Referral {
 }
 
 model CorporateAccount {
-  id            String   @id @default(uuid())
-  tenantId      String   @unique @default(uuid())
-  companyName   String
-  contactEmail  String
-  contactPhone  String?
-  maxEmployees  Int      @default(50)
-  discountBps   Int      @default(0) // discount in basis points
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  tenantId     String   @unique @default(uuid())
+  companyName  String
+  contactEmail String
+  contactPhone String?
+  maxEmployees Int      @default(50)
+  discountBps  Int      @default(0) // discount in basis points
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   employees CorporateEmployee[]
 
@@ -1078,11 +1080,11 @@ model CorporateAccount {
 }
 
 model CorporateEmployee {
-  id            String   @id @default(uuid())
-  corporateId   String
-  userId        String   @unique
-  employeeRef   String?  // internal employee ID
-  createdAt     DateTime @default(now())
+  id          String   @id @default(uuid())
+  corporateId String
+  userId      String   @unique
+  employeeRef String? // internal employee ID
+  createdAt   DateTime @default(now())
 
   corporate CorporateAccount @relation(fields: [corporateId], references: [id], onDelete: Cascade)
 

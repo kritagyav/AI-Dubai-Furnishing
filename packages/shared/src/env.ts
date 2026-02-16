@@ -18,6 +18,16 @@ const serverEnvSchema = z.object({
   WEBHOOK_SIGNING_SECRET: z.string().optional(),
   BANK_PAYOUT_API_KEY: z.string().optional(),
   BANK_PAYOUT_API_URL: z.string().url().optional(),
+  // Logging
+  LOG_LEVEL: z.string().optional(),
+  // Worker health
+  WORKER_HEALTH_PORT: z.coerce.number().optional(),
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // Apple OAuth
+  APPLE_CLIENT_ID: z.string().optional(),
+  APPLE_CLIENT_SECRET: z.string().optional(),
 });
 
 const clientEnvSchema = z.object({

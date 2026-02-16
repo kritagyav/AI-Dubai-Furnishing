@@ -9,14 +9,14 @@ import { prisma } from "./client";
  *   const db = scopedClient(ctx.tenantId);
  *   const products = await db.retailerProduct.findMany();
  */
-export function scopedClient(tenantId: string) {
+export function scopedClient(tenantId: string, scopeField: string = "retailerId") {
   return prisma.$extends({
     query: {
       $allOperations({ args, query }) {
         const extendedArgs = args as Record<string, unknown>;
         extendedArgs.where = {
           ...(extendedArgs.where as Record<string, unknown> | undefined),
-          retailerId: tenantId,
+          [scopeField]: tenantId,
         };
         return query(args);
       },

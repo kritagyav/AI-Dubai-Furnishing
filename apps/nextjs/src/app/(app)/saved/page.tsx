@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@dubai/ui/button";
 
-import { useTRPCClient } from "~/trpc/react";
+import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 interface SavedPackage {
   id: string;
@@ -16,10 +17,21 @@ interface SavedPackage {
 }
 
 export default function SavedPage() {
+  const trpc = useTRPC();
   const client = useTRPCClient();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState<SavedPackage[]>([]);
+
+  const addToCartMutation = useMutation(
+    trpc.package.addPackageToCart.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: trpc.commerce.getCart.queryKey() });
+        router.push("/cart");
+      },
+    }),
+  );
 
   useEffect(() => {
     // Fetch all user's accepted packages across projects
@@ -85,9 +97,12 @@ export default function SavedPage() {
               <Button
                 size="sm"
                 className="mt-3"
-                onClick={() => router.push("/cart")}
+                disabled={addToCartMutation.isPending}
+                onClick={() =>
+                  addToCartMutation.mutate({ packageId: pkg.id })
+                }
               >
-                Add to Cart
+                {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
               </Button>
             </div>
           ))}
