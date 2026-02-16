@@ -571,19 +571,25 @@ export const ticketStatusEnum = z.enum([
   "CLOSED",
 ]);
 
+export const ticketAttachmentSchema = z.object({
+  key: z.string().min(1).max(500),
+  filename: z.string().min(1).max(255),
+  contentType: z.string().min(1).max(255),
+});
+
 export const createTicketInput = z.object({
   category: ticketCategoryEnum,
   subject: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   priority: ticketPriorityEnum.default("MEDIUM"),
   orderId: z.uuid().optional(),
-  attachments: z.array(z.url()).max(5).optional(),
+  attachments: z.array(ticketAttachmentSchema).max(5).optional(),
 });
 
 export const addTicketMessageInput = z.object({
   ticketId: z.uuid(),
   body: z.string().min(1).max(5000),
-  attachments: z.array(z.url()).max(5).optional(),
+  attachments: z.array(ticketAttachmentSchema).max(5).optional(),
 });
 
 export const updateTicketStatusInput = z.object({

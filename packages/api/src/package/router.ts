@@ -6,7 +6,7 @@ import {
   reviewPackageInput,
   updatePackageStatusInput,
 } from "@dubai/validators";
-import { trackEvent } from "@dubai/queue";
+import { enqueue, trackEvent } from "@dubai/queue";
 
 import { authedProcedure } from "../trpc";
 
@@ -69,48 +69,13 @@ export const packageRouter = {
         select: { id: true, status: true, createdAt: true },
       });
 
-      // In production, this would queue a job to the AI service.
-      // For now, simulate generation by selecting matching products.
-      const budgetMax = preference?.budgetMaxFils ?? 500000; // 5000 AED default
-      const products = await ctx.db.retailerProduct.findMany({
-        where: {
-          validationStatus: "ACTIVE",
-          stockQuantity: { gt: 0 },
-          priceFils: { lte: budgetMax },
-        },
-        take: 8,
-        orderBy: { createdAt: "desc" },
-        select: { id: true, priceFils: true },
-      });
-
-      if (products.length > 0) {
-        await ctx.db.packageItem.createMany({
-          data: products.map((p) => ({
-            packageId: pkg.id,
-            productId: p.id,
-            quantity: 1,
-            unitPriceFils: p.priceFils,
-          })),
-        });
-
-        const totalPrice = products.reduce((sum, p) => sum + p.priceFils, 0);
-
-        await ctx.db.package.update({
-          where: { id: pkg.id },
-          data: {
-            status: "READY",
-            totalPriceFils: totalPrice,
-            generatedAt: new Date(),
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          },
-        });
-      }
-
-      trackEvent("package.generated", ctx.user.id, {
+      // Queue async AI package generation via worker
+      await enqueue("package.generate", {
         packageId: pkg.id,
         projectId: input.projectId,
-        roomId: input.roomId ?? null,
-        itemCount: products.length,
+        userId: ctx.user.id,
+        ...(input.roomId ? { roomId: input.roomId } : {}),
+        ...(input.styleTag ? { styleTag: input.styleTag } : {}),
       });
 
       return pkg;

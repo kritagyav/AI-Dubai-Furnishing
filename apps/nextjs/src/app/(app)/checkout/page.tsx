@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { Button } from "@dubai/ui/button";
 
+import { trackPageView, trackAction } from "~/lib/analytics";
 import { useTRPCClient } from "~/trpc/react";
 
 type Step = "address" | "payment" | "confirmation";
@@ -41,6 +42,11 @@ const IS_DEV = !CHECKOUT_PUBLIC_KEY || CHECKOUT_PUBLIC_KEY === "pk_test_placehol
 export default function CheckoutPage() {
   const client = useTRPCClient();
   const router = useRouter();
+
+  useEffect(() => {
+    trackPageView("Checkout Started");
+  }, []);
+
   const [step, setStep] = useState<Step>("address");
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -160,6 +166,7 @@ export default function CheckoutPage() {
         method: paymentMethod,
         token,
       });
+      trackAction("Payment Completed", { orderId, method: paymentMethod });
       setStep("confirmation");
     } catch (err) {
       const message =

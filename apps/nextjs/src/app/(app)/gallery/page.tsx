@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
+import { trackPageView } from "~/lib/analytics";
 import { useTRPC } from "~/trpc/react";
 
 const CATEGORIES = [
@@ -23,6 +24,11 @@ const CATEGORIES = [
 export default function GalleryPage() {
   const router = useRouter();
   const trpc = useTRPC();
+
+  useEffect(() => {
+    trackPageView("Gallery Viewed");
+  }, []);
+
   const [category, setCategory] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc">(

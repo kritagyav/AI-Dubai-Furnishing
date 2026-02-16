@@ -18,6 +18,7 @@ import { sessionRouter } from "./session/router";
 import { storageRouter } from "./storage/router";
 import { supportRouter } from "./support/router";
 import { userRouter } from "./user/router";
+import { webhookRouter } from "./webhook/router";
 
 export const appRouter = createTRPCRouter({
   room: roomRouter,
@@ -38,6 +39,7 @@ export const appRouter = createTRPCRouter({
   engagement: engagementRouter,
   ledger: ledgerRouter,
   offline: offlineRouter,
+  webhook: webhookRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -28,6 +28,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().min(1).optional(),
     NEXT_PUBLIC_AXIOM_DATASET: z.string().min(1).optional(),
     NEXT_PUBLIC_AXIOM_TOKEN: z.string().min(1).optional(),
+    NEXT_PUBLIC_MIXPANEL_TOKEN: z.string().min(1).optional(),
   },
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -36,6 +37,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
     NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
+    NEXT_PUBLIC_MIXPANEL_TOKEN: process.env.NEXT_PUBLIC_MIXPANEL_TOKEN,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

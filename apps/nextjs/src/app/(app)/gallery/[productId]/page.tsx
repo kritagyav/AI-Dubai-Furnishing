@@ -6,11 +6,12 @@
  */
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@dubai/ui/button";
 
+import { trackAction } from "~/lib/analytics";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -41,6 +42,11 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const trpc = useTRPC();
   const client = useTRPCClient();
+
+  useEffect(() => {
+    trackAction("Product Viewed", { productId: params.productId });
+  }, [params.productId]);
+
   const [selectedPhoto, setSelectedPhoto] = useState(0);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMessage, setCartMessage] = useState<string | null>(null);

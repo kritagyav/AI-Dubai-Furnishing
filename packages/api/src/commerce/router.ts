@@ -14,7 +14,7 @@ import {
   resolveDisputeInput,
   listDisputesInput,
 } from "@dubai/validators";
-import { trackEvent } from "@dubai/queue";
+import { enqueue, trackEvent } from "@dubai/queue";
 
 import { adminProcedure, authedProcedure } from "../trpc";
 import {
@@ -456,53 +456,9 @@ export const commerceRouter = {
         },
       });
 
-      // Create commissions only after successful capture
+      // Queue async commission calculation and track payment event
       if (payment.status === "CAPTURED") {
-        const lineItems = await ctx.db.orderLineItem.findMany({
-          where: { orderId: order.id },
-          select: { retailerId: true, totalFils: true },
-        });
-
-        // Group by retailer
-        const retailerTotals = new Map<string, number>();
-        for (const li of lineItems) {
-          retailerTotals.set(
-            li.retailerId,
-            (retailerTotals.get(li.retailerId) ?? 0) + li.totalFils,
-          );
-        }
-
-        for (const [retailerId, total] of retailerTotals) {
-          const retailer = await ctx.db.retailer.findUnique({
-            where: { id: retailerId },
-            select: { commissionRate: true },
-          });
-
-          const rateBps = retailer?.commissionRate ?? 1200;
-          const commissionAmount = Math.round((total * rateBps) / 10000);
-
-          await ctx.db.commission.create({
-            data: {
-              retailerId,
-              orderId: order.id,
-              orderRef: order.id.slice(0, 8),
-              amountFils: commissionAmount,
-              rateBps,
-              netAmountFils: total - commissionAmount,
-              status: "PENDING",
-            },
-          });
-
-          await ctx.db.ledgerEntry.create({
-            data: {
-              retailerId,
-              type: "COMMISSION",
-              amountFils: commissionAmount,
-              referenceId: order.id,
-              description: `Commission for order ${order.id.slice(0, 8)}`,
-            },
-          });
-        }
+        await enqueue("commission.calculate", { orderId: order.id });
 
         trackEvent("order.paid", ctx.user.id, {
           orderId: order.id,

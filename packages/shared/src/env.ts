@@ -16,6 +16,8 @@ const serverEnvSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   WEBHOOK_SIGNING_SECRET: z.string().optional(),
+  BANK_PAYOUT_API_KEY: z.string().optional(),
+  BANK_PAYOUT_API_URL: z.string().url().optional(),
 });
 
 const clientEnvSchema = z.object({

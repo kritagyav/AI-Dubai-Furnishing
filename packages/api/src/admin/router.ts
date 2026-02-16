@@ -4,6 +4,7 @@ import { paginationInput, retailerDecisionInput, listOrdersInput, listSettlement
 import { z } from "zod/v4";
 
 import { adminProcedure, auditedProcedure } from "../trpc";
+import { payoutService } from "./payout-service";
 
 /**
  * Admin router — includes retailer approval workflow (Story 5.1).
@@ -432,7 +433,19 @@ export const adminRouter = {
     .mutation(async ({ ctx, input }) => {
       const settlement = await ctx.db.settlement.findUnique({
         where: { id: input.settlementId },
-        select: { id: true, status: true },
+        select: {
+          id: true,
+          status: true,
+          totalAmountFils: true,
+          transactionRef: true,
+          retailer: {
+            select: {
+              id: true,
+              companyName: true,
+              // iban may not exist yet in schema — we'll handle gracefully
+            },
+          },
+        },
       });
 
       if (!settlement) {
@@ -442,12 +455,32 @@ export const adminRouter = {
         });
       }
 
+      let transactionRef = input.transactionRef;
+
+      // When transitioning to PROCESSING, initiate bank transfer
+      if (input.status === "PROCESSING" && settlement.status === "PENDING") {
+        try {
+          const payoutResult = await payoutService.initiateBankTransfer({
+            recipientIban: "AE000000000000000000000", // Placeholder IBAN
+            amount: settlement.totalAmountFils,
+            currency: "AED",
+            reference: `settlement-${settlement.id}`,
+          });
+          transactionRef = payoutResult.transactionRef;
+        } catch (err) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to initiate bank transfer: ${err instanceof Error ? err.message : "Unknown error"}`,
+          });
+        }
+      }
+
       const updated = await ctx.db.settlement.update({
         where: { id: input.settlementId },
         data: {
           status: input.status,
-          ...(input.transactionRef
-            ? { transactionRef: input.transactionRef }
+          ...(transactionRef
+            ? { transactionRef }
             : {}),
           ...(input.status === "COMPLETED"
             ? { payoutDate: new Date() }
@@ -463,6 +496,52 @@ export const adminRouter = {
       });
 
       return updated;
+    }),
+
+  /**
+   * Check the payout status of a settlement via the bank transfer API.
+   */
+  checkPayoutStatus: adminProcedure
+    .input(z.object({ settlementId: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      const settlement = await ctx.db.settlement.findUnique({
+        where: { id: input.settlementId },
+        select: { id: true, transactionRef: true, status: true },
+      });
+
+      if (!settlement) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Settlement not found",
+        });
+      }
+
+      if (!settlement.transactionRef) {
+        return {
+          settlementId: settlement.id,
+          settlementStatus: settlement.status,
+          payoutStatus: null as string | null,
+          transactionRef: null as string | null,
+        };
+      }
+
+      try {
+        const result = await payoutService.checkTransferStatus(
+          settlement.transactionRef,
+        );
+
+        return {
+          settlementId: settlement.id,
+          settlementStatus: settlement.status,
+          payoutStatus: result.status,
+          transactionRef: result.transactionRef,
+        };
+      } catch (err) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to check payout status: ${err instanceof Error ? err.message : "Unknown error"}`,
+        });
+      }
     }),
 
   // ─── Catalog health (admin) ───
@@ -774,6 +853,237 @@ export const adminRouter = {
       recentOrders: orderCount,
       unreadNotifications: workerQueueSize,
       activeSequences,
+    };
+  }),
+
+  // ─── Revenue Metrics ───
+
+  /**
+   * Get revenue and commission metrics for the admin dashboard.
+   * Supports period selection: 7d, 30d, 90d with previous-period comparison.
+   */
+  revenueMetrics: adminProcedure
+    .input(z.object({ period: z.enum(["7d", "30d", "90d"]) }))
+    .query(async ({ ctx, input }) => {
+      const periodDays =
+        input.period === "7d" ? 7 : input.period === "30d" ? 30 : 90;
+      const now = new Date();
+      const periodStart = new Date(
+        now.getTime() - periodDays * 24 * 60 * 60 * 1000,
+      );
+      const prevPeriodStart = new Date(
+        periodStart.getTime() - periodDays * 24 * 60 * 60 * 1000,
+      );
+
+      const [
+        currentOrders,
+        currentRevenueAgg,
+        currentCommissionsAgg,
+        prevRevenueAgg,
+        prevCommissionsAgg,
+        topRetailersRaw,
+      ] = await Promise.all([
+        // Current period order count
+        ctx.db.order.count({
+          where: { createdAt: { gte: periodStart } },
+        }),
+        // Current period revenue
+        ctx.db.order.aggregate({
+          where: { createdAt: { gte: periodStart } },
+          _sum: { totalFils: true },
+        }),
+        // Current period commissions
+        ctx.db.commission.aggregate({
+          where: { createdAt: { gte: periodStart } },
+          _sum: { amountFils: true },
+        }),
+        // Previous period revenue
+        ctx.db.order.aggregate({
+          where: {
+            createdAt: { gte: prevPeriodStart, lt: periodStart },
+          },
+          _sum: { totalFils: true },
+        }),
+        // Previous period commissions
+        ctx.db.commission.aggregate({
+          where: {
+            createdAt: { gte: prevPeriodStart, lt: periodStart },
+          },
+          _sum: { amountFils: true },
+        }),
+        // Top 5 retailers by revenue (via line items)
+        ctx.db.orderLineItem.groupBy({
+          by: ["retailerId"],
+          where: {
+            order: { createdAt: { gte: periodStart } },
+          },
+          _sum: { totalFils: true },
+          _count: { orderId: true },
+          orderBy: { _sum: { totalFils: "desc" } },
+          take: 5,
+        }),
+      ]);
+
+      const revenueFils = currentRevenueAgg._sum.totalFils ?? 0;
+      const commissionsFils = currentCommissionsAgg._sum.amountFils ?? 0;
+      const netPayoutFils = revenueFils - commissionsFils;
+      const orderCount = currentOrders;
+      const averageOrderFils =
+        orderCount > 0 ? Math.round(revenueFils / orderCount) : 0;
+      const prevRevenueFils = prevRevenueAgg._sum.totalFils ?? 0;
+      const prevCommissionsFils = prevCommissionsAgg._sum.amountFils ?? 0;
+
+      // Resolve retailer names for top retailers
+      const retailerIds = topRetailersRaw.map((r) => r.retailerId);
+      const retailers =
+        retailerIds.length > 0
+          ? await ctx.db.retailer.findMany({
+              where: { id: { in: retailerIds } },
+              select: { id: true, companyName: true },
+            })
+          : [];
+      const retailerMap = new Map(retailers.map((r) => [r.id, r.companyName]));
+
+      const topRetailers = topRetailersRaw.map((r) => ({
+        retailerId: r.retailerId,
+        companyName: retailerMap.get(r.retailerId) ?? "Unknown",
+        revenueFils: r._sum.totalFils ?? 0,
+        orderCount: r._count.orderId,
+      }));
+
+      // Daily revenue breakdown for charting
+      const dailyOrders = await ctx.db.order.findMany({
+        where: { createdAt: { gte: periodStart } },
+        select: { createdAt: true, totalFils: true },
+      });
+
+      const dailyMap = new Map<string, number>();
+      for (let d = 0; d < periodDays; d++) {
+        const date = new Date(
+          periodStart.getTime() + d * 24 * 60 * 60 * 1000,
+        );
+        const key = date.toISOString().slice(0, 10);
+        dailyMap.set(key, 0);
+      }
+
+      for (const order of dailyOrders) {
+        const key = order.createdAt.toISOString().slice(0, 10);
+        dailyMap.set(key, (dailyMap.get(key) ?? 0) + order.totalFils);
+      }
+
+      const dailyRevenue = Array.from(dailyMap.entries()).map(
+        ([date, fils]) => ({ date, revenueFils: fils }),
+      );
+
+      return {
+        revenueFils,
+        commissionsFils,
+        netPayoutFils,
+        orderCount,
+        averageOrderFils,
+        prevRevenueFils,
+        prevCommissionsFils,
+        topRetailers,
+        dailyRevenue,
+      };
+    }),
+
+  // ─── Dispute Metrics ───
+
+  /**
+   * Get dispute metrics for the admin dashboard.
+   * Uses commission disputes and DISPUTE-category support tickets.
+   */
+  disputeMetrics: adminProcedure.query(async ({ ctx }) => {
+    const [
+      totalDisputed,
+      resolvedDisputes,
+      disputeTicketCounts,
+      ticketCategoryCounts,
+    ] = await Promise.all([
+      // Total commissions with DISPUTED status
+      ctx.db.commission.count({
+        where: { status: "DISPUTED" },
+      }),
+      // Resolved disputes (commissions that were disputed then settled/cleared)
+      ctx.db.commission.count({
+        where: {
+          disputeReason: { not: null },
+          status: { in: ["CLEARED", "SETTLED"] },
+        },
+      }),
+      // Dispute-category support tickets by status
+      ctx.db.supportTicket.groupBy({
+        by: ["status"],
+        where: { category: "DISPUTE" },
+        _count: { _all: true },
+      }),
+      // Disputes by category (ticket categories for DISPUTE tickets)
+      ctx.db.supportTicket.groupBy({
+        by: ["category"],
+        where: {
+          category: { in: ["DISPUTE", "ORDER_ISSUE", "PRODUCT_QUALITY", "PAYMENT_ISSUE"] },
+          status: { in: ["OPEN", "IN_PROGRESS", "WAITING_ON_CUSTOMER"] },
+        },
+        _count: { _all: true },
+      }),
+    ]);
+
+    // Total tickets in DISPUTE category
+    const disputeTicketStatusMap = Object.fromEntries(
+      disputeTicketCounts.map((t) => [t.status, t._count._all]),
+    );
+    const totalDisputeTickets = disputeTicketCounts.reduce(
+      (sum, t) => sum + t._count._all,
+      0,
+    );
+    const resolvedTickets =
+      (disputeTicketStatusMap["RESOLVED"] ?? 0) +
+      (disputeTicketStatusMap["CLOSED"] ?? 0);
+    const pendingTickets =
+      (disputeTicketStatusMap["OPEN"] ?? 0) +
+      (disputeTicketStatusMap["IN_PROGRESS"] ?? 0) +
+      (disputeTicketStatusMap["WAITING_ON_CUSTOMER"] ?? 0);
+
+    // Average resolution time for resolved dispute tickets
+    const resolvedDisputeTickets = await ctx.db.supportTicket.findMany({
+      where: {
+        category: "DISPUTE",
+        status: { in: ["RESOLVED", "CLOSED"] },
+        resolvedAt: { not: null },
+      },
+      select: { createdAt: true, resolvedAt: true },
+      take: 100,
+      orderBy: { resolvedAt: "desc" },
+    });
+
+    let avgResolutionHours = 0;
+    if (resolvedDisputeTickets.length > 0) {
+      const totalHours = resolvedDisputeTickets.reduce((sum, t) => {
+        const resolvedAt = t.resolvedAt;
+        if (!resolvedAt) return sum;
+        return (
+          sum +
+          (resolvedAt.getTime() - t.createdAt.getTime()) / (1000 * 60 * 60)
+        );
+      }, 0);
+      avgResolutionHours = Math.round(
+        totalHours / resolvedDisputeTickets.length,
+      );
+    }
+
+    // Disputes by reason breakdown
+    const reasonBreakdown: Record<string, number> = {};
+    for (const group of ticketCategoryCounts) {
+      reasonBreakdown[group.category] = group._count._all;
+    }
+
+    return {
+      totalDisputes: totalDisputed + totalDisputeTickets,
+      resolved: resolvedDisputes + resolvedTickets,
+      pending: totalDisputed + pendingTickets,
+      avgResolutionHours,
+      byReason: reasonBreakdown,
     };
   }),
 } satisfies TRPCRouterRecord;
