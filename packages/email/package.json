@@ -24,6 +24,7 @@
     "@dubai/eslint-config": "workspace:*",
     "@dubai/prettier-config": "workspace:*",
     "@dubai/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
