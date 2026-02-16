@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@dubai/tailwind-config/theme";
+@import "@dubai/design-tokens/css/zones/warmth";
+@import "@dubai/design-tokens/css/zones/delight";
+@import "@dubai/design-tokens/css/zones/efficiency";
 
 @source "../../../../packages/ui/src/*.{ts,tsx}";
 

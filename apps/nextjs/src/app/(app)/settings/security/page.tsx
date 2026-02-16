@@ -134,7 +134,7 @@ export default function SecurityPage() {
     <div className="max-w-2xl space-y-8">
       <h1 className="text-3xl font-bold">Security Settings</h1>
 
-      <div className="border-border space-y-4 rounded-lg border p-6">
+      <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">
             Two-Factor Authentication
@@ -143,8 +143,8 @@ export default function SecurityPage() {
             <span
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 mfaStatus === "enabled"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                  ? "bg-[var(--color-success-light)] text-[var(--color-success-dark)]"
+                  : "bg-muted text-muted-foreground"
               }`}
             >
               {mfaStatus === "enabled" ? "Enabled" : "Disabled"}
@@ -179,11 +179,11 @@ export default function SecurityPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrCode} alt="MFA QR Code" className="h-64 w-64" />
 
-            <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            <div className="rounded-lg bg-[var(--color-warning-light)] p-4">
+              <p className="text-sm font-medium text-[var(--color-warning-dark)]">
                 Important: Save your recovery options
               </p>
-              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              <p className="mt-1 text-xs text-[var(--color-warning-dark)]/80">
                 If you lose access to your authenticator app, you will need to
                 contact support to regain access to your account. Make sure your
                 authenticator app is backed up or synced to the cloud.
@@ -222,14 +222,14 @@ export default function SecurityPage() {
 
         {mfaStatus === "enabled" && (
           <div className="space-y-4">
-            <p className="text-sm text-green-600 dark:text-green-400">
+            <p className="text-sm text-[var(--color-success-default)]">
               Two-factor authentication is enabled for your account.
             </p>
-            <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950">
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            <div className="rounded-lg bg-[var(--color-warning-light)] p-4">
+              <p className="text-sm font-medium text-[var(--color-warning-dark)]">
                 Recovery information
               </p>
-              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+              <p className="mt-1 text-xs text-[var(--color-warning-dark)]/80">
                 If you lose access to your authenticator app, contact support to
                 disable MFA on your account. Keep your authenticator app backed
                 up and synced to avoid lockout.
@@ -247,7 +247,7 @@ export default function SecurityPage() {
 
         {error && <p className="text-destructive text-sm">{error}</p>}
         {success && (
-          <p className="text-sm text-green-600 dark:text-green-400">
+          <p className="text-sm text-[var(--color-success-default)]">
             {success}
           </p>
         )}

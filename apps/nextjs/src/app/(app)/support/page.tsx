@@ -4,7 +4,9 @@ import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@dubai/ui/button";
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 type TicketStatus =
@@ -42,24 +44,6 @@ const CATEGORIES: { value: TicketCategory; label: string }[] = [
   { value: "DISPUTE", label: "Dispute" },
   { value: "OTHER", label: "Other" },
 ];
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    OPEN: "bg-yellow-100 text-yellow-800",
-    IN_PROGRESS: "bg-blue-100 text-blue-800",
-    WAITING_ON_CUSTOMER: "bg-purple-100 text-purple-800",
-    RESOLVED: "bg-green-100 text-green-800",
-    CLOSED: "bg-gray-100 text-gray-800",
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] ?? "bg-gray-100 text-gray-800"}`}
-    >
-      {status.replace(/_/g, " ")}
-    </span>
-  );
-}
 
 async function uploadFile(
   client: ReturnType<typeof useTRPCClient>,
@@ -200,12 +184,12 @@ export default function SupportPage() {
         </button>
 
         {ticketDetail.isLoading && (
-          <p className="text-muted-foreground">Loading ticket...</p>
+          <SkeletonScreen rows={4} header />
         )}
 
         {ticket && (
           <>
-            <div className="rounded-lg border p-6">
+            <div className="bg-card rounded-lg p-6 shadow-xs">
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-2xl font-bold">{ticket.subject}</h1>
@@ -229,7 +213,7 @@ export default function SupportPage() {
                         (att, i) => (
                           <li
                             key={i}
-                            className="text-sm text-blue-600"
+                            className="text-primary text-sm"
                           >
                             {att.filename} ({att.contentType})
                           </li>
@@ -256,8 +240,8 @@ export default function SupportPage() {
               {ticket.messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`rounded-lg border p-4 ${
-                    msg.senderRole === "customer" ? "bg-blue-50" : "bg-gray-50"
+                  className={`bg-card rounded-lg p-4 shadow-xs ${
+                    msg.senderRole === "customer" ? "bg-accent/50" : "bg-muted/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -281,7 +265,7 @@ export default function SupportPage() {
                             (att, i) => (
                               <li
                                 key={i}
-                                className="text-xs text-blue-600"
+                                className="text-primary text-xs"
                               >
                                 {att.filename} ({att.contentType})
                               </li>
@@ -296,7 +280,7 @@ export default function SupportPage() {
 
             {/* Reply form */}
             {ticket.status !== "CLOSED" && (
-              <div className="space-y-3 rounded-lg border p-4">
+              <div className="bg-card space-y-3 rounded-lg p-4 shadow-xs">
                 <h3 className="text-sm font-semibold">Send a Reply</h3>
                 <textarea
                   value={messageBody}
@@ -346,7 +330,7 @@ export default function SupportPage() {
 
         <h1 className="text-2xl font-bold">Create Support Ticket</h1>
 
-        <div className="space-y-4 rounded-lg border p-6">
+        <div className="bg-card space-y-4 rounded-lg p-6 shadow-xs">
           <div>
             <label className="text-sm font-medium">Category</label>
             <select
@@ -430,16 +414,16 @@ export default function SupportPage() {
       </div>
 
       {tickets.isLoading && (
-        <p className="text-muted-foreground">Loading tickets...</p>
+        <SkeletonScreen rows={3} />
       )}
 
       {tickets.data?.items.length === 0 && (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <p className="text-muted-foreground text-lg">No tickets yet.</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Create a ticket if you need help.
-          </p>
-        </div>
+        <EmptyState
+          title="No tickets yet"
+          description="Create a ticket if you need help."
+          actionLabel="New Ticket"
+          onAction={() => setView("create")}
+        />
       )}
 
       {tickets.data && tickets.data.items.length > 0 && (
@@ -451,7 +435,7 @@ export default function SupportPage() {
                 setSelectedTicketId(ticket.id);
                 setView("detail");
               }}
-              className="w-full rounded-lg border p-4 text-left transition hover:shadow-md"
+              className="bg-card w-full rounded-lg p-4 shadow-xs text-left transition hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <div>

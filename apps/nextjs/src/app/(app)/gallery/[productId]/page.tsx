@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@dubai/ui/button";
+import { Skeleton, ErrorState } from "@dubai/ui";
 
 import { trackAction } from "~/lib/analytics";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
@@ -79,17 +80,17 @@ export default function ProductDetailPage() {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-6 w-32 rounded bg-gray-200" />
+          <Skeleton className="h-6 w-32 rounded" />
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            <div className="aspect-square rounded-lg bg-gray-200" />
+            <Skeleton className="aspect-square rounded-lg" />
             <div className="space-y-4">
-              <div className="h-8 w-3/4 rounded bg-gray-200" />
-              <div className="h-6 w-1/3 rounded bg-gray-200" />
-              <div className="h-4 w-1/4 rounded bg-gray-200" />
-              <div className="mt-6 h-20 rounded bg-gray-200" />
+              <Skeleton className="h-8 w-3/4 rounded" />
+              <Skeleton className="h-6 w-1/3 rounded" />
+              <Skeleton className="h-4 w-1/4 rounded" />
+              <Skeleton className="mt-6 h-20 rounded" />
               <div className="flex gap-3">
-                <div className="h-10 w-32 rounded bg-gray-200" />
-                <div className="h-10 w-32 rounded bg-gray-200" />
+                <Skeleton className="h-10 w-32 rounded" />
+                <Skeleton className="h-10 w-32 rounded" />
               </div>
             </div>
           </div>
@@ -101,19 +102,12 @@ export default function ProductDetailPage() {
   // Error state
   if (product.error || !product.data) {
     return (
-      <div className="py-20 text-center">
-        <h2 className="text-xl font-semibold">Product not found</h2>
-        <p className="text-muted-foreground mt-2">
-          This product may no longer be available.
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => router.push("/gallery")}
-        >
-          Back to Gallery
-        </Button>
-      </div>
+      <ErrorState
+        title="Product not found"
+        message="This product may no longer be available."
+        retryLabel="Back to Gallery"
+        onRetry={() => router.push("/gallery")}
+      />
     );
   }
 
@@ -140,7 +134,7 @@ export default function ProductDetailPage() {
         {/* Photo gallery */}
         <div className="space-y-3">
           {/* Main photo */}
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-muted">
             {photos.length > 0 ? (
               <img
                 src={photos[selectedPhoto]}
@@ -186,11 +180,11 @@ export default function ProductDetailPage() {
                 {CATEGORY_LABELS[data.category] ?? data.category.replace(/_/g, " ")}
               </span>
               {data.stockQuantity > 0 ? (
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                <span className="rounded-full bg-[var(--color-success-light)] px-3 py-1 text-xs font-medium text-[var(--color-success-dark)]">
                   In Stock
                 </span>
               ) : (
-                <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">
+                <span className="rounded-full bg-[var(--color-error-light)] px-3 py-1 text-xs font-medium text-[var(--color-error-dark)]">
                   Out of Stock
                 </span>
               )}
@@ -246,7 +240,7 @@ export default function ProductDetailPage() {
           )}
 
           {/* Retailer info */}
-          <div className="border-border rounded-lg border p-4">
+          <div className="bg-card rounded-lg p-4 shadow-xs">
             <h3 className="text-sm font-semibold">Sold by</h3>
             <p className="text-muted-foreground mt-1">
               {data.retailer.companyName}
@@ -273,8 +267,8 @@ export default function ProductDetailPage() {
             <p
               className={`text-sm ${
                 cartMessage === "Added to cart"
-                  ? "text-green-600"
-                  : "text-red-600"
+                  ? "text-[var(--color-success-default)]"
+                  : "text-[var(--color-error-default)]"
               }`}
             >
               {cartMessage}
@@ -297,9 +291,9 @@ export default function ProductDetailPage() {
                   onClick={() =>
                     router.push(`/gallery/${related.id}`)
                   }
-                  className="group overflow-hidden rounded-lg border text-left transition hover:shadow-lg"
+                  className="group overflow-hidden rounded-lg border text-left transition hover:shadow-md"
                 >
-                  <div className="flex h-40 items-center justify-center bg-gray-100">
+                  <div className="flex h-40 items-center justify-center bg-muted">
                     {relFirstPhoto ? (
                       <img
                         src={relFirstPhoto}

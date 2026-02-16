@@ -10,7 +10,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
+import { SkeletonScreen } from "@dubai/ui";
+import { ZoneProvider } from "@dubai/ui/zones";
 
+import { StatusBadge } from "~/components/StatusBadge";
+import { StatCard } from "~/components/StatCard";
 import { useTRPCClient } from "~/trpc/react";
 
 interface RecentOrder {
@@ -28,17 +32,6 @@ interface ProjectListItem {
   updatedAt: Date;
   _count: { rooms: number };
 }
-
-const ORDER_STATUS_STYLES: Record<string, string> = {
-  PENDING_PAYMENT: "bg-yellow-100 text-yellow-800",
-  PAID: "bg-green-100 text-green-800",
-  PROCESSING: "bg-blue-100 text-blue-800",
-  SHIPPED: "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-  REFUNDED: "bg-gray-100 text-gray-800",
-  DRAFT: "bg-gray-100 text-gray-800",
-};
 
 export default function DashboardPage() {
   const client = useTRPCClient();
@@ -100,11 +93,7 @@ export default function DashboardPage() {
   }, [client, router]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">Loading...</p>
-      </div>
-    );
+    return <SkeletonScreen rows={4} header />;
   }
 
   return (
@@ -119,31 +108,22 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="border-border rounded-lg border p-4">
-          <p className="text-muted-foreground text-sm">Active Projects</p>
-          <p className="text-2xl font-bold">{projects.length}</p>
-        </div>
-        <div className="border-border rounded-lg border p-4">
-          <p className="text-muted-foreground text-sm">Total Rooms</p>
-          <p className="text-2xl font-bold">
-            {projects.reduce((sum, p) => sum + p._count.rooms, 0)}
-          </p>
-        </div>
-        <div className="border-border rounded-lg border p-4">
-          <p className="text-muted-foreground text-sm">Total Orders</p>
-          <p className="text-2xl font-bold">{totalOrders}</p>
-        </div>
-        <div className="border-border rounded-lg border p-4">
-          <p className="text-muted-foreground text-sm">Total Spent</p>
-          <p className="text-2xl font-bold">
-            AED{" "}
-            {(totalSpentFils / 100).toLocaleString("en-AE", {
+      <ZoneProvider zone="efficiency">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Active Projects" value={projects.length} />
+          <StatCard
+            label="Total Rooms"
+            value={projects.reduce((sum, p) => sum + p._count.rooms, 0)}
+          />
+          <StatCard label="Total Orders" value={totalOrders} />
+          <StatCard
+            label="Total Spent"
+            value={`AED ${(totalSpentFils / 100).toLocaleString("en-AE", {
               minimumFractionDigits: 2,
-            })}
-          </p>
+            })}`}
+          />
         </div>
-      </div>
+      </ZoneProvider>
 
       {/* Recent Orders */}
       {recentOrders.length > 0 && (
@@ -162,7 +142,7 @@ export default function DashboardPage() {
             {recentOrders.map((order) => (
               <div
                 key={order.id}
-                className="border-border flex items-center justify-between rounded-lg border p-4"
+                className="bg-card flex items-center justify-between rounded-lg p-4 shadow-xs"
               >
                 <div>
                   <p className="font-medium">Order #{order.orderRef}</p>
@@ -179,14 +159,7 @@ export default function DashboardPage() {
                       minimumFractionDigits: 2,
                     })}
                   </span>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      ORDER_STATUS_STYLES[order.status] ??
-                      "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {order.status.replace(/_/g, " ")}
-                  </span>
+                  <StatusBadge status={order.status} />
                 </div>
               </div>
             ))}
@@ -214,7 +187,7 @@ export default function DashboardPage() {
               <button
                 key={proj.id}
                 onClick={() => router.push(`/projects/${proj.id}`)}
-                className="border-border rounded-lg border p-4 text-left transition hover:shadow-md"
+                className="bg-card rounded-lg p-4 text-left shadow-xs transition hover:shadow-md"
               >
                 <p className="font-medium">{proj.name}</p>
                 <p className="text-muted-foreground text-xs">
@@ -288,7 +261,7 @@ function DashboardCard({
   onClick: () => void;
 }) {
   return (
-    <div className="border-border flex flex-col justify-between rounded-lg border p-6">
+    <div className="bg-card flex flex-col justify-between rounded-lg p-6 shadow-xs">
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">{title}</h2>
         <p className="text-muted-foreground text-sm">{description}</p>

@@ -70,7 +70,7 @@ export default function ProfilePage() {
         </div>
 
         {success && (
-          <p className="text-sm text-green-600">Profile updated.</p>
+          <p className="text-sm text-[var(--color-success-default)]">Profile updated.</p>
         )}
 
         <Button type="submit" disabled={saving}>

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
+import { ZoneProvider } from "@dubai/ui/zones";
+
 import { trackPageView } from "~/lib/analytics";
 import { useTRPC } from "~/trpc/react";
 
@@ -94,86 +97,72 @@ export default function GalleryPage() {
       </div>
 
       {/* Product grid */}
-      {products.isLoading && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-lg border">
-              <div className="h-48 rounded-t-lg bg-gray-200" />
-              <div className="space-y-2 p-4">
-                <div className="h-4 w-2/3 rounded bg-gray-200" />
-                <div className="h-3 w-1/3 rounded bg-gray-200" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {products.isLoading && <SkeletonScreen rows={4} />}
 
       {products.data && products.data.items.length === 0 && (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <p className="text-muted-foreground text-lg">
-            No products found matching your criteria.
-          </p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Try adjusting your filters or search terms.
-          </p>
-        </div>
+        <EmptyState
+          title="No products found"
+          description="Try adjusting your filters or search terms."
+        />
       )}
 
       {products.data && products.data.items.length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.data.items.map((product) => {
-            const photos = product.photos as string[] | null;
-            const firstPhoto = photos?.[0];
-            const materials = product.materials as string[] | null;
+        <ZoneProvider zone="delight">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {products.data.items.map((product) => {
+              const photos = product.photos as string[] | null;
+              const firstPhoto = photos?.[0];
+              const materials = product.materials as string[] | null;
 
-            return (
-              <button
-                key={product.id}
-                onClick={() => router.push(`/gallery/${product.id}`)}
-                className="group overflow-hidden rounded-lg border text-left transition hover:shadow-lg"
-              >
-                <div className="flex h-48 items-center justify-center bg-gray-100">
-                  {firstPhoto ? (
-                    <img
-                      src={firstPhoto}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-muted-foreground text-sm">
-                      No image
-                    </span>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="truncate font-semibold">{product.name}</h3>
-                  <p className="text-muted-foreground text-xs">
-                    {product.retailer.companyName}
-                  </p>
-                  <div className="mt-1 flex items-baseline justify-between">
-                    <span className="text-lg font-bold">
-                      AED{" "}
-                      {(product.priceFils / 100).toLocaleString("en-AE", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                    <span className="text-muted-foreground rounded bg-gray-100 px-2 py-0.5 text-xs">
-                      {product.category.replace(/_/g, " ")}
+              return (
+                <button
+                  key={product.id}
+                  onClick={() => router.push(`/gallery/${product.id}`)}
+                  className="group overflow-hidden rounded-lg border text-left transition hover:shadow-md"
+                >
+                  <div className="flex h-48 items-center justify-center bg-muted">
+                    {firstPhoto ? (
+                      <img
+                        src={firstPhoto}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        No image
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="truncate font-semibold">{product.name}</h3>
+                    <p className="text-muted-foreground text-xs">
+                      {product.retailer.companyName}
+                    </p>
+                    <div className="mt-1 flex items-baseline justify-between">
+                      <span className="text-lg font-bold">
+                        AED{" "}
+                        {(product.priceFils / 100).toLocaleString("en-AE", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                      <span className="text-muted-foreground bg-muted rounded px-2 py-0.5 text-xs">
+                        {product.category.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                    {materials && materials.length > 0 && (
+                      <p className="text-muted-foreground mt-1 truncate text-xs">
+                        {materials.join(", ")}
+                      </p>
+                    )}
+                    <span className="mt-3 block w-full rounded-md border px-3 py-2 text-center text-sm font-medium transition group-hover:bg-muted/50">
+                      View Details
                     </span>
                   </div>
-                  {materials && materials.length > 0 && (
-                    <p className="text-muted-foreground mt-1 truncate text-xs">
-                      {materials.join(", ")}
-                    </p>
-                  )}
-                  <span className="mt-3 block w-full rounded-md border px-3 py-2 text-center text-sm font-medium transition group-hover:bg-gray-50">
-                    View Details
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        </ZoneProvider>
       )}
     </div>
   );

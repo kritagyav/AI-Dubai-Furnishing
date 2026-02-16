@@ -9,8 +9,9 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
-import { EmptyState, Spinner } from "@dubai/ui";
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
 interface ProductItem {
@@ -24,12 +25,6 @@ interface ProductItem {
   photos: unknown;
   updatedAt: Date;
 }
-
-const STATUS_BADGE: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-800",
-  PENDING: "bg-yellow-100 text-yellow-800",
-  REJECTED: "bg-red-100 text-red-800",
-};
 
 export default function RetailerCatalogPage() {
   const client = useTRPCClient();
@@ -101,9 +96,7 @@ export default function RetailerCatalogPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <SkeletonScreen rows={4} />
       ) : products.length === 0 ? (
         <EmptyState
           title="No products found"
@@ -146,13 +139,7 @@ export default function RetailerCatalogPage() {
                     {product.stockQuantity}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        STATUS_BADGE[product.validationStatus] ?? ""
-                      }`}
-                    >
-                      {product.validationStatus}
-                    </span>
+                    <StatusBadge status={product.validationStatus} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Button

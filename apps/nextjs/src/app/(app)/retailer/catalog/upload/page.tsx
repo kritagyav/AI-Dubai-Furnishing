@@ -163,14 +163,14 @@ export default function CatalogUploadPage() {
   if (result) {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <span className="text-2xl text-green-600">&#10003;</span>
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success-light)]">
+          <span className="text-2xl text-[var(--color-success-default)]">&#10003;</span>
         </div>
         <h1 className="text-3xl font-bold">Upload Complete</h1>
         <p className="text-muted-foreground">
           {result.succeeded} of {result.total} products uploaded successfully.
           {result.failed > 0 && (
-            <span className="text-red-600"> {result.failed} failed.</span>
+            <span className="text-[var(--color-error-default)]"> {result.failed} failed.</span>
           )}
         </p>
         <div className="flex justify-center gap-3">
@@ -226,13 +226,13 @@ export default function CatalogUploadPage() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-md border border-[var(--color-error-default)]/20 bg-[var(--color-error-light)] p-3 text-sm text-[var(--color-error-dark)]">
           {error}
         </div>
       )}
 
       {mode === "csv" ? (
-        <div className="space-y-4 rounded-lg border p-6">
+        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">CSV Format</h2>
           <p className="text-muted-foreground text-sm">
             Columns: name, sku, category, width_cm, depth_cm, height_cm,
@@ -256,7 +256,7 @@ export default function CatalogUploadPage() {
       ) : (
         <div className="space-y-6">
           {products.map((product, index) => (
-            <div key={index} className="space-y-4 rounded-lg border p-6">
+            <div key={index} className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">
                   Product {index + 1}

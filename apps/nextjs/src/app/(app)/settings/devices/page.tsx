@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
 
 import { useTRPCClient } from "~/trpc/react";
 
@@ -115,19 +116,18 @@ export default function DevicesPage() {
       </p>
 
       {loading ? (
-        <div className="text-muted-foreground text-sm">
-          Loading your devices...
-        </div>
+        <SkeletonScreen rows={3} />
       ) : sessions.length === 0 ? (
-        <div className="text-muted-foreground text-sm">
-          No active sessions found.
-        </div>
+        <EmptyState
+          title="No active sessions"
+          description="No active sessions found."
+        />
       ) : (
         <div className="space-y-3">
           {sessions.map((session, index) => (
             <div
               key={session.id}
-              className="border-border flex items-center justify-between rounded-lg border p-4"
+              className="bg-card flex items-center justify-between rounded-lg p-4 shadow-xs"
             >
               <div className="flex items-center gap-4">
                 <DeviceIcon type={session.deviceType} />

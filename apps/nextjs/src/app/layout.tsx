@@ -13,21 +13,18 @@ import "~/app/styles.css";
 export const metadata: Metadata = {
   metadataBase: new URL(
     env.VERCEL_ENV === "production"
-      ? "https://turbo.t3.gg"
+      ? "https://dubaifurnishing.com"
       : "http://localhost:3000",
   ),
-  title: "Create T3 Turbo",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  title: "Dubai Furnishing",
+  description:
+    "AI-powered interior design and furniture delivery across Dubai and the UAE",
   openGraph: {
-    title: "Create T3 Turbo",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
-    siteName: "Create T3 Turbo",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@jullerino",
-    creator: "@jullerino",
+    title: "Dubai Furnishing",
+    description:
+      "AI-powered interior design and furniture delivery across Dubai and the UAE",
+    url: "https://dubaifurnishing.com",
+    siteName: "Dubai Furnishing",
   },
 };
 

@@ -180,8 +180,8 @@ export default function CheckoutPage() {
   if (step === "confirmation") {
     return (
       <div className="mx-auto max-w-lg space-y-6 py-12 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-          <span className="text-2xl text-green-600">&#10003;</span>
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success-light)]">
+          <span className="text-2xl text-[var(--color-success-default)]">&#10003;</span>
         </div>
         <h1 className="text-3xl font-bold">Order Confirmed!</h1>
         <p className="text-muted-foreground">
@@ -228,7 +228,7 @@ export default function CheckoutPage() {
       </div>
 
       {step === "address" && (
-        <div className="space-y-4 rounded-lg border p-6">
+        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">Shipping Address</h2>
 
           <div>
@@ -319,14 +319,14 @@ export default function CheckoutPage() {
       )}
 
       {step === "payment" && (
-        <div className="space-y-4 rounded-lg border p-6">
+        <div className="space-y-4 bg-card rounded-lg p-6 shadow-xs">
           <h2 className="text-lg font-semibold">Payment Method</h2>
           <p className="text-muted-foreground text-sm">
             Order ref: <span className="font-mono">{orderRef}</span>
           </p>
 
           {IS_DEV && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-md border border-[var(--color-warning-default)] bg-[var(--color-warning-light)] px-4 py-3 text-sm text-[var(--color-warning-dark)]">
               Development mode: payments are simulated. Set{" "}
               <code className="rounded bg-amber-100 px-1 font-mono text-xs">
                 NEXT_PUBLIC_CHECKOUT_COM_PUBLIC_KEY
@@ -336,7 +336,7 @@ export default function CheckoutPage() {
           )}
 
           <div className="space-y-2">
-            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-gray-50">
+            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
               <input
                 type="radio"
                 name="payment"
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                 </p>
               </div>
             </label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-gray-50">
+            <label className="flex cursor-pointer items-center gap-3 rounded-md border p-3 hover:bg-muted/50">
               <input
                 type="radio"
                 name="payment"
@@ -393,7 +393,7 @@ export default function CheckoutPage() {
           )}
 
           {paymentError && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-md border border-[var(--color-error-default)]/20 bg-[var(--color-error-light)] px-4 py-3 text-sm text-[var(--color-error-dark)]">
               {paymentError}
             </div>
           )}
