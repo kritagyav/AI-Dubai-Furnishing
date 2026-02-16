@@ -28,6 +28,12 @@ jobs:
         shell: bash
         run: cp .env.example .env
 
+      - name: Generate Prisma client
+        run: pnpm --filter @dubai/db run generate
+
+      - name: Build design tokens
+        run: pnpm --filter @dubai/design-tokens run build:tokens
+
       - name: Lint + Format + Typecheck + Test (full suite)
         run: pnpm turbo run lint lint:style format typecheck test
 
