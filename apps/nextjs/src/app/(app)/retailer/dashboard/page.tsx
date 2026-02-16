@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@dubai/ui/button";
 import { Spinner } from "@dubai/ui";
 
+import { StatCard } from "~/components/StatCard";
 import { useTRPCClient } from "~/trpc/react";
 
 export default function RetailerDashboardPage() {
@@ -135,15 +136,6 @@ export default function RetailerDashboardPage() {
           Manage Catalog
         </Button>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="border-border rounded-lg border p-4">
-      <p className="text-muted-foreground text-sm">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
     </div>
   );
 }

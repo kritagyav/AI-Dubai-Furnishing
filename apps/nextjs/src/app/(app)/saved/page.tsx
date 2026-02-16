@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPC, useTRPCClient } from "~/trpc/react";
 
 interface SavedPackage {
@@ -49,8 +51,8 @@ export default function SavedPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">Loading saved items...</p>
+      <div className="py-20">
+        <SkeletonScreen rows={3} />
       </div>
     );
   }
@@ -65,25 +67,18 @@ export default function SavedPage() {
       </div>
 
       {packages.length === 0 ? (
-        <div className="rounded-lg border p-12 text-center">
-          <p className="text-muted-foreground mb-4">
-            No saved packages yet. Generate packages from your projects to save
-            them here.
-          </p>
-          <Button onClick={() => router.push("/projects")}>
-            Go to Projects
-          </Button>
-        </div>
+        <EmptyState
+          title="No saved packages"
+          description="Generate packages from your projects to save them here."
+          actionLabel="Go to Projects"
+          onAction={() => router.push("/projects")}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {packages.map((pkg) => (
-            <div key={pkg.id} className="rounded-lg border p-6">
+            <div key={pkg.id} className="bg-card rounded-lg p-6 shadow-xs">
               <div className="mb-2 flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${pkg.status === "ACCEPTED" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
-                >
-                  {pkg.status}
-                </span>
+                <StatusBadge status={pkg.status} />
                 <span className="text-muted-foreground text-xs">
                   {new Date(pkg.createdAt).toLocaleDateString()}
                 </span>

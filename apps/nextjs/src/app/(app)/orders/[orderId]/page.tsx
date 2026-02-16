@@ -3,20 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import { ErrorState, SkeletonScreen } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
-
-const statusColors: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-800",
-  PENDING_PAYMENT: "bg-yellow-100 text-yellow-800",
-  PAID: "bg-blue-100 text-blue-800",
-  PROCESSING: "bg-indigo-100 text-indigo-800",
-  SHIPPED: "bg-purple-100 text-purple-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-  REFUNDED: "bg-orange-100 text-orange-800",
-};
 
 interface OrderDetail {
   id: string;
@@ -84,19 +75,17 @@ export default function OrderDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">Loading order...</p>
-      </div>
-    );
+    return <SkeletonScreen rows={4} header />;
   }
 
   if (!order) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-muted-foreground mb-4">Order not found</p>
-        <Button onClick={() => router.push("/orders")}>Back to Orders</Button>
-      </div>
+      <ErrorState
+        title="Order not found"
+        message="This order doesn't exist or you don't have access."
+        retryLabel="Back to Orders"
+        onRetry={() => router.push("/orders")}
+      />
     );
   }
 
@@ -116,16 +105,12 @@ export default function OrderDetailPage() {
           </button>
           <h1 className="text-3xl font-bold">Order {order.orderRef}</h1>
         </div>
-        <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusColors[order.status] ?? "bg-gray-100 text-gray-800"}`}
-        >
-          {order.status.replace(/_/g, " ")}
-        </span>
+        <StatusBadge status={order.status} className="px-3 py-1 text-sm" />
       </div>
 
       {/* Order Info */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-lg border p-4">
+        <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-2 font-semibold">Order Details</h2>
           <div className="text-sm space-y-1">
             <p>
@@ -148,7 +133,7 @@ export default function OrderDetailPage() {
         </div>
 
         {order.shippingAddress && (
-          <div className="rounded-lg border p-4">
+          <div className="bg-card rounded-lg p-4 shadow-xs">
             <h2 className="mb-2 font-semibold">Shipping Address</h2>
             <div className="text-sm space-y-1">
               <p>{order.shippingAddress.line1}</p>
@@ -167,7 +152,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Line Items */}
-      <div className="rounded-lg border">
+      <div className="bg-card rounded-lg shadow-xs">
         <div className="border-b px-4 py-3">
           <h2 className="font-semibold">Items</h2>
         </div>
@@ -186,7 +171,7 @@ export default function OrderDetailPage() {
             </div>
           ))}
         </div>
-        <div className="border-t bg-gray-50 p-4">
+        <div className="bg-muted/50 border-t p-4">
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
@@ -206,7 +191,7 @@ export default function OrderDetailPage() {
 
       {/* Payment Info */}
       {order.payments.length > 0 && (
-        <div className="rounded-lg border p-4">
+        <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-2 font-semibold">Payments</h2>
           <div className="space-y-2">
             {order.payments.map((p) => (

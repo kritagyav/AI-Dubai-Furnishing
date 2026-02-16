@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@dubai/ui/button";
 import { EmptyState, ErrorState, Spinner } from "@dubai/ui";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -245,7 +246,7 @@ export default function ProjectDetailPage() {
 
       {/* Floor Plan Section */}
       {project.floorPlanUrl && (
-        <div className="border-border rounded-lg border p-4">
+        <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-3 text-lg font-semibold">Floor Plan</h2>
           <img
             src={project.floorPlanThumbUrl ?? project.floorPlanUrl}
@@ -257,7 +258,7 @@ export default function ProjectDetailPage() {
 
       {/* Budget Summary */}
       {packages.length > 0 && (
-        <div className="border-border rounded-lg border p-4">
+        <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-3 text-lg font-semibold">Budget Summary</h2>
           <div className="grid grid-cols-3 gap-4">
             <div>
@@ -277,19 +278,13 @@ export default function ProjectDetailPage() {
               <p className="text-muted-foreground text-sm">Status</p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {packages.some((p) => p.status === "ACCEPTED") && (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                    {packages.filter((p) => p.status === "ACCEPTED").length} accepted
-                  </span>
+                  <StatusBadge status="ACCEPTED" />
                 )}
                 {packages.some((p) => p.status === "READY") && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                    {packages.filter((p) => p.status === "READY").length} ready
-                  </span>
+                  <StatusBadge status="READY" />
                 )}
                 {packages.some((p) => p.status === "GENERATING") && (
-                  <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-                    {packages.filter((p) => p.status === "GENERATING").length} generating
-                  </span>
+                  <StatusBadge status="GENERATING" />
                 )}
               </div>
             </div>
@@ -327,7 +322,7 @@ export default function ProjectDetailPage() {
             {project.rooms.map((room) => (
               <div
                 key={room.id}
-                className="border-border rounded-lg border p-4"
+                className="bg-card rounded-lg p-4 shadow-xs"
               >
                 <div className="flex items-start justify-between">
                   <button
@@ -411,7 +406,7 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Project Summary */}
-      <div className="border-border rounded-lg border p-4">
+      <div className="bg-card rounded-lg p-4 shadow-xs">
         <h2 className="mb-3 text-lg font-semibold">Summary</h2>
         <dl className="text-muted-foreground grid grid-cols-2 gap-2 text-sm">
           <dt>Rooms</dt>

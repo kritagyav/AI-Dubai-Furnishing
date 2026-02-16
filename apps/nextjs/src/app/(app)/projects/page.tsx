@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@dubai/ui/button";
-import { EmptyState } from "@dubai/ui";
+import { EmptyState, SkeletonScreen } from "@dubai/ui";
 
 import { useTRPCClient } from "~/trpc/react";
 
@@ -45,8 +45,8 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">Loading projects...</p>
+      <div className="py-20">
+        <SkeletonScreen rows={3} />
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function ProjectsPage() {
           <button
             key={project.id}
             onClick={() => router.push(`/projects/${project.id}`)}
-            className="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-6 text-left transition-colors"
+            className="bg-card hover:shadow-md flex flex-col rounded-lg p-6 shadow-xs text-left transition-all"
           >
             <h2 className="text-lg font-semibold">{project.name}</h2>
             {project.address && (

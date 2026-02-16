@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@dubai/ui/button";
+import { ZoneProvider } from "@dubai/ui/zones";
 
 export default function HomePage() {
   return (
@@ -23,25 +24,27 @@ export default function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section className="container flex flex-col items-center gap-6 pb-16 pt-24 text-center md:pt-32">
-        <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-          AI-Powered Interior Design for Your{" "}
-          <span className="text-primary">Dubai Home</span>
-        </h1>
-        <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
-          Upload a photo of your room, set your budget, and let our AI curate
-          personalised furniture packages from verified Dubai retailers —
-          delivered straight to your door.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <Button size="lg" asChild>
-            <Link href="/register">Get Started</Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/gallery">Browse Gallery</Link>
-          </Button>
-        </div>
-      </section>
+      <ZoneProvider zone="warmth">
+        <section className="container flex flex-col items-center gap-6 pb-16 pt-24 text-center md:pt-32">
+          <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            AI-Powered Interior Design for Your{" "}
+            <span className="text-primary">Dubai Home</span>
+          </h1>
+          <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
+            Upload a photo of your room, set your budget, and let our AI curate
+            personalised furniture packages from verified Dubai retailers —
+            delivered straight to your door.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Button size="lg" asChild>
+              <Link href="/register">Get Started</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/gallery">Browse Gallery</Link>
+            </Button>
+          </div>
+        </section>
+      </ZoneProvider>
 
       {/* Features */}
       <section className="bg-muted/50 border-border/40 border-y py-20">

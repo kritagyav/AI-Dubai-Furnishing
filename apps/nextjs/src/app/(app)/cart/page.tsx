@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SkeletonScreen, EmptyState } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
 import { useTRPCClient } from "~/trpc/react";
@@ -74,8 +75,8 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground text-sm">Loading cart...</p>
+      <div className="py-20">
+        <SkeletonScreen rows={3} />
       </div>
     );
   }
@@ -84,12 +85,12 @@ export default function CartPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Shopping Cart</h1>
-        <div className="rounded-lg border p-12 text-center">
-          <p className="text-muted-foreground mb-4">Your cart is empty</p>
-          <Button onClick={() => router.push("/projects")}>
-            Browse Projects
-          </Button>
-        </div>
+        <EmptyState
+          title="Your cart is empty"
+          description="Add items from your project packages or browse the gallery."
+          actionLabel="Browse Projects"
+          onAction={() => router.push("/projects")}
+        />
       </div>
     );
   }
@@ -100,13 +101,13 @@ export default function CartPage() {
         <h1 className="text-3xl font-bold">Shopping Cart</h1>
         <button
           onClick={clearCart}
-          className="text-sm text-red-600 hover:text-red-700"
+          className="text-sm text-[var(--color-error-default)] hover:text-[var(--color-error-dark)]"
         >
           Clear cart
         </button>
       </div>
 
-      <div className="divide-y rounded-lg border">
+      <div className="divide-y bg-card rounded-lg shadow-xs">
         {items.map((item) => (
           <div
             key={item.id}
@@ -126,7 +127,7 @@ export default function CartPage() {
                   onClick={() =>
                     updateQuantity(item.id, Math.max(0, item.quantity - 1))
                   }
-                  className="rounded border px-2 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="rounded border px-2 py-1 text-sm hover:bg-muted disabled:opacity-50"
                 >
                   -
                 </button>
@@ -134,7 +135,7 @@ export default function CartPage() {
                 <button
                   disabled={updating === item.id}
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="rounded border px-2 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
+                  className="rounded border px-2 py-1 text-sm hover:bg-muted disabled:opacity-50"
                 >
                   +
                 </button>
@@ -147,7 +148,7 @@ export default function CartPage() {
               <button
                 disabled={updating === item.id}
                 onClick={() => removeItem(item.id)}
-                className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
+                className="text-sm text-[var(--color-error-default)] hover:text-[var(--color-error-dark)] disabled:opacity-50"
               >
                 Remove
               </button>
@@ -157,7 +158,7 @@ export default function CartPage() {
       </div>
 
       {/* Order Summary */}
-      <div className="rounded-lg border p-6">
+      <div className="bg-card rounded-lg p-6 shadow-xs">
         <h2 className="mb-4 text-lg font-semibold">Order Summary</h2>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">

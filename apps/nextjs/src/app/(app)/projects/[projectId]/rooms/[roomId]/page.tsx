@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@dubai/ui/button";
 import { ErrorState, Spinner } from "@dubai/ui";
 
+import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -23,13 +24,6 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
   STUDY_OFFICE: "Study / Office",
   BALCONY: "Balcony",
   OTHER: "Other",
-};
-
-const PACKAGE_STATUS_STYLES: Record<string, string> = {
-  GENERATING: "bg-yellow-100 text-yellow-800",
-  READY: "bg-blue-100 text-blue-800",
-  ACCEPTED: "bg-green-100 text-green-800",
-  REJECTED: "bg-red-100 text-red-800",
 };
 
 interface RoomData {
@@ -224,7 +218,7 @@ export default function RoomDetailPage() {
       </div>
 
       {/* Room Type Selection -- Story 2.6 */}
-      <div className="border-border rounded-lg border p-4">
+      <div className="bg-card rounded-lg p-4 shadow-xs">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Room Type</h2>
           <div className="flex items-center gap-2">
@@ -242,8 +236,8 @@ export default function RoomDetailPage() {
           <p
             className={`mb-3 text-sm ${
               detectMessage.startsWith("Detected:")
-                ? "text-green-600"
-                : "text-red-600"
+                ? "text-[var(--color-success-default)]"
+                : "text-[var(--color-error-default)]"
             }`}
           >
             {detectMessage}
@@ -267,7 +261,7 @@ export default function RoomDetailPage() {
       </div>
 
       {/* Dimensions -- Story 2.2 */}
-      <div className="border-border rounded-lg border p-4">
+      <div className="bg-card rounded-lg p-4 shadow-xs">
         <h2 className="mb-3 text-sm font-semibold">Dimensions</h2>
         <dl className="grid grid-cols-3 gap-4 text-center">
           <div>
@@ -292,7 +286,7 @@ export default function RoomDetailPage() {
       </div>
 
       {/* Photos -- Story 2.3 */}
-      <div className="border-border rounded-lg border p-4">
+      <div className="bg-card rounded-lg p-4 shadow-xs">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">
             Photos ({room.photos.length})
@@ -350,7 +344,7 @@ export default function RoomDetailPage() {
 
       {/* Package History */}
       {packages.length > 0 && (
-        <div className="border-border rounded-lg border p-4">
+        <div className="bg-card rounded-lg p-4 shadow-xs">
           <h2 className="mb-3 text-sm font-semibold">
             Package History ({packages.length})
           </h2>
@@ -376,14 +370,7 @@ export default function RoomDetailPage() {
                       minimumFractionDigits: 2,
                     })}
                   </span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      PACKAGE_STATUS_STYLES[pkg.status] ??
-                      "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {pkg.status}
-                  </span>
+                  <StatusBadge status={pkg.status} />
                 </div>
               </div>
             ))}
