@@ -28,5 +28,8 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "prettier": "@dubai/prettier-config"
+  "prettier": "@dubai/prettier-config",
+  "dependencies": {
+    "bullmq": "^5.69.3"
+  }
 }

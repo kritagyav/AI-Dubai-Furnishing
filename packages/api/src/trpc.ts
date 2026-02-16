@@ -9,6 +9,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
@@ -35,6 +37,7 @@ export const createTRPCContext = async (opts: {
   return {
     supabase: opts.supabase,
     session,
+    headers: opts.headers,
     db: prisma,
     source,
     correlationId: opts.correlationId,
@@ -85,12 +88,57 @@ const correlationIdMiddleware = t.middleware(async ({ next }) => {
 });
 
 /**
- * Rate limit middleware — stub implementation for development.
- * Actual Upstash Redis rate limiter will be added in Story 1.7.
- * For now, this is a pass-through that sets rate limit context.
+ * Rate limit middleware — Upstash Redis sliding-window rate limiter.
+ *
+ * Limits: 60 requests per 60-second window per user (or IP for public).
+ * Falls back to pass-through if UPSTASH_REDIS_URL is not configured.
  */
-const rateLimitMiddleware = t.middleware(async ({ next }) => {
-  // Stub: actual Upstash Redis rate limiter in Story 1.7
+let ratelimit: Ratelimit | null = null;
+
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit;
+
+  const url = process.env.UPSTASH_REDIS_URL;
+  const token = process.env.UPSTASH_REDIS_TOKEN;
+
+  if (!url || !token || url.includes("placeholder")) {
+    return null;
+  }
+
+  ratelimit = new Ratelimit({
+    redis: new Redis({ url, token }),
+    limiter: Ratelimit.slidingWindow(60, "60 s"),
+    analytics: true,
+    prefix: "dubai:ratelimit",
+  });
+
+  return ratelimit;
+}
+
+const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+  const limiter = getRatelimit();
+
+  if (limiter) {
+    const identifier =
+      (ctx.session?.user?.id) ??
+      ctx.headers.get("x-forwarded-for") ??
+      ctx.headers.get("x-real-ip") ??
+      "anonymous";
+
+    const { success, limit, remaining, reset } = await limiter.limit(identifier);
+
+    if (!success) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: `Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)}s`,
+      });
+    }
+
+    return next({
+      ctx: { rateLimit: { limit, remaining, reset } },
+    });
+  }
+
   return next();
 });
 

@@ -8,6 +8,7 @@ import {
   paginationInput,
   updateProductInput,
 } from "@dubai/validators";
+import { trackEvent } from "@dubai/queue";
 import { z } from "zod/v4";
 
 import { adminProcedure, retailerProcedure } from "../trpc";
@@ -97,6 +98,12 @@ export const catalogRouter = {
 
       const created = results.filter((r) => r.status !== "error").length;
       const errors = results.filter((r) => r.status === "error").length;
+
+      trackEvent("catalog.uploaded", ctx.user.id, {
+        total: input.products.length,
+        succeeded: created,
+        failed: errors,
+      });
 
       return { total: input.products.length, succeeded: created, failed: errors, results };
     }),

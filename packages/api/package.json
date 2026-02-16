@@ -21,9 +21,12 @@
   "dependencies": {
     "@dubai/auth": "workspace:*",
     "@dubai/db": "workspace:*",
+    "@dubai/queue": "workspace:*",
     "@dubai/validators": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "@trpc/server": "catalog:",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },

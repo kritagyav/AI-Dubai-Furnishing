@@ -6,6 +6,7 @@ import {
   reviewPackageInput,
   updatePackageStatusInput,
 } from "@dubai/validators";
+import { trackEvent } from "@dubai/queue";
 
 import { authedProcedure } from "../trpc";
 
@@ -104,6 +105,13 @@ export const packageRouter = {
           },
         });
       }
+
+      trackEvent("package.generated", ctx.user.id, {
+        packageId: pkg.id,
+        projectId: input.projectId,
+        roomId: input.roomId ?? null,
+        itemCount: products.length,
+      });
 
       return pkg;
     }),
@@ -226,11 +234,19 @@ export const packageRouter = {
         });
       }
 
-      return ctx.db.package.update({
+      const updated = await ctx.db.package.update({
         where: { id: pkg.id },
         data: { status: input.status },
         select: { id: true, status: true },
       });
+
+      if (input.status === "ACCEPTED") {
+        trackEvent("package.accepted", ctx.user.id, {
+          packageId: pkg.id,
+        });
+      }
+
+      return updated;
     }),
 
   /**

@@ -16,6 +16,7 @@
     "@dubai/queue": "workspace:*",
     "@dubai/shared": "workspace:*",
     "@sentry/node": "catalog:",
+    "bullmq": "^5.69.3",
     "pino": "catalog:"
   },
   "devDependencies": {

@@ -10,6 +10,7 @@ import {
   listOrdersInput,
   cancelOrderInput,
 } from "@dubai/validators";
+import { trackEvent } from "@dubai/queue";
 
 import { authedProcedure } from "../trpc";
 
@@ -101,7 +102,7 @@ export const commerceRouter = {
         });
       }
 
-      return ctx.db.cartItem.create({
+      const newItem = await ctx.db.cartItem.create({
         data: {
           cartId: cart.id,
           productId: input.productId,
@@ -110,6 +111,14 @@ export const commerceRouter = {
         },
         select: { id: true, productId: true, quantity: true, priceFils: true },
       });
+
+      trackEvent("cart.item_added", ctx.user.id, {
+        productId: input.productId,
+        quantity: input.quantity,
+        priceFils: product.priceFils,
+      });
+
+      return newItem;
     }),
 
   updateCartItem: authedProcedure
@@ -185,6 +194,8 @@ export const commerceRouter = {
     if (cart) {
       await ctx.db.cartItem.deleteMany({ where: { cartId: cart.id } });
     }
+
+    trackEvent("cart.cleared", ctx.user.id, {});
 
     return { cleared: true };
   }),
@@ -300,6 +311,13 @@ export const commerceRouter = {
         return o;
       });
 
+      trackEvent("order.created", ctx.user.id, {
+        orderId: order.id,
+        orderRef: order.orderRef,
+        totalFils,
+        itemCount: cart.items.length,
+      });
+
       return {
         orderId: order.id,
         orderRef: order.orderRef,
@@ -392,6 +410,13 @@ export const commerceRouter = {
           },
         });
       }
+
+      trackEvent("order.paid", ctx.user.id, {
+        orderId: order.id,
+        paymentId: payment.id,
+        amountFils: order.totalFils,
+        method: input.method,
+      });
 
       return { paymentId: payment.id, status: payment.status };
     }),
@@ -511,6 +536,10 @@ export const commerceRouter = {
           where: { id: order.id },
           data: { status: "CANCELLED", cancelledAt: new Date() },
         });
+      });
+
+      trackEvent("order.cancelled", ctx.user.id, {
+        orderId: order.id,
       });
 
       return { cancelled: true };
