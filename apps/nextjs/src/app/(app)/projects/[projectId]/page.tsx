@@ -11,6 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { EmptyState, ErrorState, Spinner } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
+import { FileUpload } from "~/components/FileUpload";
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
@@ -75,6 +76,7 @@ export default function ProjectDetailPage() {
   const [packages, setPackages] = useState<PackageListItem[]>([]);
   const [roomPhotos, setRoomPhotos] = useState<Record<string, RoomPhoto[]>>({});
   const [generatingRoom, setGeneratingRoom] = useState<string | null>(null);
+  const [floorPlanExpanded, setFloorPlanExpanded] = useState(false);
 
   const loadProject = useCallback(async () => {
     try {
@@ -177,6 +179,32 @@ export default function ProjectDetailPage() {
     }
   }
 
+  async function handleFloorPlanUploaded(
+    files: { storageUrl: string; key: string; filename: string }[],
+  ) {
+    const firstFile = files[0];
+    if (!project || !firstFile) return;
+    try {
+      await client.room.uploadFloorPlan.mutate({
+        projectId: project.id,
+        storageUrl: firstFile.storageUrl,
+      });
+      void loadProject();
+    } catch {
+      // Stay on page
+    }
+  }
+
+  async function handleDeleteFloorPlan() {
+    if (!project || !confirm("Remove the floor plan?")) return;
+    try {
+      await client.room.deleteFloorPlan.mutate({ projectId: project.id });
+      void loadProject();
+    } catch {
+      // Stay on page
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -262,16 +290,85 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Floor Plan Section */}
-      {project.floorPlanUrl && (
-        <div className="bg-card rounded-lg p-4 shadow-xs">
-          <h2 className="mb-3 text-lg font-semibold">Floor Plan</h2>
-          <img
-            src={project.floorPlanThumbUrl ?? project.floorPlanUrl}
-            alt="Floor plan"
-            className="max-h-64 rounded object-contain"
-          />
+      <div className="bg-card rounded-lg p-4 shadow-xs">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Floor Plan</h2>
+          {project.floorPlanUrl && (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDeleteFloorPlan}
+              >
+                Remove
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+
+        {project.floorPlanUrl ? (
+          <>
+            {project.floorPlanUrl.endsWith(".pdf") ? (
+              <object
+                data={project.floorPlanUrl}
+                type="application/pdf"
+                className="h-64 w-full rounded"
+              >
+                <p className="text-muted-foreground text-sm">
+                  PDF preview not supported.{" "}
+                  <a
+                    href={project.floorPlanUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-foreground underline"
+                  >
+                    Download floor plan
+                  </a>
+                </p>
+              </object>
+            ) : (
+              <>
+                <img
+                  src={project.floorPlanThumbUrl ?? project.floorPlanUrl}
+                  alt="Floor plan"
+                  className={`rounded object-contain transition-all ${
+                    floorPlanExpanded
+                      ? "max-h-[80vh] cursor-zoom-out"
+                      : "max-h-64 cursor-zoom-in"
+                  }`}
+                  onClick={() => setFloorPlanExpanded(!floorPlanExpanded)}
+                />
+              </>
+            )}
+            <div className="mt-3">
+              <p className="text-muted-foreground mb-2 text-xs">
+                Replace floor plan:
+              </p>
+              <FileUpload
+                client={client}
+                purpose="floor_plan"
+                multiple={false}
+                maxFiles={1}
+                maxSizeMB={25}
+                accept="image/jpeg,image/png,application/pdf"
+                label="Drop a new floor plan here"
+                onUploaded={handleFloorPlanUploaded}
+              />
+            </div>
+          </>
+        ) : (
+          <FileUpload
+            client={client}
+            purpose="floor_plan"
+            multiple={false}
+            maxFiles={1}
+            maxSizeMB={25}
+            accept="image/jpeg,image/png,application/pdf"
+            label="Drop your floor plan here or click to upload"
+            onUploaded={handleFloorPlanUploaded}
+          />
+        )}
+      </div>
 
       {/* Budget Summary */}
       {packages.length > 0 && (

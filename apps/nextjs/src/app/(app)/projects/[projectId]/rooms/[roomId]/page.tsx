@@ -11,6 +11,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ErrorState, Spinner } from "@dubai/ui";
 import { Button } from "@dubai/ui/button";
 
+import { FileUpload } from "~/components/FileUpload";
 import { StatusBadge } from "~/components/StatusBadge";
 import { useTRPCClient } from "~/trpc/react";
 
@@ -74,8 +75,6 @@ export default function RoomDetailPage() {
   const [detecting, setDetecting] = useState(false);
   const [detectMessage, setDetectMessage] = useState<string | null>(null);
   const [packages, setPackages] = useState<PackageItem[]>([]);
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [addingPhoto, setAddingPhoto] = useState(false);
 
   const loadRoom = useCallback(async () => {
     try {
@@ -149,22 +148,22 @@ export default function RoomDetailPage() {
     }
   }
 
-  async function handleAddPhoto() {
-    if (!room || !photoUrl.trim()) return;
-    setAddingPhoto(true);
-    try {
-      await client.room.addPhoto.mutate({
-        roomId: room.id,
-        storageUrl: photoUrl.trim(),
-        orderIndex: room.photos.length,
-      });
-      setPhotoUrl("");
-      void loadRoom();
-    } catch {
-      // Swallow
-    } finally {
-      setAddingPhoto(false);
+  async function handlePhotosUploaded(
+    files: { storageUrl: string; key: string; filename: string }[],
+  ) {
+    if (!room) return;
+    for (const [i, file] of files.entries()) {
+      try {
+        await client.room.addPhoto.mutate({
+          roomId: room.id,
+          storageUrl: file.storageUrl,
+          orderIndex: room.photos.length + i,
+        });
+      } catch {
+        // Continue with remaining files
+      }
     }
+    void loadRoom();
   }
 
   if (loading) {
@@ -316,27 +315,18 @@ export default function RoomDetailPage() {
           </div>
         )}
 
-        {/* Add photo by URL */}
+        {/* Upload photos from device */}
         <div className="mt-4">
-          <p className="text-muted-foreground mb-2 text-xs">
-            Add a photo by entering its URL:
-          </p>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={photoUrl}
-              onChange={(e) => setPhotoUrl(e.target.value)}
-              placeholder="https://example.com/photo.jpg"
-              className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
-            />
-            <Button
-              size="sm"
-              onClick={handleAddPhoto}
-              disabled={addingPhoto || !photoUrl.trim()}
-            >
-              {addingPhoto ? "Adding..." : "Add Photo"}
-            </Button>
-          </div>
+          <FileUpload
+            client={client}
+            purpose="room_photo"
+            multiple={true}
+            maxFiles={20}
+            maxSizeMB={10}
+            accept="image/*"
+            label="Drop room photos here or click to browse"
+            onUploaded={handlePhotosUploaded}
+          />
         </div>
       </div>
 

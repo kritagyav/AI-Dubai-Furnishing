@@ -7,12 +7,15 @@ import { storageClient } from "@dubai/storage";
 import { authedProcedure } from "../trpc";
 
 const S3_BUCKET = process.env.S3_BUCKET ?? "dubai-furnishing-uploads";
+const S3_REGION = process.env.S3_REGION ?? "me-south-1";
+const DEV_MODE = !process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY;
 
 const purposeSchema = z.enum([
   "product_photo",
   "floor_plan",
   "room_photo",
   "ticket_attachment",
+  "retailer_document",
 ]);
 
 /**
@@ -62,6 +65,10 @@ export const storageRouter = {
           key = `support/tickets/${ctx.user.id}/${crypto.randomUUID()}/${filename}`;
           break;
         }
+        case "retailer_document": {
+          key = `retailers/${ctx.user.id}/documents/${crypto.randomUUID()}/${filename}`;
+          break;
+        }
         default: {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -76,9 +83,14 @@ export const storageRouter = {
         contentType,
       );
 
+      const storageUrl = DEV_MODE
+        ? `https://dev-storage.localhost/${result.key}`
+        : `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${result.key}`;
+
       return {
         uploadUrl: result.url,
         key: result.key,
+        storageUrl,
       };
     }),
 } satisfies TRPCRouterRecord;

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@dubai/ui/button";
 
+import { FileUpload } from "~/components/FileUpload";
 import { useTRPCClient } from "~/trpc/react";
 
 export default function RetailerRegisterPage() {
@@ -21,6 +22,9 @@ export default function RetailerRegisterPage() {
   const [phone, setPhone] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [warehouseDetails, setWarehouseDetails] = useState("");
+  const [documents, setDocuments] = useState<
+    { storageUrl: string; filename: string }[]
+  >([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -39,6 +43,19 @@ export default function RetailerRegisterPage() {
         businessType: businessType || undefined,
         warehouseDetails: warehouseDetails || undefined,
       });
+
+      // Submit uploaded documents if any
+      const firstDoc = documents[0];
+      if (firstDoc) {
+        try {
+          await client.retailer.submitDocuments.mutate({
+            documentsUrl: firstDoc.storageUrl,
+          });
+        } catch {
+          // Non-critical — registration succeeded, document submission failed
+        }
+      }
+
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -166,6 +183,37 @@ export default function RetailerRegisterPage() {
             placeholder="Location, size, delivery capabilities..."
             className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
           />
+        </div>
+
+        {/* Document Upload */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Trade License & Supporting Documents
+          </label>
+          <FileUpload
+            client={client}
+            purpose="retailer_document"
+            multiple={true}
+            maxFiles={5}
+            maxSizeMB={10}
+            accept="image/*,application/pdf"
+            label="Upload trade license and supporting documents"
+            onUploaded={(files) =>
+              setDocuments((prev) => [
+                ...prev,
+                ...files.map((f) => ({
+                  storageUrl: f.storageUrl,
+                  filename: f.filename,
+                })),
+              ])
+            }
+          />
+          {documents.length > 0 && (
+            <p className="text-muted-foreground text-xs">
+              {documents.length} document{documents.length !== 1 ? "s" : ""}{" "}
+              ready to submit
+            </p>
+          )}
         </div>
 
         {error && <p className="text-destructive text-sm">{error}</p>}
